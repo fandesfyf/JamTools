@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+<script type="text/javascript" src="jamjs/jquery-1.11.0.js"></script>
+  </head>
+
+  <body>
+   <input type="file" id="file" name="myfile" onchange="onchanges()" multiple="multiple"/>
+<input type="button" onclick="SerialUploadFile()" value="上传"/>
+  <script>let progress = {};
+let last_laoded;
+let last_time;
+
+function onchanges() {
+   let files = document.getElementById("file").files;
+   console.log(`共${files.length}个文件`);
+   let countSize = 0;
+   for (let i = 0; i < files.length; i++) {
+      console.log(`${files[i].name}  大小${files[i].size}`);
+      countSize += files[i].size;
+   }
+   console.log(`共计占用${countSize}字节`);
+   if (files[0].type.indexOf("image") > -1)
+   {
+      let read = new FileReader();
+      read.onload = function (e) { // 读取操作完成时触发
+         let img = new Image();
+         img.src = e.target.result; // 将base64编码赋给src属性
+         $("body")[0].appendChild(img);
+
+      };
+      read.readAsDataURL(files[0]); // 读取文件转化成base64编码
+   }
+}
+
+ // 多文件并行上传
+ function ParallelUploadFile() {
+   last_laoded = 0;
+   last_time = (new Date()).getTime();
+
+   var fileObj = document.getElementById("file").files;  // js 获取文件对象
+   for (let k = 0; k < fileObj.length; k++)
+   {
+
+      let domStr = `<div> ${fileObj[k].name}，大小${fileObj[k].size}字节
+                     <progress class='progressBar' id='pro${k}' value='' max=''></progress>
+                     <span class='percentage' id='per${k}'></span>
+                     </div>`;
+      $("body").append(domStr);
+
+      // FormData 对象
+      var form = new FormData();
+      form.append("author", "xueba");             // 可以增加表单数据
+      form.append("csrfmiddlewaretoken", $("[name = 'csrfmiddlewaretoken']").val());
+      form.append("file", fileObj[k]);
+
+
+      // XMLHttpRequest 对象
+      var xhr = new XMLHttpRequest();
+      xhr.open("post", "/file_upload/", true);
+      xhr.onload = function () {
+        alert("上传完成!");
+       };
+      xhr.upload.addEventListener("progress", progressFunction, false);
+      xhr.send(form);
+
+      // jQuery ajax
+      $.ajax({
+         url: "/file_upload/",
+         type: "POST",
+         async: true,      // 异步上传
+         data: form,
+         contentType: false, // 必须false才会自动加上正确的Content-Type
+         processData: false, // 必须false才会避开jQuery对 formdata 的默认处理。XMLHttpRequest会对 formdata 进行正确的处理
+         xhr: function () {
+            let xhr = $.ajaxSettings.xhr();
+            xhr.upload.addEventListener("progress", (e) => {progressPFunction(e, k)}, false);
+            xhr.upload.onloadstart = (e) => {
+               progress[k] = {
+                  last_laoded: 0,
+                  last_time: e.timeStamp,
+               };
+            };
+            xhr.upload.onloadend = () => {
+               delete progress[k];
+            };
+            return xhr;
+         },
+         success: function (data) {
+            data = JSON.parse(data);
+            data.forEach((i) => {
+               console.log(i.code, i.file_url);
+            });
+         },
+         error: function () {
+            alert("aaa上传失败！");
+         },
+      });
+   }
+
+ }
+
+// 多文件串行上传
+function SerialUploadFile() {
+           var fileObj = document.getElementById("file").files;  // js 获取文件对象
+           let domStr = `<div>
+                             <progress class='progressBar' id='pro' value='' max=''></progress>
+                             <span class='percentage' id='per'></span>
+                         </div>`;
+           $("body").append(domStr);
+
+           // FormData 对象
+           var form = new FormData();
+           form.append("author", "xueba");             // 可以增加表单数据
+           for (let i = 0; i < fileObj.length; i++)
+           {
+              form.append("file", fileObj[i]);        // 文件对象
+           }
+
+           // jQuery ajax
+           $.ajax({
+              url: "/file_upload/",
+              type: "POST",
+              async: true,      // 异步上传
+              data: form,
+              contentType: false, // 必须false才会自动加上正确的Content-Type
+              processData: false, // 必须false才会避开jQuery对 formdata 的默认处理。XMLHttpRequest会对 formdata 进行正确的处理
+              xhr: function () {
+                 let xhr = $.ajaxSettings.xhr();
+                 xhr.upload.addEventListener("progress", progressSFunction, false);
+                 xhr.upload.onloadstart = (e) => {
+                    progress[0] = {
+                      last_laoded: 0,
+                      last_time: e.timeStamp,
+                   };
+                    console.log("开始上传",progress);
+                 };
+                 xhr.upload.onloadend = () => {
+                    delete progress[0];
+                    console.log("结束上传",progress);
+                 };
+                 return xhr;
+              },
+              success: function (data) {
+                 data = JSON.parse(data);
+                 data.forEach((i) => {
+                    console.log(i.code, i.file_url);
+                 });
+              },
+              error: function () {
+                 alert("aaa上传失败！");
+              },
+           });
+
+}
+
+// jQuery版本进度条
+function Progressbar(e) {
+   var bar = $("#progressBar"); // 进度条
+   var num = $("#percentage");  // 百分比
+   if (e.lengthComputable) {
+      bar.attr("max", e.total);
+      bar.attr("value", e.loaded);
+      num.text(Math.round(e.loaded / e.total * 100) + "%");
+   }
+
+}
+
+
+ // 原生js版 并行进度条
+ function progressPFunction(e, k) {
+   var progressBar = document.getElementById(`pro${k}`);
+   var percentageDiv = document.getElementById(`per${k}`);
+   if (e.lengthComputable) {
+      progressBar.max = e.total;
+      progressBar.value = e.loaded;
+      let speed = (e.loaded - progress[k].last_laoded) / (e.timeStamp - progress[k].last_time) + " bytes/s";
+      let percent = Math.round(e.loaded / e.total * 100) + "%";
+      progress[k].last_laoded = e.loaded, progress[k].last_time = e.timeStamp;
+      percentageDiv.innerHTML = percent + " " + speed;
+      console.log(speed);
+   }
+ }
+
+// 原生js 串行进度条
+function progressSFunction(e) {
+   var progressBar = document.getElementById(`pro`);
+   var percentageDiv = document.getElementById(`per`);
+   if (e.lengthComputable) // lengthComputable表示进度信息是否可用
+   {
+      progressBar.max = e.total;
+      progressBar.value = e.loaded;
+      let speed = (e.loaded - progress[0].last_laoded) / (e.timeStamp - progress[0].last_time) + " bytes/s";
+      let percent = Math.round(e.loaded / e.total * 100) + "%";
+      progress[0].last_laoded = e.loaded, progress[0].last_time = e.timeStamp;
+      percentageDiv.innerHTML = percent + " " + speed;
+   }
+}</script>
+  </body>
+</html>
+

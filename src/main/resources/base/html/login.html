@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head >
+    <meta charset="UTF-8">
+    <!--手机上运行时，加上这句话-->
+    <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport">
+    <title></title>
+    <script type="text/javascript" src="js/jquery-1.11.0.js"></script>
+    <style>
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        .title {
+            font-size: 20px;
+            background-color: cornflowerblue;
+            color: #fff;
+           /*
+            * 里面的文字居中
+            */
+            line-height: 50px;
+            text-align: center;
+            /*
+             *绝对定位
+             */
+            position: fixed;
+            top: 0px;
+            left: 0px;
+            width: 100%;
+        }
+
+        .content {
+            margin-top: 110px;
+        }
+
+        .mybutton {
+            width: 200px;
+            line-height: 40px;
+            text-align: center;
+            background-color: cornflowerblue;
+            margin: 0 auto;
+            margin-top: 20px;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .shurukuang {
+            /*
+             * 自己居中
+             * 要设置为块级元素
+             */
+            display: block;
+            margin: 0 auto;
+
+            width: 200px;
+            height: 25px;
+            margin-top: 1px;
+            border: none;
+            border-bottom: 1px solid;
+            margin-top: 5px;
+            text-indent: 4px;
+            /*
+             * outline （轮廓）是绘制于元素周围的一条线，位于边框边缘的外围，可起到突出元素的作用。
+             * 这里是去掉原有的，鼠标点击后的黄色轮廓
+             */
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="title">登录界面</div>
+
+<div class="content">
+    <input id="username" class="shurukuang" type="text" placeholder="手机号">
+    <input id="password" class="shurukuang" type="password" placeholder="需要密码">
+</div>
+<div class="mybutton" onclick="myClick()">登录</div>
+
+
+<script>
+
+    // 请求路径
+    var httpurl = "/api2/ddgl/login";
+    // 数据请求
+    function myClick() {
+        var usernamestr = document.getElementById("username").value;
+        var passwordstr = document.getElementById("password").value;
+        if(usernamestr===""||usernamestr==null){
+            alert("用户名为空");
+            return;
+        }
+        if(passwordstr===""||passwordstr==null){
+            alert("密码为空");
+            return;
+        }
+
+        $.ajax({
+            url: httpurl,//请求的url地址
+            type: 'post',//设置请求的http方式，method也可以
+            dataType: 'json',//将服务器端返回的数据直接认定为是这个格式，然后会做一些自动的处理(如果是json字符串，会自动转化为js对象),服务器返回的默认格式是text/html格式
+            data: {//向服务器端发送的数据
+                username: usernamestr,
+                password: passwordstr,
+                uniqueDeviceIdentifier: 2
+            },
+            success: function (data, textStatus, jqXHR) {//请求成功之后执行的回调函数
+                if(data.resultCode!==200){
+                    alert("用户名或密码错误")
+                    return;
+                }
+                var token = data.extras.token;
+                console.log(token);
+                location.href = "Listview1.html?" + "token=" + token + "&&" + usernamestr;
+
+            },
+            error: function (jqXHR, textStatus, errorThrown) {//请求失败之后执行的回调函数
+                console.log(errorThrown);
+            }
+        });
+    }
+
+</script>
+
+</body>
+</html>
