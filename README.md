@@ -14,9 +14,9 @@ JamTools一个小工具集,包含了截屏、录屏、文字识别、多媒体�
 │  test.py //主程序文件.测试文件.
 │  main.py //不是主程序,只是用来存放引入库的文件,防止打包出错
 │  WEBFilesTransmitter.py //网页端传输模块
-│  WEBFilesTransmittertest.py //网页端传输模块测试
+│  WEBFilesTransmittertest.py //网页端传输模块测试例子,单独ui
 │  clientFilesTransmitter.py //客户端传输模块
-│  clientFilesTransmittertest.py //客户端传输测试
+│  clientFilesTransmittertest.py //客户端传输测试例子,单独ui
 │  jamcontroller.py //酱控制模块
 │  jamscreenshot.py //截屏模块
 │  jamroll_screenshot.py //滚动截屏模块
@@ -34,8 +34,9 @@ JamTools一个小工具集,包含了截屏、录屏、文字识别、多媒体�
 │  requirement.txt //依赖列表
 │  audio_sniffer-x64.dll //windows下录音驱动
 │  screen-capture-recorder-x64.dll //windows下录屏驱动
-│  voice_and_text.py //已弃用,语音合成与语音转文字模块,由于api调用完了,暂不支持,如需使用可自行替换api
+│  voice_and_text.py //已弃用,语音合成+语音转文字+播放模块,由于api调用完了,暂不支持,如需使用可自行替换api
 │  txpythonsdk.py //已弃用,腾讯Ai平台的sdk改写
+│  log.log //日志文件
 │  README.md
 │  LICENSE
 │  
@@ -149,12 +150,38 @@ JamTools一个小工具集,包含了截屏、录屏、文字识别、多媒体�
         连接测试.py
         透视变换test.py
         透视裁剪test.py
-        
-        
+            
 ```
 
 
 # 使用及依赖
+测试环境python3.7.8
+```c
+Wheel
+Pillow
+pynput
+fbs 
+qrcode
+requests
+PyInstaller==3.4
+baidu-aip
+PyQt5==5.15.2
+PyQt5-sip==12.8.1
+PyQt5-stubs==5.14.2.2
+numpy
+#opencv-contrib-python==3.4.2.17//项目中包含各平台简化版opencv编译的库,如果需要完整cv2支持,则安装这个包
+Cython==0.29.21//如果需要编译
+#PyAudio//如果需要机器人声音
+#SpeechRecognition//如果需要机器人声音
+#tencentcloud-sdk-python//如果需要机器人声音
+setuptools==50.3.0
+```
+也可以通过```c  pip3 install -r requirement.txt```安装所有依赖
+
+此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
+
+配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看
+
 # >>>功能简介:
 1.酱截屏：截图功能.快捷键Alt+z；支持选区截图、多边形截图、滚动截屏等、支持复制截屏文件或图像数据到剪切板、支持截图中文字识别(翻译)、图像识别等，左侧工具栏提供画笔橡皮擦等；支持滚动截屏，滚动过程中支持自动和手动滚动。
 
