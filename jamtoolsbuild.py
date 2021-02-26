@@ -19,7 +19,7 @@ if __name__ == '__main__':
     from test import VERSON
 
     WithCompile = False  # 是否编译
-    Debug = True  # 是否debug模式
+    Debug = False  # 是否debug模式
     print("copy test.py->PyQt5CoreModels.py")
     testsize = os.path.getsize("test.py")
     coresize = os.path.getsize("PyQt5CoreModels.py")
