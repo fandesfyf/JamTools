@@ -2,11 +2,11 @@
 JamTools一个小工具集,包含了截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能,完全开源!
 
 部分单独的模块已整理为项目：
-截屏功能:https://github.com/fandesfyf/Jamscreenshot
+[截屏功能](https://github.com/fandesfyf/Jamscreenshot)
 
-滚动截屏功能：https://github.com/fandesfyf/roll_screenshot
+[滚动截屏功能](https://github.com/fandesfyf/roll_screenshot)
 
-视频播放器：https://github.com/fandesfyf/JamVideoPlayer
+[视频播放器](https://github.com/fandesfyf/JamVideoPlayer)
 
 # 项目目录
 ```c
@@ -102,15 +102,12 @@ JamTools一个小工具集,包含了截屏、录屏、文字识别、多媒体�
 │      ├─icons //图标文件夹
 │      │  │  Icon.ico
 │      │  │  README.md
-│      │  │  
 │      │  ├─base
 │      │  │      512.png
-│      │  │      
 │      │  ├─linux
 │      │  │      512.png
-│      │  │      
 │      │  └─mac
-│      │          512.png
+│      │         512.png
 │      │          
 │      ├─python //存放源码的文件夹
 │      │  │  clientFilesTransmitter.py
@@ -180,7 +177,7 @@ setuptools==50.3.0
 
 此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
-配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看
+配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
 
 # >>>功能简介:
 1.酱截屏：截图功能.快捷键Alt+z；支持选区截图、多边形截图、滚动截屏等、支持复制截屏文件或图像数据到剪切板、支持截图中文字识别(翻译)、图像识别等，左侧工具栏提供画笔橡皮擦等；支持滚动截屏，滚动过程中支持自动和手动滚动。
