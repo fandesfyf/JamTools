@@ -170,7 +170,7 @@ Cython==0.29.21//如果需要编译
 #tencentcloud-sdk-python//如果需要机器人声音
 setuptools==50.3.0
 ```
-也可以通过```c  pip3 install -r requirement.txt```安装所有依赖
+也可以通过```  pip3 install -r requirement.txt```安装所有依赖
 
 此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
