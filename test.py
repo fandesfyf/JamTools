@@ -10,7 +10,7 @@ import socket
 import gc
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, TrThread
+    SECRECT_KEY, PLATFORM_SYS, TrThread,mutilocr
 
 import http.client
 import os, re
@@ -3212,7 +3212,6 @@ class Swindow(QMainWindow):
                                                     QStandardPaths.writableLocation(QStandardPaths.PicturesLocation),
                                                     "img Files (*.jpg *.PNG *.JPG *.JPEG *.BMP)")
         if files != []:
-            self.ocrthread = []
             print(files)
             self.ocr_textEdit.clear()
             if not self.OCR:
@@ -3222,27 +3221,38 @@ class Swindow(QMainWindow):
                 self.show()
                 self.hide()  # 删除闪退
             QApplication.processEvents()
-            for file in files:
-                self.statusBar().showMessage('开始识别图片')
+            def mutil_cla_signalhandle(filename,text):
+                print("mutil_cla_signalhandle active")
+                if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
+                    self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
+                    self.ocr_textEdit.insertPlainText(text + '\n' * 2)
+                    self.statusBar().showMessage('识别{}完成！'.format(filename))
+            self.mutiocrthread=mutilocr(files)
+            self.mutiocrthread.ocr_signal.connect(mutil_cla_signalhandle)
+            self.mutiocrthread.statusbarsignal.connect(self.statusBar().showMessage)
+            self.mutiocrthread.start()
 
-                filename = os.path.basename(file)
 
-                with open(file, 'rb')as i:
-                    img = i.read()
-                print("正在识别图片：\t" + filename)
-                self.statusBar().showMessage('正在识别: ' + filename)
-
-                def mutil_cla_signalhandle(text):
-                    if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
-                        self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
-                        self.ocr_textEdit.insertPlainText(text + '\n' * 2)
-                        self.statusBar().showMessage('识别完成！')
-
-                th = OcrimgThread(filename, img, 1)
-                th.result_show_signal.connect(mutil_cla_signalhandle)
-                th.start()
-                self.ocrthread.append(th)
-                QApplication.processEvents()
+            # for file in files:
+            #     self.statusBar().showMessage('开始识别图片')
+            #     filename = os.path.basename(file)
+            #     with open(file, 'rb')as i:
+            #         img = i.read()
+            #     print("正在识别图片：\t" + filename)
+            #     self.statusBar().showMessage('正在识别: ' + filename)
+            #
+            #     def mutil_cla_signalhandle(text):
+            #         if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
+            #             self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
+            #             self.ocr_textEdit.insertPlainText(text + '\n' * 2)
+            #             self.statusBar().showMessage('识别完成！')
+            #
+            #     th = OcrimgThread(filename, img, 1)
+            #     th.result_show_signal.connect(mutil_cla_signalhandle)
+            #     th.start()
+            #     th.wait()
+            #     self.ocrthread.append(th)
+            #     QApplication.processEvents()
 
             self.change_show_item([self.ocr_groupBox])
         else:

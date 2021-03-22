@@ -22,7 +22,7 @@ from socketserver import ThreadingMixIn
 
 import qrcode
 from PIL import ImageQt
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QObject, QSettings
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QObject, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QDesktopServices, QIcon
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGroupBox, QComboBox, QFileDialog, QCheckBox, QLineEdit
 
@@ -546,30 +546,46 @@ class serverloghandle(QThread):
     def run(self) -> None:
         self.servering = True
         olddir = ""
+
+        def initems(list1, target):
+            for i in list1:
+                if i in target:
+                    return True
+            return False
+
         while self.servering:
             if not self.q.empty():
                 log = self.q.get()
                 ip = log["ip"]
                 actiontime = log["time"].split()[1]
-                # if ip not in self.iplist:
-                #     self.iplist.append(ip)
-                #     self.showm_signal.emit("{}正在访问你的共享文件\n{}".format(ip, actiontime))
-                # print("action", log["action"])
-                # if type(log["action"][0]) == str and log["action"][1] == "200":
-                #     if "get" in log["action"][0].lower():
-                #         getfile = urllib.parse.unquote(log["action"][0].split()[1])
-                #         if getfile[-1] == "/":
-                #             print("正在访问:", getfile)
-                #             if getfile != olddir:
-                #                 olddir = getfile
-                #                 self.showm_signal.emit("{}正在访问{}\nat{}".format(ip, getfile, actiontime))
-                #         else:
-                #             print("下载了", getfile)
-                #             self.showm_signal.emit("{}下载了一个文件:\n{}\nat{}".format(ip, getfile, actiontime))
-                #     elif "post" in log["action"][0].lower():
-                #         self.showm_signal.emit("{}上传了一个文件到共享文件夹\nat{}".format(ip, actiontime))
+                ms = ""
+                print("action", log["action"])
+                if ip not in self.iplist:
+                    self.iplist.append(ip)
+                    ms = "{}正在访问你的共享文件\n{}".format(ip, actiontime)
 
-            time.sleep(0.1)
+                elif type(log["action"][0]) == str and log["action"][1] == "200":
+                    if "get" in log["action"][0].lower():
+                        getfile = urllib.parse.unquote(log["action"][0].split()[1])
+                        print("getfile", getfile)
+                        if getfile[-1] == "/" or "/home" in getfile:
+                            print("正在访问:", getfile)
+                            if getfile != olddir:
+                                olddir = getfile
+                                ms = "{}正在访问{}\nat{}".format(ip, getfile, actiontime)
+                        elif not initems(["/favicon.ico", "jamcss", "jamjs", "jamhtmlpic"], getfile):
+                            print("下载了", getfile)
+                            ms = "{}下载了一个文件:\n{}\nat{}".format(ip, getfile, actiontime)
+                    elif "post" in log["action"][0].lower():
+                        ms = "{}上传了一个文件到共享文件夹\nat{}".format(ip, actiontime)
+                if ms != "":
+                    with open(os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+                                           "jamWebTransmitter.log"), "a", encoding="utf-8")as log:
+                        log.write(actiontime + ms.replace("\n", "") + "\n")
+                    self.showm_signal.emit(ms)
+                time.sleep(0.2)
+            else:
+                time.sleep(0.5)
 
     def quit(self) -> None:
         self.servering = False
@@ -780,7 +796,9 @@ class WebFilesTransmitterBox(QGroupBox):
                 QSettings('Fandes', 'jamtools').setValue('transmitter/sharepath', os.path.split(files[0])[0])
 
         def choicedir():
-            dir = QFileDialog.getExistingDirectory(self, "选择要共享的文件夹", "")
+            dir = QFileDialog.getExistingDirectory(self, "选择要共享的文件夹",
+                                                   QSettings('Fandes', 'jamtools').value('transmitter/sharepath', "",
+                                                                                         str))
             print(dir)
             if len(dir):
                 self.WebFilesTransmitter.show_a_dir(dir, self.transmitter_web_allowupload.isChecked(),

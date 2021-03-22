@@ -6,6 +6,7 @@
 # @Software: PyCharm
 import hashlib
 import http.client
+import os
 import random
 import re
 import sys
@@ -23,7 +24,6 @@ API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIX
 SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
 print("platform is", sys.platform)
 PLATFORM_SYS = sys.platform
-
 
 
 class TipsShower(QLabel):
@@ -87,9 +87,9 @@ class TipsShower(QLabel):
 
 class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     clear_signal = pyqtSignal()
-    showm_signal=pyqtSignal(str)
+    showm_signal = pyqtSignal(str)
 
-    def __init__(self, parent=None,enter_tra=False):
+    def __init__(self, parent=None, enter_tra=False):
         super().__init__(parent)
         self.parent = parent
         self.action = self.show
@@ -134,29 +134,31 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         # self.transtalater_signal.emit()
         # transtalater.Bdtra()
         self.showm_signal.emit("正在翻译..")
-        text=self.toPlainText()
+        text = self.toPlainText()
         text = re.sub(r'[^\w]', '', text).replace('_', '')
         print(text)
-        n=0
+        n = 0
         for i in text:
             if self.is_alphabet(i):
                 n += 1
         if n / len(text) > 0.4:
             print("is en")
-            fr="en"
-            to="zh"
+            fr = "en"
+            to = "zh"
         else:
-            fr="zh"
-            to="en"
-        self.traThread = TrThread(self.toPlainText(),fr, to)
+            fr = "zh"
+            to = "en"
+        self.traThread = TrThread(self.toPlainText(), fr, to)
         self.traThread.resultsignal.connect(self.insertPlainText)
         self.traThread.start()
+
     def is_alphabet(self, uchar):
         """判断一个unicode是否是英文字母"""
         if (u'\u0041' <= uchar <= u'\u005a') or (u'\u0061' <= uchar <= u'\u007a'):
             return True
         else:
             return False
+
     def textAreaChanged(self, minsize=100):
         self.document.adjustSize()
         newWidth = self.document.size().width() + 25
@@ -297,6 +299,38 @@ class TrThread(QThread):
             self.resultsignal.emit(text)
 
 
+class mutilocr(QThread):
+    statusbarsignal = pyqtSignal(str)
+    ocr_signal = pyqtSignal(str, str)
+
+    def __init__(self, files):
+        super(mutilocr, self).__init__()
+        self.files = files
+        self.threadlist=[]
+        self.filename=""
+
+    def run(self) -> None:
+        for file in self.files:
+            self.statusbarsignal.emit('开始识别图片')
+            filename = os.path.basename(file)
+            self.filename=filename
+            with open(file, 'rb')as i:
+                img = i.read()
+            print("正在识别图片：\t" + filename)
+            self.statusbarsignal.emit('正在识别: ' + filename)
+
+            th = OcrimgThread(filename, img, 1)
+            th.result_show_signal.connect(self.mutil_cla_signalhandle)
+            th.start()
+            th.wait()
+            self.threadlist.append(th)
+
+    def mutil_cla_signalhandle(self,text):
+        print("aaaa mutil_cla_signalhandle")
+        self.ocr_signal.emit(self.filename, text)
+        print("已识别{}".format(self.filename))
+
+
 class OcrimgThread(QThread):
     # simple_show_signal = pyqtSignal(str)
     result_show_signal = pyqtSignal(str)
@@ -318,15 +352,15 @@ class OcrimgThread(QThread):
                 message = client.basicAccurate(self.args)  # 通用文字高精度识别，每天 800 次免费
                 text = ''
                 # 输出文本内容
-                # print(message.values())
+                # print("xxx", message.values())
                 for res in message.get('words_result'):
                     text += res.get('words') + '\n'
 
             except:
-                print("Unexpected error:", sys.exc_info())
+                print("Unexpected error:", sys.exc_info(), "jampublic l326")
                 self.statusbar_signal.emit('识别出错！请确保网络畅通')
                 text = str(sys.exc_info()[0])
-            print(text)
+            # print(text)
             if text == '':
                 text = '空'
 
