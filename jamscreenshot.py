@@ -1636,28 +1636,28 @@ class Slabel(QLabel):  # 区域截图功能
     def choice(self):
         self.choicing = True
 
-        botton_boxw = self.x1
-        botton_boxh = self.y1
+        botton_boxw = self.x1+5
+        botton_boxh = self.y1+5
         dx = abs(self.x1 - self.x0)
         dy = abs(self.y1 - self.y0)
         x = QApplication.desktop().width()
         y = QApplication.desktop().height()
-        if dx < self.botton_box.width():
+        if dx < self.botton_box.width()+10:
             if max(self.x1, self.x0) + self.botton_box.width() > x:
-                botton_boxw = min(self.x0, self.x1) - self.botton_box.width()
+                botton_boxw = min(self.x0, self.x1) - self.botton_box.width()-5
             else:
-                botton_boxw = max(self.x1, self.x0)
+                botton_boxw = max(self.x1, self.x0)+5
         else:
             if self.x1 > self.x0:
-                botton_boxw = self.x1 - self.botton_box.width()
-        if dy < self.botton_box.height() + 100:
+                botton_boxw = self.x1 - self.botton_box.width()-5
+        if dy < self.botton_box.height() + 105:
             if max(self.y1, self.y0) + self.botton_box.height() + 20 > y:
-                botton_boxh = min(self.y0, self.y1) - self.botton_box.height()
+                botton_boxh = min(self.y0, self.y1) - self.botton_box.height()-5
             else:
-                botton_boxh = max(self.y0, self.y1)
+                botton_boxh = max(self.y0, self.y1)+5
         else:
             if self.y1 > self.y0:
-                botton_boxh = self.y1 - self.botton_box.height()
+                botton_boxh = self.y1 - self.botton_box.height()-5
         self.botton_box.move(botton_boxw, botton_boxh)
         self.botton_box.show()
 
