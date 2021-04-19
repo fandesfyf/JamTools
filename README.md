@@ -214,7 +214,7 @@ PyQt5==5.15.2
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
 numpy
-opencv-contrib-python==3.4.2.17//项目中包含各平台简化版opencv编译的库,如果需要完整cv2支持,则安装这个版本的包
+opencv-contrib-python==3.4.2.17//如果需要完整cv2支持,则安装这个版本的包,一定是这个版本;如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载删减版
 Cython==0.29.21//如果需要编译
 #PyAudio//如果需要机器人声音
 #SpeechRecognition//如果需要机器人声音
