@@ -1687,7 +1687,8 @@ class Slabel(QLabel):  # 区域截图功能
             # self.final_get_img.save("jam_outputfile.png")
             QApplication.clipboard().setPixmap(self.final_get_img)
             self.clear_and_hide()
-            return
+            print("已复制到剪切板")
+            return #直接运行本文件时到此结束
         self.manage_data()
 
     def cutpic(self, save_as=0):
@@ -1735,8 +1736,9 @@ class Slabel(QLabel):  # 区域截图功能
             elif save_as == 2:
                 return
         if __name__ == '__main__':  # 当直接允许本文件时直接保存,测试用
-            # self.final_get_img.save("jam_outputfile.png")
+            self.final_get_img.save("j_temp/jam_outputfile.png")
             QApplication.clipboard().setPixmap(self.final_get_img)
+            print("已复制到剪切板")
             self.clear_and_hide()
             return
         # 以下为作者软件的保存操作,懒得删了...

@@ -23,6 +23,8 @@ from pynput.mouse import Listener as  MouseListenner
 
 from jampublic import Commen_Thread, TipsShower
 
+if not os.path.exists("j_temp"):
+    os.mkdir("j_temp")
 
 class PicMatcher:
     def __init__(self, nfeatures=500, draw=False):
@@ -186,6 +188,8 @@ class Splicing_shots(QObject):
         self.in_rolling = False
         print("end merge")
         cv2.imwrite("j_temp/jam_outputfile.png", self.finalimg)
+
+        print("长图片保存到j_temp/jam_outputfile.png")
         # cv2.imshow("finalimg", self.finalimg)
         # cv2.waitKey(0)
 

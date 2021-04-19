@@ -10,7 +10,7 @@ PyQt5==5.15.2
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
 numpy
-#opencv-contrib-python==3.4.2.17
+opencv-contrib-python==3.4.2.17
 Cython==0.29.21
 #PyAudio
 #SpeechRecognition
