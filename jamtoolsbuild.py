@@ -87,7 +87,7 @@ if __name__ == '__main__':
     if os.path.exists("src/main/resources/base"):
         shutil.rmtree("src/main/resources/base")
     os.makedirs("src/main/resources/base/bin")
-    includedir = ["html", "bin/"+PLATFORM_SYS]
+    includedir = ["html", "bin/" + PLATFORM_SYS]
     includefiles = ["log.log"]
     if PLATFORM_SYS == "win32":
         includefiles.extend(["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"])
@@ -140,12 +140,16 @@ if __name__ == '__main__':
     freezer = subprocess.Popen('fbs freeze {}'.format("--debug" if Debug else ""), shell=True, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE)
     freezer.wait()
-    if PLATFORM_SYS == "darwin":
-        a = input("是否打包为安装文件(dmg),Y/N:")
-        if a.lower() == "y":
+    if PLATFORM_SYS != "win32":
+        a = input("是否打包为安装文件,Y/N:(回车默认Y)")
+        if "y" in a.lower() or len(a) == 0:
             print("开始打包镜像")
             freezer = subprocess.Popen('fbs installer', shell=True,
                                        stdin=subprocess.PIPE,
                                        stdout=subprocess.PIPE)
             freezer.wait()
-    print('finished')
+            print("打包完成")
+            if PLATFORM_SYS == "linux":
+                print("linux下自行运行sudo dpkg -i target/JamTools.deb安装")
+
+    print('finished all')

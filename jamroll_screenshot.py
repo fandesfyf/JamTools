@@ -41,6 +41,7 @@ class PicMatcher:  # 图像匹配类
         tempgoods = []
         distances = {}#储存距离计数的数组
         for m, n in matches:
+            print(m.distance)
             if m.distance == 0:
                 pos0 = kps1[m.queryIdx].pt
                 pos1 = kps2[m.trainIdx].pt

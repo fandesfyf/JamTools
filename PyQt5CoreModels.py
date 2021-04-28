@@ -10,7 +10,7 @@ import socket
 import gc
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, TrThread,mutilocr
+    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr
 
 import http.client
 import os, re
@@ -53,7 +53,7 @@ if PLATFORM_SYS == "win32":
 if PLATFORM_SYS == "darwin":
     import pynput.keyboard._darwin
     import pynput.mouse._darwin
-elif PLATFORM_SYS=="linux":
+elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 # APP_ID = QSettings('Fandes', 'jamtools').value('BaiduAI_APPID', '17302981', str)  # 获取的 ID，下同
@@ -264,7 +264,7 @@ class Recordingthescreen(QObject):
             self.delay = self.parent.delay_t.value()
             if self.parent.sp_rec.isChecked():
                 profile = ' baseline -level 3.0 '
-            if self.parent.hardware_rec.isChecked() and PLATFORM_SYS=="win32":
+            if self.parent.hardware_rec.isChecked() and PLATFORM_SYS == "win32":
                 profile = ' high '
                 self.codec = ' h264_nvenc '
 
@@ -275,7 +275,7 @@ class Recordingthescreen(QObject):
             vi_divice = '抓屏'
             if len(self.parent.audio_divice) != 0:
                 au_divice = self.parent.audio_divice[0]
-            print(sys.exc_info(),273)
+            print(sys.exc_info(), 273)
         self.recording = True
         print(self.x, self.y, self.w, self.h)
         if not (
@@ -310,7 +310,7 @@ class Recordingthescreen(QObject):
                                                  "QPushButton{border:6px solid rgb(50, 50, 50)}"
                                                  )
         except:
-            print(sys.exc_info(),308)
+            print(sys.exc_info(), 308)
         self.c = 0
         self.parent.counter.display('00:00')
         self.timer.start(1000)
@@ -318,11 +318,11 @@ class Recordingthescreen(QObject):
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
         w = str(int(self.w * self.scale // 2) * 2)
 
-        area = ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format( self.mouse,
-                                                                                                          self.x,
-                                                                                                          self.y,
-                                                                                                          self.w,
-                                                                                                          self.h)
+        area = ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(self.mouse,
+                                                                                      self.x,
+                                                                                      self.y,
+                                                                                      self.w,
+                                                                                      self.h)
         audio = ' '
         video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
 
@@ -338,7 +338,7 @@ class Recordingthescreen(QObject):
 
             vf = ' -vf scale=' + w + ':-2 '
             if vi_divice == '抓屏':
-                if PLATFORM_SYS=="win32":
+                if PLATFORM_SYS == "win32":
                     area = '  -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(
                         self.mouse,
                         self.x,
@@ -347,30 +347,34 @@ class Recordingthescreen(QObject):
                         self.h)
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
-                    video=" -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w,self.h,self.mouse,self.x,self.y)
+                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
+                                                                                                 self.mouse, self.x,
+                                                                                                 self.y)
             else:
                 vf = ' -vf crop={}:{}:{}:{} '.format(self.w, self.h, self.x, self.y)
-                if PLATFORM_SYS=="win32":
-                    video = ' -thread_queue_size 16 -f dshow -rtbufsize 500M -i video="{}"  '.format( vi_divice)
-                elif PLATFORM_SYS=="darwin":
+                if PLATFORM_SYS == "win32":
+                    video = ' -thread_queue_size 16 -f dshow -rtbufsize 500M -i video="{}"  '.format(vi_divice)
+                elif PLATFORM_SYS == "darwin":
                     video = ' -thread_queue_size 16 -f avfoundation -rtbufsize 500M -i {}:  '.format(
                         self.parent.video_divice.index(vi_divice))
                 self.Nondestructive = ' '
 
-            out_file = self.Nondestructive + vf + ' -r {} -profile:v '.format(self.fps) + profile + '  -pix_fmt yuv420p ' \
-                                                                             '-preset:v  ultrafast  -vcodec libx264 ' + \
+            out_file = self.Nondestructive + vf + ' -r {} -profile:v '.format(
+                self.fps) + profile + '  -pix_fmt yuv420p ' \
+                                      '-preset:v  ultrafast  -vcodec libx264 ' + \
                        ' "' + temp_path + '/j_temp/temp_video.mp4"'
 
         elif self.file_format == 'mp3':  # 音频
             video = ' '
             if au_divice != '无':
-                adv=au_divice
+                adv = au_divice
             else:
                 adv = self.parent.audio_divice[0]
-            if PLATFORM_SYS=="win32":
+            if PLATFORM_SYS == "win32":
                 audio += ' -thread_queue_size 16 -f dshow -rtbufsize 50M -i audio="{0}" '.format(adv)
-            elif PLATFORM_SYS=="darwin":
-                audio += ' -thread_queue_size 16 -f avfoundation -rtbufsize 50M -i :{} '.format(self.parent.audio_divice.index(adv))
+            elif PLATFORM_SYS == "darwin":
+                audio += ' -thread_queue_size 16 -f avfoundation -rtbufsize 50M -i :{} '.format(
+                    self.parent.audio_divice.index(adv))
             out_file = ' -preset:a  ' + self.preset + ' ' + QStandardPaths.writableLocation(
                 QStandardPaths.MoviesLocation) + "/Jam_screenrecord/" + self.name + '.mp3'
 
@@ -386,37 +390,40 @@ class Recordingthescreen(QObject):
                     #     audio += ' -thread_queue_size 16 -f avfoundation -rtbufsize 50M -i :{} '.format(
                     #         self.parent.audio_divice.index(adv))
                 else:
-                    adv=0
-                    video=" "
+                    adv = 0
+                    video = " "
 
             except:
-                print(sys.exc_info(),408)
+                print(sys.exc_info(), 408)
             vf = ' -vf scale=' + w + ':-2 '
             if vi_divice == '抓屏':
-                if PLATFORM_SYS=="win32":
+                if PLATFORM_SYS == "win32":
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
-                    audio=" "#linux 暂不支持录音
-                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,self.mouse, self.x, self.y)
+                    audio = " "  # linux 暂不支持录音
+                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
+                                                                                                 self.mouse, self.x,
+                                                                                                 self.y)
             else:
-                if "camera" in vi_divice.lower() or "摄像头"in vi_divice.lower():#摄像头
+                if "camera" in vi_divice.lower() or "摄像头" in vi_divice.lower():  # 摄像头
                     vf = ' '
                 else:
                     vf = ' -vf crop={}:{}:{}:{} '.format(self.w, self.h, self.x, self.y)
-                if PLATFORM_SYS=="win32":
-                    video = ' -thread_queue_size 16 -f dshow -rtbufsize 500M -i video="{}"  '.format( vi_divice)
-                elif PLATFORM_SYS=="darwin":
+                if PLATFORM_SYS == "win32":
+                    video = ' -thread_queue_size 16 -f dshow -rtbufsize 500M -i video="{}"  '.format(vi_divice)
+                elif PLATFORM_SYS == "darwin":
                     video = ' -thread_queue_size 16 -f avfoundation -rtbufsize 500M -i {}:{}  '.format(
-                        self.parent.video_divice.index(vi_divice),self.parent.audio_divice.index(adv)if au_divice != '无' else "")
+                        self.parent.video_divice.index(vi_divice),
+                        self.parent.audio_divice.index(adv) if au_divice != '无' else "")
                 self.Nondestructive = ' '
 
             #     -vf crop=1920:500:500:0
-            out_file = self.Nondestructive + vf + ' -r {} -profile:v '.format(self.fps) + profile + '  -pix_fmt yuv420p ' \
-                                                                             '-preset:v ' + self.preset + \
+            out_file = self.Nondestructive + vf + ' -r {} -profile:v '.format(
+                self.fps) + profile + '  -pix_fmt yuv420p ' \
+                                      '-preset:v ' + self.preset + \
                        ' -preset:a  ' + self.preset + '  -vcodec ' + \
                        self.codec + ' ' + QStandardPaths.writableLocation(
                 QStandardPaths.MoviesLocation) + "/Jam_screenrecord/" + self.name + '.' + self.file_format
-
 
         self.record = subprocess.Popen(
             f_path + video
@@ -637,26 +644,6 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.changesimple.setCheckable(True)
         self.changesimple.triggered.connect(self.parent.changesimple)
 
-    # def change_control_fun(self):
-    #     try:
-    #         if self.parent.settings.value('can_controll', False, type=bool):
-    #             self.parent.settings.setValue('can_controll', False)
-    #             self.parent.can_controll = False
-    #             try:
-    #                 self.parent.can_controll_box.setChecked(False)
-    #             except:
-    #                 pass
-    #             self.control.setChecked(False)
-    #         else:
-    #             self.parent.settings.setValue('can_controll', True)
-    #             self.parent.can_controll = True
-    #             try:
-    #                 self.parent.can_controll_box.setChecked(True)
-    #             except:
-    #                 pass
-    #             self.control.setChecked(True)
-    #     except:
-    #         print('未初始化')
 
     def connect_record_fun(self):
         self.parent.recorder.recordchange()
@@ -713,10 +700,10 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
 
     def iconClied(self, e):
         "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"
-        if e == 2:
+        if e == 3:
             self.parent.changesimple()
-        elif e == 3 and not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
-            self.parent.show()
+        # elif e == 3 and not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
+        #     self.parent.show()
 
     def open_file(self):
         now = time.time()
@@ -932,12 +919,15 @@ class Small_Ocr(QLabel):
         &rsv_sug7=101&rsv_sug2=0&inputT=1398&rsv_sug4=2340""".format(self.small_show.toPlainText())
         QDesktopServices.openUrl(QUrl(url))
 
+
 class FuncBox(QGroupBox):
-    def __init__(self,parent):
+    def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
         self.setGeometry(QRect(176, 30, 580, 500))
-        self.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 7))
+        self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 7))
         self.hide()
+
+
 class ImgShower(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1032,7 +1022,7 @@ class Swindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        groupfont = QFont('黑体'if PLATFORM_SYS=="win32" else"", 7)
+        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
         self.settings = QSettings('Fandes', 'jamtools')
         self.main_groupBox = QGroupBox(self)
         self.main_groupBox.setGeometry(QRect(10, 30, 160, 490))
@@ -1110,7 +1100,7 @@ class Swindow(QMainWindow):
                     width: 10px; 
                     margin: 1px 1px 1px 1px; 
                 } ''')
-        self.help_text.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.help_text.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.help_text.setReadOnly(True)
 
         self.delay = 0
@@ -1132,8 +1122,8 @@ class Swindow(QMainWindow):
         first_distance = 25
         s_distance = 30
         d_distance = 58
-        btn_font = QFont('黑体'if PLATFORM_SYS=="win32" else"", 10)
-        QToolTip.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 8))
+        btn_font = QFont('黑体' if PLATFORM_SYS == "win32" else "", 10)
+        QToolTip.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 8))
         self.ss_btn.setToolTip('截图功能Alt+Z')
         self.ss_btn.setStatusTip('截图功能Alt+Z')
         self.ss_btn.resize(110, 35)
@@ -1208,16 +1198,16 @@ class Swindow(QMainWindow):
         # self.plan_btn.setIcon(QIcon(":/timetable.png"))
 
         # self.ocr_textEdit.hide()
-        self.ocr_textEdit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         # self.ocr_textEdit.move(150, 50)
         # self.ocr_textEdit.resize(400, 300)
         self.ocr_textEdit.move(40, 35)
         self.ocr_textEdit.resize(480, 350)
-        self.cla_textEdit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.cla_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.cla_textEdit.move(170, 50)
         self.cla_textEdit.resize(211, 300)
 
-        groupfont = QFont('黑体'if PLATFORM_SYS=="win32" else"", 7)
+        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
         self.view_groupBox.setTitle("view")
         self.tra_groupBox.setTitle("Translate")
         self.Transforma_groupBox.setTitle("Transformation")
@@ -1242,7 +1232,7 @@ class Swindow(QMainWindow):
                             padding:2px 4px;
                             background-color:rgb(250,250,250);}"""
                            """QComboBox{combobox-popup: 0;padding:2px 4px;background-color:rgb(250,250,250);}"""
-                           
+
                            """QSpinBox{padding:2px 4px;background-color:rgb(250,250,250);
                                            border:2px solid rgb(140, 140, 140);}"""
                            """QDoubleSpinBox{padding:2px 6px;background-color:rgb(250,250,250);
@@ -1601,6 +1591,7 @@ class Swindow(QMainWindow):
             self.controll_delayrecord.setSuffix('秒')
             self.controll_delayrecord.setStatusTip('设置倒计时开始录制')
             self.controll_delayrecord.setMaximum(99999)
+
             #
             # modelbox = QGroupBox("模式:", recordbox)
             # modelbox.setGeometry(self.controll_roller.x() + self.controll_roller.width() + 10,
@@ -1796,7 +1787,6 @@ class Swindow(QMainWindow):
         for i in paths:
             if os.path.splitext(i)[1].lower() == '.jam' and i != 'current.jam':
                 self.control_list_widget.addItem(i)
-
 
     def update_samrate(self, rates):
         # print(rates)
@@ -2002,7 +1992,7 @@ class Swindow(QMainWindow):
         btn1.setGeometry(30, 380, 100, 100)
         btn1.clicked.connect(self.screensh)
         # btn1.setShortcut('Alt+Z')
-        btn1.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 10))
+        btn1.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         btn1.setIcon(QIcon(":/screenshot.png"))
         btn1.setStyleSheet(
             "QPushButton:hover{background-color:rgb(200,200,50)}"
@@ -2181,7 +2171,7 @@ class Swindow(QMainWindow):
 
             self.traforma_tab = QTabWidget(self.Transforma_groupBox)
             # self.traforma_tab.setTabShape(QTabWidget.Triangular)
-            self.traforma_tab.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+            self.traforma_tab.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
             self.traforma_tab.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;}""")
             self.tab1 = QWidget()
             self.tab1.setStyleSheet("background-color:rgb(240,240,240)")
@@ -2337,7 +2327,7 @@ class Swindow(QMainWindow):
             pic_format_box.setGeometry(350, self.t_pic_sp.y() - 6, 100, 45)
             self.t_pic_format = QComboBox(pic_format_box)
             self.t_pic_format.addItems(["jpg", "png", "BMP", "ico"])
-            self.t_pic_format.setGeometry(10, 15,pic_format_box.width()-20,25)
+            self.t_pic_format.setGeometry(10, 15, pic_format_box.width() - 20, 25)
             # self.t_pic_format.currentText()
 
             self.t_pic_quality = QSpinBox(t_pic_box)
@@ -2879,7 +2869,7 @@ class Swindow(QMainWindow):
 
             self.hardware_transforma = QCheckBox(self.Transforma_groupBox)
             self.hardware_transforma.move(365, 30)
-            if PLATFORM_SYS=="win32":
+            if PLATFORM_SYS == "win32":
                 self.hardware_transforma.setText('硬件加速')
                 self.hardware_transforma.setChecked(self.settings.value('rec_settings/hardware_rec', False, type=bool))
                 self.hardware_transforma.stateChanged.connect(
@@ -2896,7 +2886,7 @@ class Swindow(QMainWindow):
                 self.hardware_transforma.hide()
 
             self.transforma_stop = QPushButton(self.Transforma_groupBox)
-            self.transforma_stop.setGeometry(420 if PLATFORM_SYS=="darwin" else 330, 30, 18, 18)
+            self.transforma_stop.setGeometry(420 if PLATFORM_SYS == "darwin" else 330, 30, 18, 18)
             self.transforma_stop.setText('X')
             self.transforma_stop.setToolTip('停止所有处理！')
             self.transforma_stop.setStatusTip('停止所有处理！')
@@ -2913,7 +2903,7 @@ class Swindow(QMainWindow):
         elif PLATFORM_SYS == "darwin":
             f = '-f avfoundation -list_devices true -i ""'
         else:
-            f=' -hide_banner -devices '
+            f = ' -hide_banner -devices '
         record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
                                   stdin=subprocess.PIPE,
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
@@ -2954,7 +2944,7 @@ class Swindow(QMainWindow):
                         audio_divice.append(line[3:])
             print(video_divice, audio_divice)
         else:
-            video_divice=["尚未支持"]
+            video_divice = ["尚未支持"]
 
         self.audio_divice = audio_divice
         self.video_divice = video_divice
@@ -2988,13 +2978,11 @@ class Swindow(QMainWindow):
                 self.mouse_rec.setChecked(self.settings.value('rec_settings/mouse_rec', True, type=bool))
                 self.mouse_rec.stateChanged.connect(self.setting_save)
 
-
             self.sp_rec = QCheckBox(self.rec_groupBox)
             self.sp_rec.setGeometry(QRect(390, 260, 91, 19))
             self.sp_rec.setText("画质适配")
             self.sp_rec.setToolTip('由于默认采用的是H.264的high级别画质以增加压缩比，某些设备可能无法播放，勾选以使用Baseline画质以适配所有设备！')
             self.sp_rec.setStatusTip('由于默认采用的是H.264的high级别画质以增加压缩比，勾选以使用Baseline画质以适配所有设备！')
-
 
             self.hide_rec = QCheckBox(self.rec_groupBox)
             self.hide_rec.setGeometry(QRect(390, 290, 91, 19))
@@ -3019,7 +3007,7 @@ class Swindow(QMainWindow):
 
             self.hardware_rec = QCheckBox(self.rec_groupBox)
             self.hardware_rec.setGeometry(QRect(390, 350, 91, 19))
-            if PLATFORM_SYS=="win32":
+            if PLATFORM_SYS == "win32":
                 self.hardware_rec.setText("硬件编码")
                 self.hardware_rec.setToolTip(
                     '可使用独立显卡进行编码,能有效降低CPU占用,目前仅适配了NVIDIA的显卡;\n需要把显卡驱动更新到最新版!进入设备管理器-显示适配器-NVIDIA XXX-更新驱动程序')
@@ -3063,7 +3051,7 @@ class Swindow(QMainWindow):
             self.file_format = QComboBox(self.groupBox_2)
             self.file_format.setGeometry(QRect(10, 20, 100, 22))
             items_format = ['mp4', 'gif', 'flv', 'mkv', 'TS']
-            if PLATFORM_SYS!="linux":
+            if PLATFORM_SYS != "linux":
                 items_format.append('mp3')
             self.file_format.addItems(items_format)
             self.file_format.setToolTip('选择gif格式则只录视频;选择mp3格式则只录音频')
@@ -3157,7 +3145,7 @@ class Swindow(QMainWindow):
         if PLATFORM_SYS != "darwin":
             self.videosourse.addItem('抓屏')
         self.videosourse.addItems(self.video_divice)
-        if len(self.audio_divice) == 0 and PLATFORM_SYS !="linux":
+        if len(self.audio_divice) == 0 and PLATFORM_SYS != "linux":
             self.showm_signal.emit('找不到你的音频设备,请尝试重装本软件!')
         self.change_show_item([self.rec_groupBox])
 
@@ -3221,17 +3209,18 @@ class Swindow(QMainWindow):
                 self.show()
                 self.hide()  # 删除闪退
             QApplication.processEvents()
-            def mutil_cla_signalhandle(filename,text):
+
+            def mutil_cla_signalhandle(filename, text):
                 print("mutil_cla_signalhandle active")
                 if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                     self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
                     self.ocr_textEdit.insertPlainText(text + '\n' * 2)
                     self.statusBar().showMessage('识别{}完成！'.format(filename))
-            self.mutiocrthread=mutilocr(files)
+
+            self.mutiocrthread = mutilocr(files)
             self.mutiocrthread.ocr_signal.connect(mutil_cla_signalhandle)
             self.mutiocrthread.statusbarsignal.connect(self.statusBar().showMessage)
             self.mutiocrthread.start()
-
 
             # for file in files:
             #     self.statusBar().showMessage('开始识别图片')
@@ -3274,7 +3263,7 @@ class Swindow(QMainWindow):
         # self.simg.resize(w, 20)
         grabheight = self.simg.h
         self.simg.move(x, y - grabheight / 2)
-        font = QFont('黑体'if PLATFORM_SYS=="win32" else"", )
+        font = QFont('黑体' if PLATFORM_SYS == "win32" else "", )
         self.simg.small_show.resize(w + grabheight, grabheight)
         self.simg.small_show.move(0, grabheight)
         self.simg.smalltra.resize(w + grabheight, grabheight)
@@ -3521,7 +3510,7 @@ hhh(o゜▽゜)o☆）
             self.chat_view_textEdit.moveCursor(QTextCursor.End)
 
         self.chat_view_textEdit.textChanged.connect(move_to_end)
-        self.chat_view_textEdit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.chat_view_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.chat_view_textEdit.setReadOnly(True)
         if os.path.exists(documents_path + '/chat_record.txt'):
             with open(documents_path + '/chat_record.txt', 'r+')as file:
@@ -3536,7 +3525,7 @@ hhh(o゜▽゜)o☆）
         self.chat_view_textEdit.setGeometry(100, 30, 350, 350)
         self.chat_send_textEdit = EnterSendQTextEdit(self.chat_groupBox)
         self.chat_send_textEdit.keyenter_connect(self.chat)
-        self.chat_send_textEdit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.chat_send_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.chat_send_textEdit.clear()
         self.chat_send_textEdit.setGeometry(100, 390, 350, 90)
         self.chatbt = QPushButton("发送>>", self.chat_groupBox)
@@ -3588,22 +3577,22 @@ hhh(o゜▽゜)o☆）
         items = ['自动检测', '中文', '英语', '文言文', '粤语', '日语', '德语', '韩语', '法语', '俄语', '泰语', '意大利语', '葡萄牙语', '西班牙语']
         self.tra_from = QComboBox(self.tra_groupBox)
         self.tra_from.addItems(items)
-        self.tra_from.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.tra_from.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.tra_to = QComboBox(self.tra_groupBox)
         self.tra_to.addItems(items[1:])
-        self.tra_to.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.tra_to.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.tra_from.move(465, 48)
         self.tra_to.move(465, 282)
-        
+
         self.tra_to_edit = QTextEdit(self.tra_groupBox)
         # self.tra_to_edit.hide()
-        self.tra_to_edit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.tra_to_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.tra_to_edit.setGeometry(30, 274, 420, 210)
         self.tra_from_edit = EnterSendQTextEdit(self.tra_groupBox)
         self.tra_from_edit.keyenter_connect(transtalater.Bdtra)
         self.tra_from_edit.setPlaceholderText('在此输入文字')
 
-        self.tra_from_edit.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 9))
+        self.tra_from_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.tra_from_edit.setGeometry(30, 40, 420, 210)
 
         self.tra_detal = QPushButton("详细释义", self.tra_groupBox)
@@ -3613,7 +3602,7 @@ hhh(o゜▽゜)o☆）
         self.trabot = QPushButton("翻译", self.tra_groupBox)
         self.trabot.setStatusTip('开始翻译')
         self.trabot.setGeometry(465, 180, 86, 40)
-        self.trabot.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 10))
+        self.trabot.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         self.trabot.clicked.connect(transtalater.Bdtra)
 
         self.change_show_item([self.tra_groupBox])
@@ -3817,7 +3806,7 @@ class SettingPage(QScrollArea):
         self.settings_widget = QWidget()
         self.settings_widget.setGeometry(0, 0, 500, 1100)
         self.setWidget(self.settings_widget)
-        self.setFont(QFont('黑体'if PLATFORM_SYS=="win32" else"", 10))
+        self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
                            "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
 
@@ -5450,25 +5439,29 @@ class InitThread(QThread):
 def main():
     global jamtools, ffmpeg_path, documents_path, temp_path, iconpng, paypng, transformater, \
         transtalater
-    # if path.exists("outfile"):
-    #     os.remove("outfile")
+
     appctxt = ApplicationContext()
     start = time.process_time()
     # app = QApplication(sys.argv)
-    # stop = QSharedMemory(appctxt.app.applicationName())
-    # ffmpeg_path = os.getcwd() + '/bin'
 
+    A = QObject()
     serverName = 'jamtoolsserver'
-    socket = QLocalSocket()
-    socket.connectToServer(serverName)
+    # QLocalServer.removeServer(serverName)
+    ssocket = QLocalSocket(A)
+    ssocket.connectToServer(serverName)
+    # print("e",  ssocket.errorString(), ssocket.error())
+    # refuse:0  invalid name:2 unknown error:-1
     # 如果连接成功，表明server已经存在，当前已有实例在运行
-    if socket.waitForConnected(500):
+    if ssocket.waitForConnected(500):
         print('connected server')
-        socket.write(str(sys.argv).encode('utf-8'))
-        socket.waitForBytesWritten()
+        ssocket.write(str(sys.argv).encode('utf-8'))
+        ssocket.waitForBytesWritten()
         appctxt.app.quit()
         sys.exit()
     else:
+        if ssocket.error() == 0:
+            QLocalServer.removeServer(serverName)
+            print(ssocket.errorString(), ",Remove it")
         print('no server')
         localServer = QLocalServer()  # 没有实例运行，创建服务器
         localServer.listen(serverName)
@@ -5487,7 +5480,6 @@ def main():
                         jamtools.start_action_run(data[1])
                         print('start')
                         jamtools.hide()
-
                 else:
                     jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, True)
                     jamtools.show()
@@ -5501,11 +5493,11 @@ def main():
 
         localServer.newConnection.connect(ready_)
 
-        ffmpeg_path = os.path.join(apppath, 'bin',PLATFORM_SYS)
+        ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
         documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
         with open(os.path.join(documents_path, "log.txt"), "w")as f:
             f.write("".join(sys.path))
-            f.write("\n"+apppath)
+            f.write("\n" + apppath)
         temp_path = QStandardPaths.writableLocation(QStandardPaths.TempLocation)
         os.chdir(temp_path)
         if not os.path.exists("j_temp"):
@@ -5513,20 +5505,12 @@ def main():
         else:
             if os.path.exists("j_temp/triggerpix.png"):
                 os.remove("j_temp/triggerpix.png")
-
         jamtools = Swindow()
         print('init_swindowtime:', time.process_time() - start)
-
         transtalater = Transtalater(jamtools)  # 翻译
-
         transformater = Transforma(jamtools)  # 格式转换
 
-        # Trayicon = TrayIcon(jamtools)  # 系统托盘
-        # QApplication.processEvents()
         # 创建一个新的线程
-
-        # listenmouse()  # 监听鼠标
-
         jamtools.init_rec_con_thread = InitThread()
         jamtools.init_rec_con_thread.start()
         jamtools.statusBar().showMessage('初始化用时：%f' % float(time.process_time() - start))
