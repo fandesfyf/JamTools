@@ -1679,8 +1679,13 @@ class Slabel(QLabel):  # 区域截图功能
                 self.parent.init_ssview()
         except:
             print(sys.exc_info())
-        roller.roll_manager(area)
+        exi=roller.roll_manager(area)
         print('roller end')
+        if exi:
+            print("未完成滚动截屏,用户退出")
+            self.clear_and_hide()
+            return
+
         self.final_get_img = QPixmap("j_temp/jam_outputfile.png")
         if __name__ == '__main__':  # 当直接运行本文件时直接保存,测试用
             # self.final_get_img.save("jam_outputfile.png")
@@ -2390,17 +2395,22 @@ if __name__ == '__main__':
             btn.setGeometry(20, 20, 60, 30)
             btn.setShortcut("Alt+Z")
             btn.clicked.connect(self.ss)
+            self.temppos=[500,100]
             self.s = Slabel(self)
             self.s.close_signal.connect(self.ss_end)#截屏结束信号连接
             self.resize(300, 200)
 
         def ss(self):#截屏开始
             self.setWindowOpacity(0)  # 设置透明度而不是hide是因为透明度更快
+            self.temppos=[self.x(),self.y()]
+            self.move(QApplication.desktop().width(),QApplication.desktop().height())
             self.s.screen_shot()
             # self.hide()
 
         def ss_end(self):
             del self.s
+            self.move(self.temppos[0],self.temppos[1])
+            self.show()
             self.setWindowOpacity(1)
             self.raise_()
             gc.collect()
@@ -2408,6 +2418,9 @@ if __name__ == '__main__':
             print('cleard')
             self.s = Slabel(self)
             self.s.close_signal.connect(self.ss_end)
+        def show(self) -> None:
+            super(testwin, self).show()
+            print("ss show")
 
 
     app = QApplication(sys.argv)

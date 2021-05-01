@@ -2005,9 +2005,9 @@ class Swindow(QMainWindow):
         text = QLabel(roll_ss_box)
         self.roll_nfeatures = QSpinBox(roll_ss_box)
         self.roll_nfeatures.setGeometry(80, 30, 70, 20)
-        self.roll_nfeatures.setValue(self.settings.value('screenshot/roll_nfeatures', 500, type=int))
-        self.roll_nfeatures.setMinimum(5)
+        self.roll_nfeatures.setMinimum(200)
         self.roll_nfeatures.setMaximum(99999)
+        self.roll_nfeatures.setValue(self.settings.value('screenshot/roll_nfeatures', 500, type=int))
         self.roll_nfeatures.valueChanged.connect(self.setting_save)
         self.roll_nfeatures.setStatusTip('设置在寻找拼接位置时每张图片的最大特征点数，该值越大，拼接越慢，准确率越高！')
         self.roll_nfeatures.setToolTip('设置在寻找拼接位置时每张图片的最大特征点数，该值越大，拼接越慢，准确率越高！')
@@ -3680,7 +3680,10 @@ hhh(o゜▽゜)o☆）
         # def reshow():
         #     self.setWindowOpacity(1)
         #     self.ssreshowtimer.stop()
-        self.setWindowOpacity(0)
+        self.settings.setValue("windowx", self.x())
+        self.settings.setValue("windowy", self.y())
+        self.move(QApplication.desktop().width(),QApplication.desktop().height())
+        # self.setWindowOpacity(0)
         # self.hide()
 
     def connectss(self):
@@ -3691,6 +3694,7 @@ hhh(o゜▽゜)o☆）
     def screenshoterinit(self):
         print("重置slabel")
         # self.setWindowOpacity(0)
+        self.move(self.settings.value("windowx",500,int),self.settings.value("windowy",100,int))
         if PLATFORM_SYS == "darwin":  # macos使用,不然会有切屏
             self.setWindowOpacity(0)
             self.show()
@@ -3706,6 +3710,7 @@ hhh(o゜▽゜)o☆）
         if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             self.hide()
         else:
+
             self.setWindowOpacity(1)
             self.show()
         # self.setWindowOpacity(1)
