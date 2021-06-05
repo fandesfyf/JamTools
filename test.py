@@ -1539,9 +1539,9 @@ class Swindow(QMainWindow):
             self.controlrecord.setStatusTip('快捷键Alt+1;开始/结束记录你的所有动作')
             self.controlrecord.setGeometry(10, 15, 100, 50)
             self.controlrecord.clicked.connect(self.start_action_listen)
-            self.controlrun = QPushButton("播放/结束\n(Alt+2)", controlbox)
-            self.controlrun.setToolTip('快捷键Alt+2;播放已录制的动作')
-            self.controlrun.setStatusTip('快捷键Alt+2;播放已录制的动作')
+            self.controlrun = QPushButton("播放/结束\n(Alt+2)(F4)", controlbox)
+            self.controlrun.setToolTip('快捷键Alt+2;播放已录制的动作,F4强制中断播放')
+            self.controlrun.setStatusTip('快捷键Alt+2;播放已录制的动作,F4强制中断播放')
             self.controlrun.setGeometry(10, 15, 100, 50)
             self.controlrun.clicked.connect(self.start_action_run)
 
@@ -1802,7 +1802,7 @@ class Swindow(QMainWindow):
 
     def start_action_run(self, path=False):
         # if self.controll_trigger.isChecked()
-        print(path)
+        print(path,"action")
         if type(path) == str and os.path.exists(path):
             print("检测到路径")
             self.actioncontroller.running_change(path=path)
@@ -1846,6 +1846,7 @@ class Swindow(QMainWindow):
                 else:
                     print("没有脚本!请先录制")
                     self.showm_signal.emit("没有脚本!请先录制")
+        print("exit action")
 
     def ocr(self):
         if not self.OCR:
@@ -3307,7 +3308,7 @@ class Swindow(QMainWindow):
 
 5.酱转换：各种多媒体文件的裁剪拼接、压缩转码、提取混合功能...这个的功能太多自行探索...
 
-6.酱控制：鼠标键盘所有动作的录制和重放，支持将录制的动作作为教程发送给你的小伙伴萌，支持快捷键启动Alt+1录制，Alt+2播放。注意是不是九宫格的数字1！是字母区上面的数字！动作文件(.jam)可以直接双击打开或拖入打开！
+6.酱控制：鼠标键盘所有动作的录制和重放，支持将录制的动作作为教程发送给你的小伙伴萌，支持快捷键启动Alt+1录制，Alt+2播放,F4强制中断播放。注意是不是九宫格的数字1！是字母区上面的数字！动作文件(.jam)可以直接双击打开或拖入打开！
 
 7.酱传输：提供快速的局域网传输功能,有客户端点对点连接传输和网页端共享两种方式。均支持数据双向传输。客户端连接需要通过连接码自动搜索并连接主机，建立连接之后即可互相发送文件或文件夹。网页端传输相当于共享文件夹，支持共享一个文件夹或文件夹下的某几个文件，通过选择对应网络适配器即可生成共享链接，连入该与适配器同一网络的其他设备即可通过链接或扫码访问共享文件，网页端勾选允许上传后支持文件上传。
 
@@ -3680,9 +3681,11 @@ hhh(o゜▽゜)o☆）
         # def reshow():
         #     self.setWindowOpacity(1)
         #     self.ssreshowtimer.stop()
+        self.setWindowOpacity(0)
         self.settings.setValue("windowx", self.x())
         self.settings.setValue("windowy", self.y())
         self.move(QApplication.desktop().width(),QApplication.desktop().height())
+        self.setWindowOpacity(1)
         # self.setWindowOpacity(0)
         # self.hide()
 

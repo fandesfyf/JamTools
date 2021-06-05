@@ -492,6 +492,7 @@ class ActionController(QObject):
 
     def controlerrun_stop(self):
         print("动作播放中止")
+        self.showrect_signal.emit(False)
         self.showm_signal.emit('动作播放中止！')
         self.running = False
         try:
@@ -505,7 +506,7 @@ class ActionController(QObject):
                 self.keyboardrunner.wait()
         except:
             print("出错l576", sys.exc_info())
-            return
+        self.controlrun_bot_stylesheet_signal.emit("QPushButton{background-color:rgb(239,239,239);}")
 
     def running_change(self, delay=0, execute_count=1, speed=1,
                        comparison_info: dict = None,
@@ -528,10 +529,14 @@ class ActionController(QObject):
                 return
             if self.running:
                 print("播放中停止")
-                self.showrect_signal.emit(False)
                 self.controlerrun_stop()
-                self.controlrun_bot_stylesheet_signal.emit("QPushButton{background-color:rgb(239,239,239);}")
             elif not self.running:
+                def on_press(key):
+                    if key == keyboard.Key.f4:
+                        self.controlerrun_stop()
+                        self.runnerstopper.stop()
+                self.runnerstopper = keyboard.Listener(on_press=on_press)
+                self.runnerstopper.start()
                 if os.path.exists(path):
                     self.controlerrun_start(delay=delay, path=path,
                                             execute_count=execute_count, speed=speed)
