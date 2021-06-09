@@ -8,16 +8,18 @@ import hashlib
 import json
 import socket
 import gc
-
+import sys
+import os, re
+from  Logger import Logger
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr
 
 import http.client
-import os, re
+
 import random
 import shutil
 import subprocess
-import sys
+
 import time
 from urllib.parse import quote
 
@@ -45,6 +47,7 @@ from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, app
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 import jamresourse
 
+sys.stdout = Logger(os.path.join(os.path.expanduser('~'),"jamtools.log"))
 if PLATFORM_SYS == "win32":
     import win32con
     import ctypes, ctypes.wintypes
@@ -60,7 +63,7 @@ elif PLATFORM_SYS == "linux":
 # API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIXvlNkPa9QWsw', str)
 # SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
 
-VERSON = "0.12.200226Beta"
+VERSON = "0.13.A"
 
 
 class JHotkey(QThread):
