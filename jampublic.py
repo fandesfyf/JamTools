@@ -13,9 +13,9 @@ import sys
 
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QBrush
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from aip import AipOcr, AipImageClassify
 from urllib.parse import quote
 
@@ -108,33 +108,35 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                            "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
                            "border-radius: 8px;}"
                            )
+        self.label = linelabel(self)
         self.colse_botton = QPushButton('X', self)
         self.colse_botton.setToolTip('关闭')
-        self.colse_botton.setGeometry(self.width() - 20, 2, 18, 18)
+        self.colse_botton.resize(25, 25)
         self.colse_botton.clicked.connect(self.hide)
         self.colse_botton.show()
         self.colse_botton.setStyleSheet(
-            "QPushButton{color:black}"
+            "QPushButton{color:white}"
             "QPushButton{background-color:rgb(239,0,0)}"
             "QPushButton:hover{color:green}"
-            "QPushButton:hover{background-color:rgb(200,50,0)}"
-            "QPushButton{border-radius:9};")
-        self.tra_botton = QPushButton(QIcon(':/tra.png'), '', self)
+            "QPushButton:hover{background-color:rgb(150,50,0)}"
+            "QPushButton{border-radius:0};")
+        self.tra_botton = QPushButton('译', self)
         self.tra_botton.resize(25, 25)
-        self.tra_botton.move(self.width() - 28, self.height() - 26)
         self.tra_botton.clicked.connect(self.tra)
         self.tra_botton.setToolTip('翻译')
         self.tra_botton.show()
         self.setToolTip('回车可快速翻译,拖动边框可改变位置')
         self.clear_signal.connect(self.clear)
+        self.textAreaChanged()
         if enter_tra:
             self.action = self.tra
 
     def tra(self):
-        # self.transtalater_signal.emit()
-        # transtalater.Bdtra()
         self.showm_signal.emit("正在翻译..")
         text = self.toPlainText()
+        if len(text)==0:
+            print("无文本")
+            return
         text = re.sub(r'[^\w]', '', text).replace('_', '')
         print(text)
         n = 0
@@ -161,20 +163,31 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
 
     def textAreaChanged(self, minsize=100):
         self.document.adjustSize()
-        newWidth = self.document.size().width() + 25
+        newWidth = self.document.size().width() + 28
         newHeight = self.document.size().height() + 15
+        maxwidth, maxheight = QApplication.desktop().width(), QApplication.desktop().height()
         if newWidth != self.width():
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
+            elif newWidth > maxwidth // 3:
+                self.setFixedWidth(maxwidth // 3 + 28)
+                print("超宽")
             else:
                 self.setFixedWidth(newWidth)
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
+            elif newHeight > maxheight * 2 // 3:
+                self.setFixedHeight(maxheight * 2 // 3 + 15)
+                print("超高")
             else:
                 self.setFixedHeight(newHeight)
-        self.colse_botton.move(self.width() - 20, 2)
-        self.tra_botton.move(self.width() - 28, self.height() - 26)
+        self.adjustBotton()
+
+    def adjustBotton(self):
+        self.label.setGeometry(self.width() - 28, 0, 28, self.height())
+        self.colse_botton.move(self.width() - 26, 1)
+        self.tra_botton.move(self.width() - 26, self.height() - 26)
 
     def get_tra_resultsignal(self, text):
         self.insertPlainText("\n翻译结果:\n{}".format(text))
@@ -209,7 +222,6 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             if e.x() > self.width() - 25 or e.y() < 10 or e.y() > self.height() - 20:
                 self.viewport().setCursor(Qt.SizeAllCursor)
                 if self.moving:
-                    # print(e.x()+self.x()-self.dx,e.y()+self.y()-self.dy)
                     self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
             else:
                 self.viewport().setCursor(Qt.ArrowCursor)
@@ -219,20 +231,30 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         if e.key() == Qt.Key_Return:
             try:
                 if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
-                    if QApplication.keyboardModifiers() in (Qt.ControlModifier, Qt.AltModifier):
-                        self.insertPlainText('\n')
-                    else:
-                        # print('enter')
-                        pass
-                else:
-                    # print('returnkey')
                     self.action()
+                else:
+                    pass
+                    # self.insertPlainText('\n')
             except:
                 print('回车失败')
             return
 
     def keyenter_connect(self, action):
         self.action = action
+
+
+class linelabel(QLabel):
+    def __init__(self, parent):
+        super(linelabel, self).__init__(parent=parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+    def paintEvent(self, e):
+        super(linelabel, self).paintEvent(e)
+        painter = QPainter(self)
+        brush = QBrush(Qt.Dense7Pattern)
+        painter.setBrush(brush)
+        painter.drawRect(0, 0, self.width(), self.height())
+        painter.end()
 
 
 class TrThread(QThread):
@@ -244,7 +266,6 @@ class TrThread(QThread):
         super(QThread, self).__init__()
         self.text = text
         self.toLang = to_lan
-        # self.resultsignal.connect(transtalater.translate_signal)
         self.appid = QSettings('Fandes', 'jamtools').value('tran_appid', '20190928000337891', str)
         self.secretKey = QSettings('Fandes', 'jamtools').value('tran_secretKey', 'SiNITAufl_JCVpk7fAUS', str)
         salt = str(random.randint(32768, 65536))
@@ -258,6 +279,10 @@ class TrThread(QThread):
         self.geturl = self.re_url.format(self.toLang)
 
     def run(self):
+        if len(str(self.text).replace(" ", "").replace("\n", "")) == 0:
+            print("空翻译")
+            self.resultsignal.emit("没有文本!")
+            return
         try:
             # res = requests.get("https://api.fanyi.baidu.com", params=self.args)
             # print(res)
@@ -290,7 +315,6 @@ class TrThread(QThread):
                         # jamtools.tra_to.setCurrentText('中文')
                     except:
                         print(sys.exc_info())
-
                 self.run()
                 return
             for line in s['trans_result']:
@@ -306,14 +330,14 @@ class mutilocr(QThread):
     def __init__(self, files):
         super(mutilocr, self).__init__()
         self.files = files
-        self.threadlist=[]
-        self.filename=""
+        self.threadlist = []
+        self.filename = ""
 
     def run(self) -> None:
         for file in self.files:
             self.statusbarsignal.emit('开始识别图片')
             filename = os.path.basename(file)
-            self.filename=filename
+            self.filename = filename
             with open(file, 'rb')as i:
                 img = i.read()
             print("正在识别图片：\t" + filename)
@@ -325,7 +349,7 @@ class mutilocr(QThread):
             th.wait()
             self.threadlist.append(th)
 
-    def mutil_cla_signalhandle(self,text):
+    def mutil_cla_signalhandle(self, text):
         print("aaaa mutil_cla_signalhandle")
         self.ocr_signal.emit(self.filename, text)
         print("已识别{}".format(self.filename))
