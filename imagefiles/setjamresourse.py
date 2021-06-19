@@ -15,7 +15,8 @@ imglist = ["p.png", "ico.png", "tra.png", "screenshot.png", "record.png", "OCR.p
            "circle.png", "texticon.png", "saveicon.png", "recording.png", "scroll_icon.png", "freeze.png",
            "timetable.png", "ssrecord.png", "choice_path.png", "add.png", "remove.png", "update.png", "why.png",
            "load.gif", "original.png", "sound0.png", "sound3.png", "smartcursor.png", "colorsampler.png", "yqt.png",
-           "backgroundrepair.png", "perspective.png", "polygon_ss.png", "last.png", "next.png", "videowjj.png"
+           "backgroundrepair.png", "perspective.png", "polygon_ss.png", "last.png", "next.png", "videowjj.png",
+           "clear.png"
 
            ]
 with open("jamresourse.qrc", "w", encoding="utf-8")as qrcf:

@@ -49,5 +49,6 @@
 	<file>last.png</file>
 	<file>next.png</file>
 	<file>videowjj.png</file>
+	<file>clear.png</file>
 </qresource>
 </RCC>

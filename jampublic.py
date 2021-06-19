@@ -11,9 +11,9 @@ import random
 import re
 import sys
 
-from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings
+from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor, QBrush
+from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from aip import AipOcr, AipImageClassify
@@ -94,6 +94,14 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.parent = parent
         self.action = self.show
         self.moving = False
+        self.hsp = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+                                "JamtoolsSimpleModehistory.txt")
+        if os.path.exists(self.hsp):
+            with open(self.hsp, "r")as f:
+                self.history = f.read().split("<\n\n<<>>\n\n>")
+        else:
+            self.history = []
+        self.history_pos = len(self.history)
         self.document = self.document()
         self.document.contentsChanged.connect(self.textAreaChanged)
         self.setMouseTracking(True)
@@ -104,7 +112,6 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                            "QPushButton:hover{color:green}"
                            "QPushButton:hover{background-color:rgb(200,200,100)}"
                            "QPushButton{background-color:rgb(239,239,239)}"
-                           "QPushButton{padding:1px 4px }"
                            "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
                            "border-radius: 8px;}"
                            )
@@ -125,16 +132,34 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.tra_botton.clicked.connect(self.tra)
         self.tra_botton.setToolTip('翻译')
         self.tra_botton.show()
-        self.setToolTip('回车可快速翻译,拖动边框可改变位置')
+
+        self.clear_botton = QPushButton(QIcon(":./clear.png"), "", self)
+        self.clear_botton.resize(25, 25)
+        self.clear_botton.clicked.connect(self.clear)
+        self.clear_botton.setToolTip('清空')
+        self.clear_botton.show()
+        self.last_botton = QPushButton('<', self)
+        self.last_botton.resize(13, 13)
+        self.last_botton.clicked.connect(self.last_history)
+        self.last_botton.setToolTip('上一个历史记录Ctrl+←')
+        self.last_botton.show()
+        self.next_botton = QPushButton('>', self)
+        self.next_botton.resize(13, 13)
+        self.next_botton.clicked.connect(self.next_history)
+        self.next_botton.setToolTip('下一个历史记录Ctrl+→')
+        self.next_botton.show()
+
+        self.setToolTip('Ctrl+回车可快速翻译,拖动边框可改变位置')
         self.clear_signal.connect(self.clear)
         self.textAreaChanged()
+
         if enter_tra:
             self.action = self.tra
 
     def tra(self):
         self.showm_signal.emit("正在翻译..")
         text = self.toPlainText()
-        if len(text)==0:
+        if len(text) == 0:
             print("无文本")
             return
         text = re.sub(r'[^\w]', '', text).replace('_', '')
@@ -151,7 +176,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             fr = "zh"
             to = "en"
         self.traThread = TrThread(self.toPlainText(), fr, to)
-        self.traThread.resultsignal.connect(self.insertPlainText)
+        self.traThread.resultsignal.connect(self.get_tra_resultsignal)
         self.traThread.start()
 
     def is_alphabet(self, uchar):
@@ -165,32 +190,43 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.document.adjustSize()
         newWidth = self.document.size().width() + 28
         newHeight = self.document.size().height() + 15
-        maxwidth, maxheight = QApplication.desktop().width(), QApplication.desktop().height()
+        winwidth, winheight = QApplication.desktop().width(), QApplication.desktop().height()
         if newWidth != self.width():
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
-            elif newWidth > maxwidth // 3:
-                self.setFixedWidth(maxwidth // 3 + 28)
+            elif newWidth > winwidth * 2 // 5:
+                self.setFixedWidth(winwidth * 2 // 5 + 28)
                 print("超宽")
             else:
                 self.setFixedWidth(newWidth)
+            if self.x()+self.width()>winwidth:
+                self.move(winwidth-28-self.width(),self.y())
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
-            elif newHeight > maxheight * 2 // 3:
-                self.setFixedHeight(maxheight * 2 // 3 + 15)
+            elif newHeight > winheight * 2 // 3:
+                self.setFixedHeight(winheight * 2 // 3 + 15)
                 print("超高")
             else:
                 self.setFixedHeight(newHeight)
+            if self.y()+self.height()>winheight:
+                self.move(self.x(),winheight-28-self.height())
+        self.document.adjustSize()
         self.adjustBotton()
 
     def adjustBotton(self):
         self.label.setGeometry(self.width() - 28, 0, 28, self.height())
         self.colse_botton.move(self.width() - 26, 1)
         self.tra_botton.move(self.width() - 26, self.height() - 26)
+        self.clear_botton.move(self.tra_botton.x(), self.tra_botton.y() - self.clear_botton.height())
+        self.last_botton.move(self.clear_botton.x(), self.clear_botton.y() - self.last_botton.height())
+        self.next_botton.move(self.clear_botton.x() + self.clear_botton.width() - self.next_botton.width(),
+                              self.clear_botton.y() - self.next_botton.height())
 
     def get_tra_resultsignal(self, text):
-        self.insertPlainText("\n翻译结果:\n{}".format(text))
+        self.moveCursor(QTextCursor.End)
+        self.insertPlainText("\n\n翻译结果:\n{}".format(text))
+        self.addhistory(self.toPlainText())
 
     def insertPlainText(self, text):
         super(FramelessEnterSendQTextEdit, self).insertPlainText(text)
@@ -206,7 +242,6 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 self.viewport().update()
             else:
                 super().mousePressEvent(e)
-            # self.update()
 
     def mouseReleaseEvent(self, e):
         super().mouseReleaseEvent(e)
@@ -227,20 +262,74 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 self.viewport().setCursor(Qt.ArrowCursor)
 
     def keyPressEvent(self, e):
-        super().keyPressEvent(e)
+        super(FramelessEnterSendQTextEdit, self).keyPressEvent(e)
         if e.key() == Qt.Key_Return:
             try:
                 if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
                     self.action()
                 else:
-                    pass
-                    # self.insertPlainText('\n')
+                    self.insertPlainText('\n')
             except:
                 print('回车失败')
             return
+        elif e.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
+            print("save")
+            self.addhistory(self.toPlainText())
+        elif QApplication.keyboardModifiers() not in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
+            self.history_pos = len(self.history)
+        elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Left:
+            self.last_history()
+        elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Right:
+            self.next_history()
+
+    def addhistory(self, text):
+        if text not in self.history and len(text.replace(" ", "").replace("\n", "")):
+            self.history.append(text)
+            mode = "r+"
+            if not os.path.exists(self.hsp):
+                mode = "w+"
+            with open(self.hsp, mode,encoding="utf-8")as f:
+                hislist = f.read().split("<\n\n<<>>\n\n>")
+                hislist.append(text)
+                if len(hislist) > 20:
+                    hislist = hislist[-20:]
+                    self.history = self.history[-20:]
+                newhis = "<\n\n<<>>\n\n>".join(hislist)
+                f.seek(0)
+                f.truncate()
+                f.write(newhis)
+            self.history_pos = len(self.history)
 
     def keyenter_connect(self, action):
         self.action = action
+
+    def next_history(self):
+        if self.history_pos < len(self.history) - 1:
+            hp = self.history_pos
+            self.clear()
+            self.history_pos = hp + 1
+            self.setText(self.history[self.history_pos])
+        # print("next h", self.history_pos, len(self.history))
+
+    def last_history(self):
+        # self.next_botton.setEnabled(True)
+        hp = self.history_pos
+        self.addhistory(self.toPlainText())
+        self.history_pos = hp
+        if self.history_pos > 0:
+            hp = self.history_pos
+            self.clear()
+            self.history_pos = hp - 1
+            self.setText(self.history[self.history_pos])
+        # print("last h", self.history_pos, len(self.history))
+
+    def clear(self, notsave=False):
+        save = not notsave
+        if save:
+            text = self.toPlainText()
+            self.addhistory(text)
+        self.history_pos = len(self.history)
+        super(FramelessEnterSendQTextEdit, self).clear()
 
 
 class linelabel(QLabel):

@@ -596,7 +596,7 @@ class Transtalater():
             self.parent.statusBar().showMessage("翻译完成！")
         else:
             self.parent.simplemodebox.moveCursor(QTextCursor.End)
-            self.parent.simplemodebox.insertPlainText('\n\n翻译结果：\n' + text)
+            self.parent.simplemodebox.get_tra_resultsignal(text)
         QApplication.processEvents()
 
 
@@ -625,30 +625,25 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
     def init_trayicon(self):
         self.recorded_open = False
         self.tran_open = False
+        self.small_windows=[]
         self.open_path = QStandardPaths.writableLocation(
             QStandardPaths.PicturesLocation)
         self.getscreen.triggered.connect(self.parent.screensh)
         self.recordscreen.triggered.connect(self.connect_record_fun)
         self.setarea.triggered.connect(self.parent.set_area)
-
         self.Tray_tra.triggered.connect(self.BaiduTRA)
-        # self.control.setCheckable(True)
-        # self.control.triggered.connect(self.change_control_fun)
-        # self.control.setChecked(self.parent.settings.value('can_controll', False, type=bool))
         self.quitAction.triggered.connect(self.jquit)
-        # self.Bdcla.triggered.connect(self.parent.BDimgcla)
         self.OCR.triggered.connect(self.parent.BaiduOCR)
         self.chatbot.triggered.connect(self.chat)
         self.mulocr.triggered.connect(self.parent.multiocr)
         self.changesimple.setCheckable(True)
         self.changesimple.triggered.connect(self.parent.changesimple)
-
+        self.addsimplewin.triggered.connect(self.add_simple_window)
 
     def connect_record_fun(self):
         self.parent.recorder.recordchange()
 
     def showMenu(self):
-
         "设计托盘的菜单，这里实现了一个二级菜单"
         self.menu = QMenu()
         self.menu1 = QMenu()
@@ -666,6 +661,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.chatbot = QAction("酱聊天", self)
         self.mulocr = QAction("批量文字提取", self)
         self.changesimple = QAction("极简模式", self)
+        self.addsimplewin=QAction("添加小窗",self)
 
         self.menu1.addAction(self.OCR)
         self.menu1.addAction(self.mulocr)
@@ -680,6 +676,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.menu.addAction(self.Tray_tra)
         self.menu.addAction(self.getscreen)
         self.menu.addAction(self.changesimple)
+        self.menu.addAction(self.addsimplewin)
 
         self.menu.addAction(self.quitAction)
         self.menu1.setTitle("酱识图")
@@ -695,7 +692,10 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.icon = self.MessageIcon()
 
         # 设置图标
-
+    def add_simple_window(self):
+        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True)
+        simplemodebox.show()
+        self.small_windows.append(simplemodebox)
     def iconClied(self, e):
         "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"
         if e == 3:
@@ -760,18 +760,15 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
 
 
 class StraThread(QThread):  # 右键画屏翻译线程
-    signal = pyqtSignal(float, float, float, QPixmap, str, str)
+    signal = pyqtSignal(float, str, str)
 
-    def __init__(self, x, y, w, pix):
+    def __init__(self, w):
         super(QThread, self).__init__()
-        self.x = x
-        self.y = y
         self.w = w
-        self.pix = pix
         self.signal.connect(jamtools.word_extraction)
 
     def run(self):
-        self.signal.emit(self.x, self.y, self.w, self.pix, '正在识别...', '正在翻译...')
+        self.signal.emit(self.w,'正在识别...', '正在翻译...')
         with open("j_temp/sdf.png", 'rb')as i:
             img = i.read()
         text0 = ''
@@ -782,7 +779,7 @@ class StraThread(QThread):  # 右键画屏翻译线程
         # message = client.basicAccurate(img)   # 通用文字高精度识别，每天 800 次免费
         except:
             print("Unexpected error:", sys.exc_info()[0])
-            self.signal.emit(self.x, self.y, self.w, self.pix, 'Unexpected error...', str(sys.exc_info()[0]))
+            self.signal.emit(self.w,'Unexpected error...', str(sys.exc_info()[0]))
             return
         else:
             if message is None:
@@ -790,7 +787,7 @@ class StraThread(QThread):  # 右键画屏翻译线程
             else:
                 for res in message.get('words_result'):
                     text0 += res.get('words')
-            self.signal.emit(self.x, self.y, self.w, self.pix, text0, '正在翻译...')
+            self.signal.emit( self.w,  text0, '正在翻译...')
         # appid = '20190928000337891'
         # secretKey = 'SiNITAufl_JCVpk7fAUS'
         salt = str(random.randint(32768, 65536))
@@ -843,10 +840,9 @@ class StraThread(QThread):  # 右键画屏翻译线程
                 # text1 = line['dst']
             except:
                 print("Unexpected error:", sys.exc_info()[0])
-
-            self.signal.emit(self.x, self.y, self.w, self.pix, text0, text1)
+            self.signal.emit(self.w,  text0, text1)
         else:
-            self.signal.emit(self.x, self.y, self.w, self.pix, '没有检测到文字...', '请重新操作...')
+            self.signal.emit( self.w, '没有检测到文字...', '请重新操作...')
 
 
 class Draw_grab_width(QLabel):
@@ -875,7 +871,7 @@ class Small_Ocr(QLabel):
         self.small_show = QTextEdit(self)
         self.smalltra = QTextEdit(self)
         self.search_botton = QPushButton('', self)
-        # self.small_show.setReadOnly(True)
+        self.pix=QPixmap()
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.SplashScreen)
         self.setAlignment(Qt.AlignTop)
         self.init_small_ocr_thread = Commen_Thread(self.init_small_ocr)
@@ -906,8 +902,45 @@ class Small_Ocr(QLabel):
         bp=1&rsv_idx=2&ie=utf-8&tn=94819464_hao_pg&rsv_enter=1&rsv_dl=tb&rsv_sug3=4&rsv_sug1=3
         &rsv_sug7=101&rsv_sug2=0&inputT=1398&rsv_sug4=2340""".format(self.small_show.toPlainText())
         QDesktopServices.openUrl(QUrl(url))
-
-
+    def show_extrat_res(self,w, text=None, text1=None):
+        self.small_show.clear()
+        self.smalltra.clear()
+        self.smalltra.hide()
+        grabheight = self.h
+        self.setPixmap(self.pix)
+        self.small_show.setText(text)
+        self.smalltra.setText(text1)
+        self.move(self.sx, self.sy - grabheight / 2)
+        font = QFont('黑体' if PLATFORM_SYS == "win32" else "", )
+        self.small_show.move(0, grabheight)
+        self.smalltra.move(0, grabheight * 2)
+        self.search_botton.move(w, 0)
+        self.search_botton.resize(grabheight, grabheight)
+        font.setBold(True)
+        self.small_show.setFont(font)
+        self.smalltra.setFont(font)
+        self.adjustSize(w)
+        if text1 is not None:
+            self.smalltra.show()
+        self.show()
+        self.small_show.show()
+        self.search_botton.show()
+        QApplication.processEvents()
+    def adjustSize(self,w) -> None:
+        td=self.smalltra.document()
+        td.adjustSize()
+        sd=self.small_show.document()
+        sd.adjustSize()
+        trawidth=td.size().width()
+        show_width=sd.size().width()
+        maxw=max([w,trawidth,show_width])
+        print(w,trawidth,show_width)
+        self.small_show.resize(maxw + self.h, self.h)
+        self.smalltra.resize(maxw + self.h, self.h)
+        self.resize(maxw + self.h, self.h * 3)
+        self.small_show.setDocument(sd)
+        self.smalltra.setDocument(td)
+        # super(Small_Ocr, self).adjustSize()
 class FuncBox(QGroupBox):
     def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
@@ -1251,7 +1284,7 @@ class Swindow(QMainWindow):
         other_act = QAction('其他功能', self)
         other_act.triggered.connect(self.others)
         simplemode = QAction('极简模式', self)
-        simplemode.triggered.connect(self.changesimple)
+        simplemode.triggered.connect(lambda x:self.changesimple(show=True))
         simplemode.setStatusTip('极简模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
         if PLATFORM_SYS == "darwin":
             othermenu = menubar.addMenu("其他")
@@ -1443,7 +1476,7 @@ class Swindow(QMainWindow):
         self.simplemodebox.setWindowOpacity(0.8)
         self.hide()
 
-    def changesimple(self):
+    def changesimple(self,show=False):
         print('S_SIMPLE_MODE', QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool))
         if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
@@ -1454,6 +1487,8 @@ class Swindow(QMainWindow):
         else:
             QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", True)
             self.simple_mode()
+            if show:
+                self.simplemodebox.show()
         self.trayicon.changesimple.setChecked(QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool))
 
     def setting_save(self):
@@ -3102,7 +3137,7 @@ class Swindow(QMainWindow):
             self.showm_signal.emit('找不到你的音频设备,请尝试重装本软件!')
         self.change_show_item([self.rec_groupBox])
 
-    def openlistenmouse(self):  # 监听鼠标划屏提字
+    def openlistenmouse(self):  # 监听鼠标右键划屏提字
         print("mouse listen start")
         self.simg = Small_Ocr()  # 划屏提字
 
@@ -3136,8 +3171,8 @@ class Swindow(QMainWindow):
                             pix = screen.grabWindow(QApplication.desktop().winId(), self.simg.sx, self.simg.sy - lef,
                                                     dx, self.simg.h)
                             pix.save("j_temp/sdf.png")
-
-                            jamtools.start_thread = StraThread(self.simg.sx, self.simg.sy, dx, pix)
+                            self.simg.pix=pix
+                            jamtools.start_thread = StraThread(dx)
                             jamtools.start_thread.start()
                             QApplication.processEvents()
 
@@ -3175,27 +3210,6 @@ class Swindow(QMainWindow):
             self.mutiocrthread.statusbarsignal.connect(self.statusBar().showMessage)
             self.mutiocrthread.start()
 
-            # for file in files:
-            #     self.statusBar().showMessage('开始识别图片')
-            #     filename = os.path.basename(file)
-            #     with open(file, 'rb')as i:
-            #         img = i.read()
-            #     print("正在识别图片：\t" + filename)
-            #     self.statusBar().showMessage('正在识别: ' + filename)
-            #
-            #     def mutil_cla_signalhandle(text):
-            #         if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
-            #             self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
-            #             self.ocr_textEdit.insertPlainText(text + '\n' * 2)
-            #             self.statusBar().showMessage('识别完成！')
-            #
-            #     th = OcrimgThread(filename, img, 1)
-            #     th.result_show_signal.connect(mutil_cla_signalhandle)
-            #     th.start()
-            #     th.wait()
-            #     self.ocrthread.append(th)
-            #     QApplication.processEvents()
-
             self.change_show_item([self.ocr_groupBox])
         else:
             if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
@@ -3203,44 +3217,8 @@ class Swindow(QMainWindow):
                 self.hide()
             # self.ocr_textEdit.show()
 
-    def word_extraction(self, x, y, w, pix, text=None, text1=None):  # 画词提取
-        # self.hide()
-        # self.simg.setWindowOpacity(0.5)
-        # self.small_show.setWindowOpacity(0.5)
-        # self.smalltra.setWindowOpacity(0.5)
-
-        # self.smalltra.raise_()
-        self.simg.small_show.clear()
-        self.simg.smalltra.clear()
-        self.simg.smalltra.hide()
-        # self.simg.resize(w, 20)
-        grabheight = self.simg.h
-        self.simg.move(x, y - grabheight / 2)
-        font = QFont('黑体' if PLATFORM_SYS == "win32" else "", )
-        self.simg.small_show.resize(w + grabheight, grabheight)
-        self.simg.small_show.move(0, grabheight)
-        self.simg.smalltra.resize(w + grabheight, grabheight)
-        self.simg.smalltra.move(0, grabheight * 2)
-        self.simg.search_botton.move(w, 0)
-        self.simg.search_botton.resize(grabheight, grabheight)
-        font.setBold(True)
-        self.simg.small_show.setFont(font)
-        self.simg.smalltra.setFont(font)
-        self.simg.setPixmap(pix)
-        # self.simg.setWindowFlags(Qt.SplashScreen)
-        # self.simg.small_show.setWindowFlags(Qt.SplashScreen)
-        self.simg.resize(w + grabheight, grabheight * 3)
-        self.simg.small_show.setText(text)
-        # self.simg.smalltra.setWindowFlags(Qt.SplashScreen)
-        self.simg.smalltra.setText(text1)
-        if text1 is not None:
-            self.simg.smalltra.show()
-            # print(text, text1)
-        # self.small_show.setWindowFlags(Qt.WindowStaysOnTopHint)
-        # self.smalltra.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.simg.show()
-        self.simg.small_show.show()
-        self.simg.search_botton.show()
+    def word_extraction(self,w,text=None, text1=None):  # 画词提取接收信号函数
+        self.simg.show_extrat_res(w, text, text1)
 
     def help(self):
         # self.help_text.setReadOnly(True)
@@ -5441,9 +5419,7 @@ def main():
 
         ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
         documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
-        with open(os.path.join(documents_path, "log.txt"), "w")as f:
-            f.write("".join(sys.path))
-            f.write("\n" + apppath)
+
         temp_path = QStandardPaths.writableLocation(QStandardPaths.TempLocation)
         os.chdir(temp_path)
         if not os.path.exists("j_temp"):
