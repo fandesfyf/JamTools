@@ -2892,12 +2892,17 @@ class Swindow(QMainWindow):
             f = '-f avfoundation -list_devices true -i ""'
         else:
             f = ' -hide_banner -devices '
-        record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
-                                  stdin=subprocess.PIPE,
-                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-        relog = record.stderr.read()
-        # print(relog)
-        record.terminate()
+        if not os.path.exists(ffmpeg_path+"/ffmpeg"):
+            print("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件,或执行编译ffmpeg放于{}下".format(ffmpeg_path))
+            self.showm_signal.emit("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件,或执行编译ffmpeg放于{}下".format(ffmpeg_path))
+            relog=" "
+        else:
+            record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
+                                      stdin=subprocess.PIPE,
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+            relog = record.stderr.read()
+            # print(relog)
+            record.terminate()
         audio_divice = []
         video_divice = []
         if PLATFORM_SYS == "win32":
