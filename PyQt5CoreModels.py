@@ -2892,9 +2892,9 @@ class Swindow(QMainWindow):
             f = '-f avfoundation -list_devices true -i ""'
         else:
             f = ' -hide_banner -devices '
-        if not os.path.exists(ffmpeg_path+"/ffmpeg"):
-            print("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件,或执行编译ffmpeg放于{}下".format(ffmpeg_path))
-            self.showm_signal.emit("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件,或执行编译ffmpeg放于{}下".format(ffmpeg_path))
+        if not (os.path.exists(ffmpeg_path+"/ffmpeg")or os.path.exists(ffmpeg_path+"/ffmpeg.exe")):
+            print("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件或源码,编译后将ffmpeg可执行文件放于{}下".format(ffmpeg_path))
+            self.showm_signal.emit("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件或源码,编译后将ffmpeg可执行文件放于{}下".format(ffmpeg_path))
             relog=" "
         else:
             record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
