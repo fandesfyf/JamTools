@@ -63,7 +63,7 @@ elif PLATFORM_SYS == "linux":
 # API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIXvlNkPa9QWsw', str)
 # SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
 
-VERSON = "0.13.A"
+VERSON = "0.13.5A"
 
 
 class JHotkey(QThread):
@@ -1220,7 +1220,7 @@ class Swindow(QMainWindow):
         self.counter.display('00:00')
         self.keyboard = QApplication.clipboard()
         self.keyboard.dataChanged.connect(self.keyboardchanged)  # 剪切板翻译/智能shift
-        self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
+        self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:0px 0px;}"
                            "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
                            "QScrollBar{border:none;width:10px; background-color:rgb(200,200,200);border-radius: 8px;}"
                            """QTextEdit{

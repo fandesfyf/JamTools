@@ -97,7 +97,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.hsp = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
                                 "JamtoolsSimpleModehistory.txt")
         if os.path.exists(self.hsp):
-            with open(self.hsp, "r")as f:
+            with open(self.hsp, "r",encoding="utf-8")as f:
                 self.history = f.read().split("<\n\n<<>>\n\n>")
         else:
             self.history = []
