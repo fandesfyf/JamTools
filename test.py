@@ -693,7 +693,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
 
         # 设置图标
     def add_simple_window(self):
-        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True)
+        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True,autoreset=True)
         simplemodebox.show()
         self.small_windows.append(simplemodebox)
     def iconClied(self, e):

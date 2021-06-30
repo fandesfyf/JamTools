@@ -89,15 +89,16 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     clear_signal = pyqtSignal()
     showm_signal = pyqtSignal(str)
 
-    def __init__(self, parent=None, enter_tra=False):
+    def __init__(self, parent=None, enter_tra=False, autoreset=False):
         super().__init__(parent)
         self.parent = parent
         self.action = self.show
         self.moving = False
+        self.autoreset = autoreset
         self.hsp = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
                                 "JamtoolsSimpleModehistory.txt")
         if os.path.exists(self.hsp):
-            with open(self.hsp, "r",encoding="utf-8")as f:
+            with open(self.hsp, "r", encoding="utf-8")as f:
                 self.history = f.read().split("<\n\n<<>>\n\n>")
         else:
             self.history = []
@@ -199,8 +200,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 print("超宽")
             else:
                 self.setFixedWidth(newWidth)
-            if self.x()+self.width()>winwidth:
-                self.move(winwidth-28-self.width(),self.y())
+            if self.x() + self.width() > winwidth:
+                self.move(winwidth - 28 - self.width(), self.y())
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
@@ -209,8 +210,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 print("超高")
             else:
                 self.setFixedHeight(newHeight)
-            if self.y()+self.height()>winheight:
-                self.move(self.x(),winheight-28-self.height())
+            if self.y() + self.height() > winheight:
+                self.move(self.x(), winheight - 28 - self.height())
         self.document.adjustSize()
         self.adjustBotton()
 
@@ -226,7 +227,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     def get_tra_resultsignal(self, text):
         self.moveCursor(QTextCursor.End)
         self.insertPlainText("\n\n翻译结果:\n{}".format(text))
-        self.addhistory(self.toPlainText())
+        self.addhistory()
 
     def insertPlainText(self, text):
         super(FramelessEnterSendQTextEdit, self).insertPlainText(text)
@@ -268,13 +269,13 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
                     self.action()
                 else:
-                    self.insertPlainText('\n')
+                    pass
             except:
                 print('回车失败')
             return
         elif e.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
             print("save")
-            self.addhistory(self.toPlainText())
+            self.addhistory()
         elif QApplication.keyboardModifiers() not in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
             self.history_pos = len(self.history)
         elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Left:
@@ -282,13 +283,14 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Right:
             self.next_history()
 
-    def addhistory(self, text):
+    def addhistory(self):
+        text = self.toPlainText()
         if text not in self.history and len(text.replace(" ", "").replace("\n", "")):
             self.history.append(text)
             mode = "r+"
             if not os.path.exists(self.hsp):
                 mode = "w+"
-            with open(self.hsp, mode,encoding="utf-8")as f:
+            with open(self.hsp, mode, encoding="utf-8")as f:
                 hislist = f.read().split("<\n\n<<>>\n\n>")
                 hislist.append(text)
                 if len(hislist) > 20:
@@ -312,9 +314,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         # print("next h", self.history_pos, len(self.history))
 
     def last_history(self):
-        # self.next_botton.setEnabled(True)
         hp = self.history_pos
-        self.addhistory(self.toPlainText())
+        self.addhistory()
         self.history_pos = hp
         if self.history_pos > 0:
             hp = self.history_pos
@@ -323,11 +324,16 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             self.setText(self.history[self.history_pos])
         # print("last h", self.history_pos, len(self.history))
 
+    def hide(self) -> None:
+        self.addhistory()
+        super(FramelessEnterSendQTextEdit, self).hide()
+        if self.autoreset:
+            self.close()
+
     def clear(self, notsave=False):
         save = not notsave
         if save:
-            text = self.toPlainText()
-            self.addhistory(text)
+            self.addhistory()
         self.history_pos = len(self.history)
         super(FramelessEnterSendQTextEdit, self).clear()
 

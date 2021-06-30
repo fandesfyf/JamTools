@@ -114,13 +114,7 @@ if __name__ == '__main__':
         else:
             print("不存在", f)
 
-    # if os.path.exists("src/main/resources/base/html"):
-    #     shutil.rmtree("src/main/resources/base/html")
-    #     print("移除html")
-    # shutil.copytree("html", "src/main/resources/base/html")
-    # print("copy html")
-    # shutil.copy2('log.log', 'src/main/resources/base/log.log')
-    # print('copy log.log')
+
 
     if PLATFORM_SYS == "win32":
         with open("target/installer/Installer.nsi", "r", encoding="ansi")as nsisfile:
