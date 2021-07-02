@@ -187,7 +187,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         else:
             return False
 
-    def textAreaChanged(self, minsize=100):
+    def textAreaChanged(self, minsize=150, recheck=True):
         self.document.adjustSize()
         newWidth = self.document.size().width() + 28
         newHeight = self.document.size().height() + 15
@@ -195,9 +195,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         if newWidth != self.width():
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
-            elif newWidth > winwidth * 2 // 5:
-                self.setFixedWidth(winwidth * 2 // 5 + 28)
-                print("超宽")
+            elif newWidth > winwidth * 3 // 7:
+                self.setFixedWidth(winwidth * 3 // 7 + 28)
             else:
                 self.setFixedWidth(newWidth)
             if self.x() + self.width() > winwidth:
@@ -207,12 +206,12 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
                 self.setFixedHeight(minsize)
             elif newHeight > winheight * 2 // 3:
                 self.setFixedHeight(winheight * 2 // 3 + 15)
-                print("超高")
             else:
                 self.setFixedHeight(newHeight)
             if self.y() + self.height() > winheight:
                 self.move(self.x(), winheight - 28 - self.height())
-        self.document.adjustSize()
+        if recheck:
+            self.textAreaChanged(recheck=False)
         self.adjustBotton()
 
     def adjustBotton(self):
@@ -244,6 +243,16 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             else:
                 super().mousePressEvent(e)
 
+    def wheelEvent(self, e) -> None:
+        super(FramelessEnterSendQTextEdit, self).wheelEvent(e)
+        angle = e.angleDelta() / 8
+        angle = angle.y()
+        if QApplication.keyboardModifiers() == Qt.ControlModifier:
+            if angle > 0 and self.windowOpacity() < 1:
+                self.setWindowOpacity(self.windowOpacity() + 0.1 if angle > 0 else -0.1)
+            elif angle < 0 and self.windowOpacity() >0.2:
+                self.setWindowOpacity(self.windowOpacity() - 0.1)
+
     def mouseReleaseEvent(self, e):
         super().mouseReleaseEvent(e)
         if e.button() == Qt.LeftButton:
@@ -254,7 +263,6 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     def mouseMoveEvent(self, e):
         super().mouseMoveEvent(e)
         if self.isVisible():
-
             if e.x() > self.width() - 25 or e.y() < 10 or e.y() > self.height() - 20:
                 self.viewport().setCursor(Qt.SizeAllCursor)
                 if self.moving:

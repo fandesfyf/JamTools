@@ -934,7 +934,6 @@ class Small_Ocr(QLabel):
         trawidth=td.size().width()
         show_width=sd.size().width()
         maxw=max([w,trawidth,show_width])
-        print(w,trawidth,show_width)
         self.small_show.resize(maxw + self.h, self.h)
         self.smalltra.resize(maxw + self.h, self.h)
         self.resize(maxw + self.h, self.h * 3)
@@ -1401,7 +1400,7 @@ class Swindow(QMainWindow):
         rtext = data.text()
         text = re.sub(r'[^\w]', '', rtext).replace('_', '')
         print('exlister', self.canstartkeyboardtra)
-        if self.canstartkeyboardtra and data.hasText() and 800 > len(text) > 2:
+        if self.canstartkeyboardtra and data.hasText() and 3000 > len(text) > 2:
             fy = 1
             if self.settings.value("openhttp", True, bool):
                 a = []

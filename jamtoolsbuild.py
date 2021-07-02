@@ -1,7 +1,7 @@
 import time
 
 jamfilelist = ["PyQt5CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
-               "jamscreenshot", "jampublic", "jamroll_screenshot","Logger"]
+               "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger"]
 print("说明:test.py文件为主文件,main.py为存放引入库的文件(无需管),scr文件夹是fbs打包的项目目录.\n"
       "运行本文件打包时,会自动将test.py文件覆盖到PyQt5CoreModels.py(这是前期为了防反编译搞的hh)中,然后会自动解析所有jamfilelist中源码的引入库,"
       "并将所有需要的库格式化后写入main.py文件中,从而让pyinstall可以找到(否则可能有找不到库的错误)"
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                         if line not in importfilelist:
                             importfilelist.append(line)
                     line = soursef.readline()
-                    
+
         mainf.writelines(importfilelist)
         mainf.writelines(["from PyQt5CoreModels import main\n", "main()\n\n"])
     shutil.copy2('main.py', 'src/main/python/main.py')
@@ -113,8 +113,6 @@ if __name__ == '__main__':
             print("copy{}->{}".format(f, td))
         else:
             print("不存在", f)
-
-
 
     if PLATFORM_SYS == "win32":
         with open("target/installer/Installer.nsi", "r", encoding="ansi")as nsisfile:
