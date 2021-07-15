@@ -693,8 +693,9 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
 
         # 设置图标
     def add_simple_window(self):
-        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True,autoreset=True)
+        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True,autoresetid=len(self.small_windows)+1)
         simplemodebox.show()
+        simplemodebox.del_myself_signal.connect(self.small_windows.pop)
         self.small_windows.append(simplemodebox)
     def iconClied(self, e):
         "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"

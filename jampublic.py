@@ -88,13 +88,14 @@ class TipsShower(QLabel):
 class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     clear_signal = pyqtSignal()
     showm_signal = pyqtSignal(str)
+    del_myself_signal = pyqtSignal(int)
 
-    def __init__(self, parent=None, enter_tra=False, autoreset=False):
+    def __init__(self, parent=None, enter_tra=False, autoresetid=0):
         super().__init__(parent)
         self.parent = parent
         self.action = self.show
         self.moving = False
-        self.autoreset = autoreset
+        self.autoreset = autoresetid
         self.hsp = os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
                                 "JamtoolsSimpleModehistory.txt")
         if os.path.exists(self.hsp):
@@ -250,7 +251,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         if QApplication.keyboardModifiers() == Qt.ControlModifier:
             if angle > 0 and self.windowOpacity() < 1:
                 self.setWindowOpacity(self.windowOpacity() + 0.1 if angle > 0 else -0.1)
-            elif angle < 0 and self.windowOpacity() >0.2:
+            elif angle < 0 and self.windowOpacity() > 0.2:
                 self.setWindowOpacity(self.windowOpacity() - 0.1)
 
     def mouseReleaseEvent(self, e):
@@ -336,7 +337,12 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.addhistory()
         super(FramelessEnterSendQTextEdit, self).hide()
         if self.autoreset:
+            print('删除', self.autoreset - 1)
+            self.del_myself_signal.emit(self.autoreset - 1)
             self.close()
+
+    def closeEvent(self, e) -> None:
+        super(FramelessEnterSendQTextEdit, self).closeEvent(e)
 
     def clear(self, notsave=False):
         save = not notsave
