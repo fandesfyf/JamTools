@@ -1375,8 +1375,7 @@ class Swindow(QMainWindow):
         print('keyboardchanged')
         try:
             self.kbtralistener.stop()
-            self.kbtralistener.wait()
-            QApplication.processEvents()
+            del self.kbtralistener
         except:
             print(sys.exc_info())
 
@@ -1384,17 +1383,23 @@ class Swindow(QMainWindow):
         self.shifttime = time.time()
 
         def on_press(key):
-            if time.time() -  self.shifttime < self.settings.value("timeoutshift", 7, type=int):
-                if key == keyboard.Key.shift and self.settings.value('smartShift', True, bool):
-                    print('shift pressed', time.time() - self.shifttime)
-                    self.canstartkeyboardtra = True
-                    self.keboardchange_fucsignal.emit()
-                    self.kbtralistener.stop()
-            else:
-                self.kbtralistener.stop()
+            if key == keyboard.Key.shift and self.settings.value('smartShift', True, bool)and \
+                    time.time() -  self.shifttime < self.settings.value("timeoutshift", 7, type=int):
+                print('shift pressed', time.time() - self.shifttime)
+                self.canstartkeyboardtra = True
+                self.keboardchange_fucsignal.emit()
+                stopall()
 
+        def stopall():
+            print("停止监听")
+            self.kbtralistenertimer.stop()
+            self.kbtralistener.stop()
+
+        self.kbtralistenertimer=QTimer()
         self.kbtralistener = keyboard.Listener(on_press=on_press)
         self.kbtralistener.start()
+        self.kbtralistenertimer.start(self.settings.value("timeoutshift", 7, type=int)*1000)
+        self.kbtralistenertimer.timeout.connect(stopall)
 
     def keboardchange_fuc(self):
         data = self.keyboard.mimeData()
