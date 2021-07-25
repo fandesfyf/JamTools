@@ -1391,7 +1391,6 @@ class Swindow(QMainWindow):
                 stopall()
 
         def stopall():
-            print("停止监听")
             self.kbtralistenertimer.stop()
             self.kbtralistener.stop()
 
@@ -4378,7 +4377,7 @@ class Transforma(QObject):
         print(vds)
         t_videofile_format = 'gif'
         dt = fps = video_w = keep_ws = out_file = ' '
-        vd_speed = [""]
+        vd_speed = ["" for i in range(len(vds))]
         if not recording:
             self.set_style(self.parent.t_video_pushButton)
             t_videofile_format = self.parent.t_videofile_format.currentText()
@@ -4482,6 +4481,7 @@ class Transforma(QObject):
         else:
             for i, vd in enumerate(vds):
                 print("正在处理", vd)
+                self.showm_signal.emit("正在处理{}".format(vd))
                 self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
                 # try:
                 print(

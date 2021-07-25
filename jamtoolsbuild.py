@@ -92,6 +92,8 @@ if __name__ == '__main__':
     includefiles = ["log.log"]
     if PLATFORM_SYS == "win32":
         includefiles.extend(["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"])
+    elif PLATFORM_SYS == "linux":
+        includefiles.extend(["libopencv_world.so.3.4"])
     for d in includedir:
         td = "src/main/resources/base/" + d
         if os.path.exists(d):
