@@ -1,10 +1,10 @@
 # JamTools
-JamTools是一个小工具集,包含了(滚动)截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能，完全开源!
+JamTools是一个跨平台的小工具集类软件,包含了(滚动)截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能，完全开源!
 
 部分单独的模块已整理为项目：
 [截屏功能](https://github.com/fandesfyf/Jamscreenshot) 
 [滚动截屏功能](https://github.com/fandesfyf/roll_screenshot) 
-[视频播放器](https://github.com/fandesfyf/JamVideoPlayer) 
+[视频播放器项目](https://github.com/fandesfyf/JamVideoPlayer)
 [网页端传输项目](https://github.com/fandesfyf/WEBFilesTransmitter)
 [客户端传输项目](https://github.com/fandesfyf/clientFilesTransmitter)
 
