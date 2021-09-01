@@ -1078,7 +1078,6 @@ class Swindow(QMainWindow):
         self.counter = QLCDNumber(self.rec_groupBox)
 
         self.on_top = self.settings.value('win_ontop', False, type=bool)
-
         self.initUI()
         self.init_other()
         self.help()
@@ -1098,9 +1097,12 @@ class Swindow(QMainWindow):
         self.trayicon = TrayIcon(self)
         self.recorder = Recordingthescreen(self)  # 录屏
         self.connect_all()
+
         self.settings.setValue("S_SIMPLE_MODE", False)
+
         if self.settings.value('right_ocr', False, bool):
             self.openlistenmouse()
+
 
     def init_other(self):  # 后台初始化
 
@@ -1252,10 +1254,10 @@ class Swindow(QMainWindow):
 
     def initUI(self):
         x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
-        if x < 50:
+        if x < 50 or x>QApplication.desktop().width():
             self.settings.setValue("windowx", 50)
             x = 50
-        if y < 50:
+        if y < 50 or y>QApplication.desktop().availableGeometry(0).height():
             self.settings.setValue("windowy", 50)
             y = 50
 
@@ -1338,6 +1340,7 @@ class Swindow(QMainWindow):
         fileMenu.setToolTip("Edit by Fandes&机械酱 \n联系作者：2861114322@qq.com")
         fileMenu.addActions([help_act, about, loge, update])
         self.statusBar().setStyleSheet("color:blue;")
+        # self.settings.clear()
 
     def connect_all(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
@@ -5415,12 +5418,13 @@ def main():
                         print('start')
                         jamtools.hide()
                 else:
+                    QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
                     jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, True)
                     jamtools.show()
                     jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, False)
                     jamtools.show()
                     jamtools.activateWindow()
-                    QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
+
 
             client.readyRead.connect(read_)
             print('read server', client.readAll().data())
