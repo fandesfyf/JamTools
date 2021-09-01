@@ -61,7 +61,7 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 ```c
 目录结构:.
 │  test.py //主程序文件.测试文件.
-│  main.py //不是主程序,只是用来存放引入库的文件,防止打包出错
+│  main.py //不是主程序,只是用来存放引入库的文件,防止打包出错,运行一键构建脚本将会自动编写该文件
 │  WEBFilesTransmitter.py //网页端传输模块
 │  WEBFilesTransmittertest.py //网页端传输模块测试例子,单独ui
 │  clientFilesTransmitter.py //客户端传输模块
@@ -69,17 +69,18 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 │  jamcontroller.py //酱控制模块
 │  jamscreenshot.py //截屏模块
 │  jamroll_screenshot.py //滚动截屏模块
-│  jampublic.py //公共引用
+│  jampublic.py //一些非常常用的公共引用类/方法,如翻译文字识别线程类等
 │  jamresourse.py //转化的资源文件
 │  jamtoolsbuild.py //一键构建脚本,调用该脚本即可自动分析项目引用,自动配置项目文件,自动编译/打包等
-│  setjam.py //附加编译脚本,如在构建脚本中设置了编译,则会调用该脚本将所有库转化为c文件后编译
-│  cv2.cp37-win_amd64.pyd //windows下编译的opencv库,如需扩展功能,请自行安装opencv-contrib-python==3.4.2.17
-│  opencv_world341.dll
-│  cv2.cpython-37m-darwin.so //macos下编译的opencv库
-│  libopencv_world.3.4.1.dylib
-│  cv2.so //linux下编译的opencv库
-│  libopencv_world.so.3.4.1
-│  PyQt5CoreModels.py //中间文件,运行一键构建脚本时将主源码复制到此
+│  setjam.py //附加编译脚本,如在构建脚本中设置了编译,则会调用该脚本将所有库转化为c文件后编译,需要Cython支持
+|  以下几个库文件是(作者自行编译的)不同平台下的缩略版opencv库(10M+),现在默认clone的项目将不会包含这些文件(因为太大了clone起来太慢),已经放在release里面了,要小一点的文件的话就自己去下载,或者直接安装完全版的opencv-contrib-python==3.4.2.17(70M+)..
+│ \ cv2.cp37-win_amd64.pyd //windows下编译的opencv库,如需扩展功能,请自行安装opencv-contrib-python==3.4.2.17
+│ \ opencv_world341.dll
+│ \ cv2.cpython-37m-darwin.so //macos下编译的opencv库
+│ \ libopencv_world.3.4.1.dylib
+│ \ cv2.so //linux下编译的opencv库
+│ \ libopencv_world.so.3.4.1
+│  PyQt5CoreModels.py //中间文件,运行一键构建脚本时将主源码复制到此(之前是为了代码混淆用的hh懒得改了,这个文件和test.py文件要保持一致)
 │  requirement.txt //依赖列表
 │  audio_sniffer-x64.dll //windows下录音驱动
 │  screen-capture-recorder-x64.dll //windows下录屏驱动
