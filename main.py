@@ -49,11 +49,13 @@ import re
 from numpy import array, zeros, uint8, float32
 from jamroll_screenshot import Splicing_shots
 from aip import AipOcr, AipImageClassify
+from jamspeak import Speaker
 import operator
 from functools import reduce
 from numpy import zeros, uint8, asarray, vstack, float32
 import io
 import sys, time
+from playsound import playsound
 from PyQt5CoreModels import main
 main()
 

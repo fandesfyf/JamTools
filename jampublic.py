@@ -11,13 +11,14 @@ import random
 import re
 import sys
 
-from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths
+from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor
+from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from aip import AipOcr, AipImageClassify
 from urllib.parse import quote
+from jamspeak import Speaker
 
 APP_ID = QSettings('Fandes', 'jamtools').value('BaiduAI_APPID', '17302981', str)  # 获取的 ID，下同
 API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIXvlNkPa9QWsw', str)
@@ -132,8 +133,20 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.tra_botton = QPushButton('译', self)
         self.tra_botton.resize(25, 25)
         self.tra_botton.clicked.connect(self.tra)
-        self.tra_botton.setToolTip('翻译')
+        self.tra_botton.setToolTip('翻译/快捷键Ctrl+回车')
         self.tra_botton.show()
+
+        self.detail_botton = QPushButton('详', self)
+        self.detail_botton.resize(25, 25)
+        self.detail_botton.clicked.connect(self.detail)
+        self.detail_botton.setToolTip('跳转百度翻译网页版查看详细解析')
+        self.detail_botton.show()
+
+        self.speak_botton = QPushButton('听', self)
+        self.speak_botton.resize(25, 25)
+        self.speak_botton.clicked.connect(self.speak)
+        self.speak_botton.setToolTip('播放音频/快捷键F4')
+        self.speak_botton.show()
 
         self.clear_botton = QPushButton(QIcon(":./clear.png"), "", self)
         self.clear_botton.resize(25, 25)
@@ -157,6 +170,11 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
 
         if enter_tra:
             self.action = self.tra
+
+    def detail(self):
+        text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
+        url = 'https://fanyi.baidu.com/#auto/zh/' + text
+        QDesktopServices.openUrl(QUrl(url))
 
     def tra(self):
         self.showm_signal.emit("正在翻译..")
@@ -188,7 +206,13 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         else:
             return False
 
-    def textAreaChanged(self, minsize=150, recheck=True):
+    def speak(self):
+        text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
+        if text != "":
+            s = Speaker()
+            s.speak(text)
+
+    def textAreaChanged(self, minsize=180, recheck=True):
         self.document.adjustSize()
         newWidth = self.document.size().width() + 28
         newHeight = self.document.size().height() + 15
@@ -219,7 +243,9 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.label.setGeometry(self.width() - 28, 0, 28, self.height())
         self.colse_botton.move(self.width() - 26, 1)
         self.tra_botton.move(self.width() - 26, self.height() - 26)
-        self.clear_botton.move(self.tra_botton.x(), self.tra_botton.y() - self.clear_botton.height())
+        self.speak_botton.move(self.tra_botton.x(), self.tra_botton.y() - self.speak_botton.height())
+        self.detail_botton.move(self.speak_botton.x(), self.speak_botton.y() - self.detail_botton.height())
+        self.clear_botton.move(self.detail_botton.x(), self.detail_botton.y() - self.clear_botton.height())
         self.last_botton.move(self.clear_botton.x(), self.clear_botton.y() - self.last_botton.height())
         self.next_botton.move(self.clear_botton.x() + self.clear_botton.width() - self.next_botton.width(),
                               self.clear_botton.y() - self.next_botton.height())
@@ -273,6 +299,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
 
     def keyPressEvent(self, e):
         super(FramelessEnterSendQTextEdit, self).keyPressEvent(e)
+        # print(e.key())
         if e.key() == Qt.Key_Return:
             try:
                 if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
@@ -282,6 +309,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             except:
                 print('回车失败')
             return
+        elif e.key() ==16777267:
+            self.speak()
         elif e.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
             print("save")
             self.addhistory()
@@ -291,6 +320,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
             self.last_history()
         elif QApplication.keyboardModifiers() == Qt.ControlModifier and e.key() == Qt.Key_Right:
             self.next_history()
+
 
     def addhistory(self):
         text = self.toPlainText()
