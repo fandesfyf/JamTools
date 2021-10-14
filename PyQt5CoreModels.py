@@ -3305,7 +3305,8 @@ hhh(o゜▽゜)o☆）
                '   百度AI开放平台http:/ai.baidu.com\n' \
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \
                '   思知人工智能AI开放平台https:/console.ownthink.com\n\n' \
-               '本软件完全免费，严禁贩卖！！如有疑问，联系作者 2861114322@qq.com\n' \
+               '本软件完全免费，严禁贩卖！如有疑问，联系作者 2861114322@qq.com\n' \
+               'Github项目地址:https://github.com/fandesfyf/JamTools\n'\
                '欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
                '欢迎关注,<<机械酱的小黑屋>>(●ˇ∀ˇ●)⇣⇣⇣⇣,虽然什么都没有...(真的)'
         self.help_text.insertPlainText(text)

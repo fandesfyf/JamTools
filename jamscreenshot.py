@@ -1,6 +1,7 @@
 import gc
 import math
 import os
+import re
 import sys
 import time
 
@@ -175,7 +176,7 @@ class CanMoveGroupbox(QGroupBox):  # 移动groupbox
         # super(CanMoveGroupbox, self).mouseMoveEvent(event)
 
 
-class Finder():#选择智能选区
+class Finder():  # 选择智能选区
     def __init__(self, parent):
         self.h = self.w = 0
         self.rect_list = self.contours = []
@@ -245,6 +246,7 @@ class Finder():#选择智能选区
         self.h = self.w = 0
         self.rect_list = self.contours = []
         self.img = None
+
 
 class MaskLayer(QLabel):
     def __init__(self, parent=None):
@@ -341,7 +343,7 @@ class MaskLayer(QLabel):
                                      self.parent.mouse_posx, self.parent.mouse_posy)
 
         elif not (self.parent.painter_tools['selectcolor_on'] or self.parent.painter_tools['bucketpainter_on']):
-            #正常显示选区
+            # 正常显示选区
             rect = QRect(min(self.parent.x0, self.parent.x1), min(self.parent.y0, self.parent.y1),
                          abs(self.parent.x1 - self.parent.x0), abs(self.parent.y1 - self.parent.y0))
 
@@ -386,7 +388,7 @@ class MaskLayer(QLabel):
             painter.drawRect(min(self.parent.x1, self.parent.x0), max(self.parent.y1, self.parent.y0),
                              max(self.parent.x1, self.parent.x0) - min(self.parent.x1, self.parent.x0),
                              self.height() - max(self.parent.y1, self.parent.y0))
-        #以下为鼠标放大镜
+        # 以下为鼠标放大镜
         if not (self.parent.painter_tools['drawcircle_on'] or self.parent.painter_tools['drawrect_bs_on'] or
                 self.parent.painter_tools['pen_on'] or self.parent.painter_tools['eraser_on'] or
                 self.parent.painter_tools['drawtext_on'] or self.parent.painter_tools['backgrounderaser_on']
@@ -451,7 +453,7 @@ class PaintLayer(QLabel):
         if self.parent.on_init:
             print('oninit return')
             return
-        if 1 in self.parent.painter_tools.values():#如果有画笔工具打开
+        if 1 in self.parent.painter_tools.values():  # 如果有画笔工具打开
             painter = QPainter(self)
             color = QColor(self.parent.pencolor)
             color.setAlpha(255)
@@ -471,7 +473,7 @@ class PaintLayer(QLabel):
             self.pixPainter.setRenderHint(QPainter.Antialiasing)
         except:
             print('pixpainter fail!')
-        while len(self.parent.eraser_pointlist):#橡皮擦工具
+        while len(self.parent.eraser_pointlist):  # 橡皮擦工具
             # self.pixPainter.setRenderHint(QPainter.Antialiasing)
             self.pixPainter.setBrush(QColor(0, 0, 0, 0))
             self.pixPainter.setPen(Qt.NoPen)
@@ -506,7 +508,7 @@ class PaintLayer(QLabel):
                     color.setAlpha(1)
             return color
 
-        while len(self.parent.pen_pointlist):#画笔工具
+        while len(self.parent.pen_pointlist):  # 画笔工具
             color = get_ture_pen_alpha_color()
             self.pixPainter.setBrush(color)
             self.pixPainter.setPen(Qt.NoPen)
@@ -531,7 +533,7 @@ class PaintLayer(QLabel):
                                                         self.parent.tool_width, self.parent.tool_width)
 
             self.parent.old_pen = new_pen_point
-        while len(self.parent.drawpix_pointlist):#贴图工具
+        while len(self.parent.drawpix_pointlist):  # 贴图工具
             brush = QBrush(self.parent.pencolor)
             tpix = QPixmap(self.parent.tool_width, self.parent.tool_width)
             tpix.fill(Qt.transparent)
@@ -567,7 +569,7 @@ class PaintLayer(QLabel):
                                                         self.parent.tool_width, self.parent.tool_width)
 
             self.parent.old_pen = new_pen_point
-        if self.parent.drawrect_pointlist[0][0] != -2 and self.parent.drawrect_pointlist[1][0] != -2:#画矩形工具
+        if self.parent.drawrect_pointlist[0][0] != -2 and self.parent.drawrect_pointlist[1][0] != -2:  # 画矩形工具
             # print(self.parent.drawrect_pointlist)
             temppainter = QPainter(self)
             temppainter.setPen(QPen(self.parent.pencolor, self.parent.tool_width, Qt.SolidLine))
@@ -626,7 +628,7 @@ class PaintLayer(QLabel):
                 self.parent.drawarrow_pointlist = [[-2, -2], [-2, -2], 0]
                 # self.parent.drawarrow_pointlist[0] = [-2, -2]
 
-        if len(self.parent.drawtext_pointlist) > 1 or self.parent.text_box.paint:#绘制文字
+        if len(self.parent.drawtext_pointlist) > 1 or self.parent.text_box.paint:  # 绘制文字
             self.parent.text_box.paint = False
             # print(self.parent.drawtext_pointlist)
             text = self.parent.text_box.toPlainText()
@@ -645,7 +647,6 @@ class PaintLayer(QLabel):
             self.pixPainter.end()
         except:
             print("pixpainter end fail!")
-
 
 
 class AutotextEdit(QTextEdit):
@@ -695,6 +696,7 @@ class Freezer(QLabel):
         self.setWindowOpacity(0.95)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setMouseTracking(True)
+        self.drawRect = True
         # self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.setGeometry(x, y, self.imgpix.width(), self.imgpix.height())
         self.show()
@@ -710,6 +712,7 @@ class Freezer(QLabel):
         copyaction = menu.addAction('复制')
         saveaction = menu.addAction('另存为')
         topaction = menu.addAction('(取消)置顶')
+        rectaction = menu.addAction('(取消)边框')
 
         action = menu.exec_(self.mapToGlobal(event.pos()))
         if action == quitAction:
@@ -739,6 +742,9 @@ class Freezer(QLabel):
                 self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
                 self.setWindowFlag(Qt.Tool, True)
                 self.show()
+        elif action == rectaction:
+            self.drawRect = not self.drawRect
+            self.update()
 
     def wheelEvent(self, e):
         if self.isVisible():
@@ -814,10 +820,11 @@ class Freezer(QLabel):
 
     def paintEvent(self, event):
         super().paintEvent(event)
-        painter = QPainter(self)
-        painter.setPen(QPen(Qt.green, 1, Qt.SolidLine))
-        painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
-        painter.end()
+        if self.drawRect:
+            painter = QPainter(self)
+            painter.setPen(QPen(Qt.green, 1, Qt.SolidLine))
+            painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
+            painter.end()
 
     def clear(self):
         self.clearMask()
@@ -844,12 +851,12 @@ class Slabel(QLabel):  # 区域截图功能
             os.mkdir("j_temp")
         # self.pixmap()=QPixmap()
 
-    def setup(self):#初始化界面
+    def setup(self):  # 初始化界面
         self.on_init = True
-        self.paintlayer = PaintLayer(self)#绘图层
-        self.mask = MaskLayer(self)#遮罩层
-        self.text_box = AutotextEdit(self)#文字工具类
-        self.shower = FramelessEnterSendQTextEdit(self, enter_tra=True)#截屏时文字识别的小窗口
+        self.paintlayer = PaintLayer(self)  # 绘图层
+        self.mask = MaskLayer(self)  # 遮罩层
+        self.text_box = AutotextEdit(self)  # 文字工具类
+        self.shower = FramelessEnterSendQTextEdit(self, enter_tra=True)  # 截屏时文字识别的小窗口
         self.settings = QSettings('Fandes', 'jamtools')
         self.setMouseTracking(True)
         if PLATFORM_SYS == "darwin":
@@ -857,7 +864,7 @@ class Slabel(QLabel):  # 区域截图功能
         else:
             self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)  # Sheet
         # self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        self.botton_box = QGroupBox(self)#botton_box是截屏选框旁边那个按钮堆的box
+        self.botton_box = QGroupBox(self)  # botton_box是截屏选框旁边那个按钮堆的box
         self.save_botton = QPushButton(QIcon(":/saveicon.png"), '', self.botton_box)
         self.save_botton.clicked.connect(lambda: self.cutpic(1))
         self.ssrec_botton = QPushButton(QIcon(":/ssrecord.png"), '', self.botton_box)
@@ -867,7 +874,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.btn1 = QPushButton("确定", self.botton_box)
         self.freeze_img_botton = QPushButton(self.botton_box)
         self.pencolor = QColor(Qt.red)
-        self.painter_box = CanMoveGroupbox(self)#painter_box是绘图工具堆里的那个box,可移动
+        self.painter_box = CanMoveGroupbox(self)  # painter_box是绘图工具堆里的那个box,可移动
         self.choice_clor_btn = HoverButton('', self.painter_box)
         self.selectcolor_btn = QPushButton("", self.painter_box)
         self.original_btn = QPushButton("", self.painter_box)
@@ -894,8 +901,8 @@ class Slabel(QLabel):  # 区域截图功能
         self.polygon_ss_btn = QPushButton("", self.painter_box)
         self.lastbtn = QPushButton("", self.painter_box)
         self.nextbtn = QPushButton("", self.painter_box)
-        self.finder = Finder(self)#智能选区的寻找器
-        self.Tipsshower = TipsShower("  ", targetarea=(100, 70, 0, 0), parent=self)#左上角的大字提示
+        self.finder = Finder(self)  # 智能选区的寻找器
+        self.Tipsshower = TipsShower("  ", targetarea=(100, 70, 0, 0), parent=self)  # 左上角的大字提示
         self.Tipsshower.hide()
         self.shower.showm_signal.connect(self.Tipsshower.setText)
         if PLATFORM_SYS == "darwin":
@@ -912,21 +919,21 @@ class Slabel(QLabel):  # 区域截图功能
         # self.setWindowOpacity(1)
 
         self.init_parameters()
-        self.backup_ssid = 0#当前备份数组的id,用于确定回退了几步
-        self.backup_pic_list = []#备份页面的数组,用于前进/后退
+        self.backup_ssid = 0  # 当前备份数组的id,用于确定回退了几步
+        self.backup_pic_list = []  # 备份页面的数组,用于前进/后退
         self.on_init = False
 
-    def init_parameters(self):#初始化参数
+    def init_parameters(self):  # 初始化参数
         self.NpainterNmoveFlag = self.choicing = self.move_rect = self.move_y0 = self.move_x0 = self.move_x1 \
             = self.change_alpha = self.move_y1 = False
         self.x0 = self.y0 = self.rx0 = self.ry0 = self.x1 = self.y1 = self.mouse_posx = self.mouse_posy = -50
         self.bx = self.by = 0
-        self.alpha = 255#透明度值
+        self.alpha = 255  # 透明度值
         self.smartcursor_on = self.settings.value("screenshot/smartcursor", True, type=bool)
-        self.finding_rect = True#正在自动寻找选取的控制变量,就进入截屏之后会根据鼠标移动到的位置自动选取,
+        self.finding_rect = True  # 正在自动寻找选取的控制变量,就进入截屏之后会根据鼠标移动到的位置自动选取,
         self.tool_width = 5
         self.roller_area = (0, 0, 1, 1)
-        self.backgrounderaser_pointlist = []#下面xxpointlist都是储存绘图数据的列表
+        self.backgrounderaser_pointlist = []  # 下面xxpointlist都是储存绘图数据的列表
         self.eraser_pointlist = []
         self.pen_pointlist = []
         self.drawpix_pointlist = []
@@ -945,7 +952,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.old_pen = self.old_eraser = self.old_brush = self.old_backgrounderaser = [-2, -2]
         self.left_button_push = False
 
-    def init_slabel_ui(self):#初始化界面的参数
+    def init_slabel_ui(self):  # 初始化界面的参数
         self.shower.hide()
         self.shower.setWindowOpacity(0.8)
         if PLATFORM_SYS == "darwin":
@@ -1158,13 +1165,13 @@ class Slabel(QLabel):  # 区域截图功能
         if self.settings.value("screenshot/smartcursor", True, type=bool):
             self.smartcursor_btn.setStyleSheet("background-color:rgb(50,50,50);")
 
-    def ssrec(self):#录屏函数
+    def ssrec(self):  # 录屏函数
         self.parent.setingarea = True
         self.cutpic()
         self.recorder_recordchange_signal.emit()
         # recorder.recordchange()
 
-    def Color_hoveraction(self, hover):#鼠标滑过选色按钮时触发的
+    def Color_hoveraction(self, hover):  # 鼠标滑过选色按钮时触发的
         if hover:
             try:
                 self.closenomalcolorboxtimer.stop()
@@ -1208,7 +1215,7 @@ class Slabel(QLabel):  # 区域截图功能
             # self.refresh_hideclosenomalsignal()
         # else:
 
-    def closenomalcolorboxsignalhandle(self, s):#关闭常见颜色浮窗的函数
+    def closenomalcolorboxsignalhandle(self, s):  # 关闭常见颜色浮窗的函数
         if s:
             try:
                 self.closenomalcolorboxtimer.stop()
@@ -1232,7 +1239,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.get_color(QColor(color))
         # self.nomalcolorbox = None
 
-    def get_color(self, color: QColor = None):#选择颜色
+    def get_color(self, color: QColor = None):  # 选择颜色
         if type(color) is not QColor:
             self.Tipsshower.setText("选择颜色")
             try:
@@ -1408,7 +1415,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.alpha = self.alpha_slider.value()
         self.pencolor.setAlpha(self.alpha)
 
-    def change_tools_fun(self, r):#更改工具时统一调用的函数,用于重置所有样式
+    def change_tools_fun(self, r):  # 更改工具时统一调用的函数,用于重置所有样式
         self.pen.setStyleSheet('')
         self.bs.setStyleSheet('')
         self.eraser.setStyleSheet('')
@@ -1471,7 +1478,7 @@ class Slabel(QLabel):  # 区域截图功能
             self.choise_pix.setIcon(QIcon(pic))
 
     def screen_shot(self, pix=None):
-        #截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
+        # 截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
         # if PLATFORM_SYS=="darwin":
         self.sshoting = True
         t1 = time.process_time()
@@ -1479,10 +1486,10 @@ class Slabel(QLabel):  # 区域截图功能
             get_pix = pix
             self.init_parameters()
         else:
-            self.setup()#初始化截屏
-            get_pix = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId())#截取屏幕
+            self.setup()  # 初始化截屏
+            get_pix = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId())  # 截取屏幕
         pixmap = QPixmap(get_pix.width(), get_pix.height())
-        pixmap.fill(Qt.transparent)#填充透明色,不然没有透明通道
+        pixmap.fill(Qt.transparent)  # 填充透明色,不然没有透明通道
 
         painter = QPainter(pixmap)
         # painter.setRenderHint(QPainter.Antialiasing)
@@ -1513,7 +1520,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.init_ss_thread_fun(get_pix)
         self.paintlayer.pixpng = QPixmap(":/msk.jpg")
         self.text_box.setTextColor(self.pencolor)
-        #以下设置样式
+        # 以下设置样式
         self.text_box.setStyleSheet("background-color: rgba(0, 0, 0, 10);")
         self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
                            "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
@@ -1541,7 +1548,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.update()
         QApplication.processEvents()
 
-    def init_ss_thread_fun(self, get_pix):#后台初始化截屏线程,用于寻找所有智能选区
+    def init_ss_thread_fun(self, get_pix):  # 后台初始化截屏线程,用于寻找所有智能选区
 
         self.x0 = self.y0 = 0
         self.x1 = QApplication.desktop().width()
@@ -1593,12 +1600,9 @@ class Slabel(QLabel):  # 区域截图功能
 
     def freeze_img(self):
         self.cutpic(save_as=2)
-        # st = time.process_time()
-
         self.parent.freeze_imgs.append(Freezer(None, self.final_get_img,
                                                min(self.x0, self.x1), min(self.y0, self.y1),
                                                len(self.parent.freeze_imgs)))
-        # print(len(self.parent.freeze_imgs), time.process_time() - st, 'time')
         if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             self.parent.show()
         self.clear_and_hide()
@@ -1613,9 +1617,27 @@ class Slabel(QLabel):  # 区域截图功能
         with open("j_temp/jam_outputfile.png", 'rb') as i:
             img = i.read()
         self.ocrthread = OcrimgThread('jam_outputfile', img, 1)
-        self.ocrthread.result_show_signal.connect(self.shower.insertPlainText)
+        self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
         self.ocrthread.start()
         QApplication.processEvents()
+
+    def ocr_res_signalhandle(self, text):
+        self.shower.insertPlainText(text)
+        jt = re.sub(r'[^\w]', '', text).replace('_', '')
+        n = 0
+        for i in text:
+            if self.is_alphabet(i):
+                n += 1
+        if n / len(jt) > 0.4:
+            print("is en")
+            self.shower.tra()
+
+    def is_alphabet(self, uchar):
+        """判断一个unicode是否是英文字母"""
+        if (u'\u0041' <= uchar <= u'\u005a') or (u'\u0061' <= uchar <= u'\u007a'):
+            return True
+        else:
+            return False
 
     def cla(self):
         self.Tipsshower.setText("正在识别...")
@@ -1632,31 +1654,31 @@ class Slabel(QLabel):  # 区域截图功能
         self.ocrthread.start()
         QApplication.processEvents()
 
-    def choice(self):#选区完毕后显示选择按钮的函数
+    def choice(self):  # 选区完毕后显示选择按钮的函数
         self.choicing = True
 
-        botton_boxw = self.x1+5
-        botton_boxh = self.y1+5
+        botton_boxw = self.x1 + 5
+        botton_boxh = self.y1 + 5
         dx = abs(self.x1 - self.x0)
         dy = abs(self.y1 - self.y0)
         x = QApplication.desktop().width()
         y = QApplication.desktop().height()
-        if dx < self.botton_box.width()+10:
+        if dx < self.botton_box.width() + 10:
             if max(self.x1, self.x0) + self.botton_box.width() > x:
-                botton_boxw = min(self.x0, self.x1) - self.botton_box.width()-5
+                botton_boxw = min(self.x0, self.x1) - self.botton_box.width() - 5
             else:
-                botton_boxw = max(self.x1, self.x0)+5
+                botton_boxw = max(self.x1, self.x0) + 5
         else:
             if self.x1 > self.x0:
-                botton_boxw = self.x1 - self.botton_box.width()-5
+                botton_boxw = self.x1 - self.botton_box.width() - 5
         if dy < self.botton_box.height() + 105:
             if max(self.y1, self.y0) + self.botton_box.height() + 20 > y:
-                botton_boxh = min(self.y0, self.y1) - self.botton_box.height()-5
+                botton_boxh = min(self.y0, self.y1) - self.botton_box.height() - 5
             else:
-                botton_boxh = max(self.y0, self.y1)+5
+                botton_boxh = max(self.y0, self.y1) + 5
         else:
             if self.y1 > self.y0:
-                botton_boxh = self.y1 - self.botton_box.height()-5
+                botton_boxh = self.y1 - self.botton_box.height() - 5
         self.botton_box.move(botton_boxw, botton_boxh)
         self.botton_box.show()
 
@@ -1679,7 +1701,7 @@ class Slabel(QLabel):  # 区域截图功能
                 self.parent.init_ssview()
         except:
             print(sys.exc_info())
-        exi=roller.roll_manager(area)
+        exi = roller.roll_manager(area)
         print('roller end')
         if exi:
             print("未完成滚动截屏,用户退出")
@@ -1692,10 +1714,10 @@ class Slabel(QLabel):  # 区域截图功能
             QApplication.clipboard().setPixmap(self.final_get_img)
             self.clear_and_hide()
             print("已复制到剪切板")
-            return #直接运行本文件时到此结束
+            return  # 直接运行本文件时到此结束
         self.manage_data()
 
-    def cutpic(self, save_as=0):#裁剪图片
+    def cutpic(self, save_as=0):  # 裁剪图片
         """裁剪图片"""
         self.sshoting = False
         transparentpix = self.pixmap().copy()
@@ -1862,9 +1884,9 @@ class Slabel(QLabel):  # 区域截图功能
 
     # 鼠标点击事件
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:#按下了左键
+        if event.button() == Qt.LeftButton:  # 按下了左键
             self.left_button_push = True
-            if 1 in self.painter_tools.values():#如果有绘图工具打开了,说明正在绘图
+            if 1 in self.painter_tools.values():  # 如果有绘图工具打开了,说明正在绘图
                 if self.painter_tools['drawrect_bs_on']:
                     # print("ch",self.drawrect_pointlist)
                     self.drawrect_pointlist = [[event.x(), event.y()], [-2, -2], 0]
@@ -1945,7 +1967,7 @@ class Slabel(QLabel):  # 区域截图功能
                         self.change_tools_fun("")
                         self.choicing = False
                         self.finding_rect = True
-            else:#否则说明正在选区或移动选区
+            else:  # 否则说明正在选区或移动选区
                 r = 0
                 x0 = min(self.x0, self.x1)
                 x1 = max(self.x0, self.x1)
@@ -1954,7 +1976,7 @@ class Slabel(QLabel):  # 区域截图功能
                 my = (y1 + y0) // 2
                 mx = (x1 + x0) // 2
                 # print(x0, x1, y0, y1, mx, my, event.x(), event.y())
-                #以下为判断点击在哪里
+                # 以下为判断点击在哪里
                 if not self.finding_rect and (self.x0 - 8 < event.x() < self.x0 + 8) and (
                         my - 8 < event.y() < my + 8 or y0 - 8 < event.y() < y0 + 8 or y1 - 8 < event.y() < y1 + 8):
                     self.move_x0 = True
@@ -1982,19 +2004,19 @@ class Slabel(QLabel):  # 区域截图功能
                     self.bx = abs(max(self.x1, self.x0) - event.x())
                     self.by = abs(max(self.y1, self.y0) - event.y())
                 else:
-                    self.NpainterNmoveFlag = True#没有绘图没有移动还按下了左键,说明正在选区,标志变量
+                    self.NpainterNmoveFlag = True  # 没有绘图没有移动还按下了左键,说明正在选区,标志变量
                     # if self.finding_rect:
                     #     self.rx0 = event.x()
                     #     self.ry0 = event.y()
                     # else:
-                    self.rx0 = event.x()  #记录下点击位置
+                    self.rx0 = event.x()  # 记录下点击位置
                     self.ry0 = event.y()
                     if self.x1 == -50:
                         self.x1 = event.x()
                         self.y1 = event.y()
 
                     # print('re')
-                if r:#判断是否点击在了对角线上
+                if r:  # 判断是否点击在了对角线上
                     if (self.y0 - 8 < event.y() < self.y0 + 8) and (
                             x0 - 8 < event.x() < x1 + 8):
                         self.move_y0 = True
@@ -2008,9 +2030,9 @@ class Slabel(QLabel):  # 区域截图功能
                 # self.finding_rectde = True
             self.botton_box.hide()
             self.update()
-        elif event.button() == Qt.RightButton:#右键
+        elif event.button() == Qt.RightButton:  # 右键
             self.setCursor(Qt.ArrowCursor)
-            if 1 in self.painter_tools.values():#退出绘图工具
+            if 1 in self.painter_tools.values():  # 退出绘图工具
                 if self.painter_tools["selectcolor_on"]:
                     self.Tipsshower.setText("取消取色器")
                     self.choice_clor_btn.setStyleSheet(
@@ -2033,13 +2055,13 @@ class Slabel(QLabel):  # 区域截图功能
                     self.shower.hide()
                     self.change_tools_fun("")
 
-            elif self.choicing:#退出选定的选区
+            elif self.choicing:  # 退出选定的选区
                 self.botton_box.hide()
                 self.choicing = False
                 self.finding_rect = True
                 self.shower.hide()
                 self.x0 = self.y0 = self.x1 = self.y1 = -50
-            else:#退出截屏
+            else:  # 退出截屏
                 try:
                     if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                         self.parent.show()
@@ -2054,7 +2076,7 @@ class Slabel(QLabel):  # 区域截图功能
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.left_button_push = False
-            if 1 in self.painter_tools.values():#绘图工具松开
+            if 1 in self.painter_tools.values():  # 绘图工具松开
                 if self.painter_tools['pen_on']:
                     self.pen_pointlist.append([-2, -2])
                 elif self.painter_tools['drawpix_bs_on']:
@@ -2076,9 +2098,9 @@ class Slabel(QLabel):  # 区域截图功能
                     self.backgrounderaser_pointlist.append([-2, -2])
                 if not self.painter_tools["perspective_cut_on"] and not self.painter_tools["polygon_ss_on"]:
                     self.backup_shortshot()
-            else:#调整选区松开
+            else:  # 调整选区松开
                 self.setCursor(Qt.ArrowCursor)
-            self.NpainterNmoveFlag = False#选区结束标志置零
+            self.NpainterNmoveFlag = False  # 选区结束标志置零
             self.move_rect = self.move_y0 = self.move_x0 = self.move_x1 = self.move_y1 = False
             if not self.painter_tools["perspective_cut_on"] and not self.painter_tools["polygon_ss_on"]:
                 self.choice()
@@ -2091,14 +2113,14 @@ class Slabel(QLabel):  # 区域截图功能
             angleDelta = event.angleDelta() / 8
             dy = angleDelta.y()
             # print(dy)
-            if self.change_alpha:#正在调整透明度
+            if self.change_alpha:  # 正在调整透明度
                 if dy > 0 and self.alpha < 254:
                     self.alpha_slider.setValue(self.alpha_slider.value() + 2)
                 elif dy < 0 and self.alpha > 2:
                     self.alpha_slider.setValue(self.alpha_slider.value() - 2)
                 self.Tipsshower.setText("透明度值{}".format(self.alpha))
 
-            else:#否则是调节画笔大小
+            else:  # 否则是调节画笔大小
                 # angleDelta = event.angleDelta() / 8
                 # dy = angleDelta.y()
                 # print(dy)
@@ -2123,14 +2145,14 @@ class Slabel(QLabel):  # 区域截图功能
     def mouseMoveEvent(self, event):
         # print(self.isVisible(), 12121, self.finding_rect, self.smartcursor_on, self.isActiveWindow(), self.isHidden())
         if self.isVisible():
-            self.mouse_posx = event.x()#先储存起鼠标位置,用于画笔等的绘图计算
+            self.mouse_posx = event.x()  # 先储存起鼠标位置,用于画笔等的绘图计算
             self.mouse_posy = event.y()
-            if self.finding_rect and self.smartcursor_on:#如果允许智能选取并且在选选区步骤
+            if self.finding_rect and self.smartcursor_on:  # 如果允许智能选取并且在选选区步骤
                 self.x0, self.y0, self.x1, self.y1 = self.finder.find_targetrect((self.mouse_posx, self.mouse_posy))
                 self.setCursor(QCursor(QPixmap(":/smartcursor.png").scaled(32, 32, Qt.KeepAspectRatio), 16, 16))
                 # print(self.x0, self.y0, self.x1, self.y1 )
                 # print("findtime {}".format(time.process_time()-st))
-            elif 1 in self.painter_tools.values():#如果有绘图工具已经被选择,说明正在绘图
+            elif 1 in self.painter_tools.values():  # 如果有绘图工具已经被选择,说明正在绘图
                 self.paintlayer.px = event.x()
                 self.paintlayer.py = event.y()
                 if self.left_button_push:
@@ -2192,9 +2214,9 @@ class Slabel(QLabel):  # 区域截图功能
                 minx = min(self.x0, self.x1)
                 maxx = max(self.x0, self.x1)
                 miny = min(self.y0, self.y1)
-                maxy = max(self.y0, self.y1)#以上取选区的最小值和最大值
+                maxy = max(self.y0, self.y1)  # 以上取选区的最小值和最大值
                 my = (maxy + miny) // 2
-                mx = (maxx + minx) // 2#取中间值
+                mx = (maxx + minx) // 2  # 取中间值
                 if ((minx - 8 < event.x() < minx + 8) and (miny - 8 < event.y() < miny + 8)) or \
                         ((maxx - 8 < event.x() < maxx + 8) and (maxy - 8 < event.y() < maxy + 8)):
                     self.setCursor(Qt.SizeFDiagCursor)
@@ -2236,14 +2258,14 @@ class Slabel(QLabel):  # 区域截图功能
                         self.setCursor(Qt.SizeAllCursor)
                 else:
                     self.setCursor(Qt.ArrowCursor)
-                #以上几个ifelse都是判断鼠标移动的位置和选框的关系然后设定光标形状
-                    # print(11)
-                if self.NpainterNmoveFlag:#如果没有在绘图也没在移动(调整)选区,在选区,则不断更新选区的数值
+                # 以上几个ifelse都是判断鼠标移动的位置和选框的关系然后设定光标形状
+                # print(11)
+                if self.NpainterNmoveFlag:  # 如果没有在绘图也没在移动(调整)选区,在选区,则不断更新选区的数值
                     # self.btn1.hide()
                     # self.btn2.hide()
-                    self.x1 = event.x()#储存当前位置到self.x1下同
+                    self.x1 = event.x()  # 储存当前位置到self.x1下同
                     self.y1 = event.y()
-                    self.x0 = self.rx0#鼠标按下时记录的坐标,下同
+                    self.x0 = self.rx0  # 鼠标按下时记录的坐标,下同
                     self.y0 = self.ry0
                     if self.y1 > self.y0:  # 下面是边界修正,由于选框占用了一个像素,否则有误差
                         self.y1 += 1
@@ -2253,8 +2275,8 @@ class Slabel(QLabel):  # 区域截图功能
                         self.x1 += 1
                     else:
                         self.x0 += 1
-                else:#说明在移动或者绘图,不过绘图没有什么处理的,下面是处理移动/拖动选区
-                    if self.move_x0:#判断拖动标志位,下同
+                else:  # 说明在移动或者绘图,不过绘图没有什么处理的,下面是处理移动/拖动选区
+                    if self.move_x0:  # 判断拖动标志位,下同
                         self.x0 = event.x()
                     elif self.move_x1:
                         self.x1 = event.x()
@@ -2262,7 +2284,7 @@ class Slabel(QLabel):  # 区域截图功能
                         self.y0 = event.y()
                     elif self.move_y1:
                         self.y1 = event.y()
-                    elif self.move_rect:#拖动选框
+                    elif self.move_rect:  # 拖动选框
                         dx = abs(self.x1 - self.x0)
                         dy = abs(self.y1 - self.y0)
                         if self.x1 > self.x0:
@@ -2279,35 +2301,35 @@ class Slabel(QLabel):  # 区域截图功能
                             self.y0 = event.y() + self.by
                             self.y1 = self.y0 - dy
             # print("movetime{}".format(time.process_time()-st))
-            self.update()#更新界面
+            self.update()  # 更新界面
         # QApplication.processEvents()
 
-    def keyPressEvent(self, e):#按键按下,没按一个键触发一次
+    def keyPressEvent(self, e):  # 按键按下,没按一个键触发一次
         super(Slabel, self).keyPressEvent(e)
         # self.pixmap().save(temp_path + '/aslfdhds.png')
-        if e.key() == Qt.Key_Escape:#退出
+        if e.key() == Qt.Key_Escape:  # 退出
             self.clear_and_hide()
-        elif e.key() == Qt.Key_Control:#按住ctrl,更改透明度标志位置一
+        elif e.key() == Qt.Key_Control:  # 按住ctrl,更改透明度标志位置一
             print("cahnge")
             self.change_alpha = True
 
-        elif self.change_alpha:#如果已经按下了ctrl
-            if e.key() == Qt.Key_S:#还按下了s,说明是保存,ctrl+s
+        elif self.change_alpha:  # 如果已经按下了ctrl
+            if e.key() == Qt.Key_S:  # 还按下了s,说明是保存,ctrl+s
                 self.cutpic(1)
             elif not self.painter_tools["polygon_ss_on"] and not self.painter_tools["perspective_cut_on"]:
-                if e.key() == Qt.Key_Z:#前一步
+                if e.key() == Qt.Key_Z:  # 前一步
                     self.last_step()
-                elif e.key() == Qt.Key_Y:#后一步
+                elif e.key() == Qt.Key_Y:  # 后一步
                     self.next_step()
 
-    def keyReleaseEvent(self, e) -> None:#按键松开
+    def keyReleaseEvent(self, e) -> None:  # 按键松开
         super(Slabel, self).keyReleaseEvent(e)
         if e.key() == Qt.Key_Control:
             self.change_alpha = False
 
-    def clear_and_hide(self):#清理退出
+    def clear_and_hide(self):  # 清理退出
         print("clear and hide")
-        if PLATFORM_SYS == "darwin":#如果系统为macos
+        if PLATFORM_SYS == "darwin":  # 如果系统为macos
             print("drawin hide")
             self.setWindowOpacity(0)
             self.showNormal()
@@ -2315,23 +2337,21 @@ class Slabel(QLabel):  # 区域截图功能
         self.clearotherthread = Commen_Thread(self.clear_and_hide_thread)
         self.clearotherthread.start()
 
-    def clear_and_hide_thread(self):#后台等待线程
+    def clear_and_hide_thread(self):  # 后台等待线程
         self.close_signal.emit()
         try:
             self.save_data_thread.wait()
         except:
             print(sys.exc_info(), 2300)
 
-
-
     # 绘制事件
-    def paintEvent(self, event):#绘图函数,每次调用self.update时触发
+    def paintEvent(self, event):  # 绘图函数,每次调用self.update时触发
         super().paintEvent(event)
         if self.on_init:
             print('oninit return')
             return
-        pixPainter = QPainter(self.pixmap())#画笔
-        while len(self.backgrounderaser_pointlist):#背景橡皮擦工具有值,则说明正在使用背景橡皮擦
+        pixPainter = QPainter(self.pixmap())  # 画笔
+        while len(self.backgrounderaser_pointlist):  # 背景橡皮擦工具有值,则说明正在使用背景橡皮擦
             # print(self.backgrounderaser_pointlist)
             pixPainter.setRenderHint(QPainter.Antialiasing)
             pixPainter.setBrush(QColor(0, 0, 0, 0))
@@ -2358,7 +2378,7 @@ class Slabel(QLabel):  # 区域截图功能
 
             self.old_pen = new_pen_point
 
-        while len(self.repairbackground_pointlist):#背景修复画笔有值
+        while len(self.repairbackground_pointlist):  # 背景修复画笔有值
             brush = QBrush(self.pencolor)
 
             brush.setTexture(self.originalPix)
@@ -2387,29 +2407,29 @@ class Slabel(QLabel):  # 区域截图功能
 
 
 if __name__ == '__main__':
-    class testwin(QWidget):#随便设置的一个ui,
+    class testwin(QWidget):  # 随便设置的一个ui,
         def __init__(self):
             super(testwin, self).__init__()
-            self.freeze_imgs = []#储存固定截屏在屏幕上的数组
+            self.freeze_imgs = []  # 储存固定截屏在屏幕上的数组
             btn = QPushButton("截屏", self)
             btn.setGeometry(20, 20, 60, 30)
             btn.setShortcut("Alt+Z")
             btn.clicked.connect(self.ss)
-            self.temppos=[500,100]
+            self.temppos = [500, 100]
             self.s = Slabel(self)
-            self.s.close_signal.connect(self.ss_end)#截屏结束信号连接
+            self.s.close_signal.connect(self.ss_end)  # 截屏结束信号连接
             self.resize(300, 200)
 
-        def ss(self):#截屏开始
+        def ss(self):  # 截屏开始
             self.setWindowOpacity(0)  # 设置透明度而不是hide是因为透明度更快
-            self.temppos=[self.x(),self.y()]
-            self.move(QApplication.desktop().width(),QApplication.desktop().height())
+            self.temppos = [self.x(), self.y()]
+            self.move(QApplication.desktop().width(), QApplication.desktop().height())
             self.s.screen_shot()
             # self.hide()
 
         def ss_end(self):
             del self.s
-            self.move(self.temppos[0],self.temppos[1])
+            self.move(self.temppos[0], self.temppos[1])
             self.show()
             self.setWindowOpacity(1)
             self.raise_()
@@ -2418,6 +2438,7 @@ if __name__ == '__main__':
             print('cleard')
             self.s = Slabel(self)
             self.s.close_signal.connect(self.ss_end)
+
         def show(self) -> None:
             super(testwin, self).show()
             print("ss show")
