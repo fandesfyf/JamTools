@@ -455,7 +455,7 @@ class ActionController(QObject):
             # self.showm_signal.emit("开始比对图像...")
             self.controlrun_bot_stylesheet_signal.emit("QPushButton{background-color:rgb(180,180,50)}")
             self.showrect_signal.emit(True)
-            areas, pix, same_rate, interval = self.comparison_info
+            areas, pix, same_rate, interval = self.comparison_info.values()
             self.comparison_Thread = ControllTrigger(self, areas=areas, pixpaths=pix, same_rate=same_rate,
                                                      args=(speed,))
             self.comparison_Thread.allow_signal.connect(self.controlerrun_start_func)
