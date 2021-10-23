@@ -1,5 +1,6 @@
-# JamTools
-JamTools是一个跨平台的小工具集类软件，支持Windows7、Windows10、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动)截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能，完全开源!
+JamTools
+
+JamTools是一个跨平台的小工具集类软件，支持Windows7、Windows10、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动/区域)截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能，完全开源!
 
 部分单独的模块已整理为项目：
 [截屏功能](https://github.com/fandesfyf/Jamscreenshot) 
@@ -9,6 +10,7 @@ JamTools是一个跨平台的小工具集类软件，支持Windows7、Windows10�
 [客户端传输项目](https://github.com/fandesfyf/clientFilesTransmitter)
 
 # >>>功能简介:
+
 1.酱截屏：截图功能.快捷键Alt+z；支持选区截图、多边形截图、滚动截屏等、支持复制截屏文件或图像数据到剪切板、支持截图中文字识别(翻译)、图像识别等，左侧工具栏提供画笔橡皮擦等简单绘图工具(QQ微信截屏有的都有,没有的也有hh)；支持滚动截屏，滚动过程中支持自动和手动滚动，滚动截屏比FSCapture的拼接准确率更高，并且集成录屏功能，支持截屏时选区录屏。
 
 2.酱识字：文字识别功能；截屏提取.快捷键Alt+x：截屏并提取文字；批量识别：可上传一张或多张图片进行文字提取
@@ -31,28 +33,33 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 ##大部分功能可以在系统托盘调用！
 # 界面展示
 所有图片可以看image目录下的
+
 ### macos和ubuntu下的界面
-![imgae](https://github.com/fandesfyf/JamTools/blob/main/image/ui.jpg)
+
+![imgae](image/ui.jpg)
 ### 截屏界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/jp.png)
+![image](image/jp.png)
 ##### 截屏时
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/jp0.jpg)
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/jp1.jpg)
+![image](image/jp0.jpg)
+![image](image/jp1.jpg)
 ### 录屏界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/sc.png)
+![image](image/sc.png)
 ### 文字提取界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/ocr.png)
+![image](image/ocr.png)
 ### 多媒体格式转化界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/51.png)
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/52.png)
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/53.png)
+![image](image/51.png)
+![image](image/52.png)
+![image](image/53.png)
+
 ### 键鼠动作录制播放界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/61.png)
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/62.png)
+
+![image](image/61.png)
+![image](image/62.png)
+
 ### 聊天机器人界面
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/chat.png)
+![image](image/chat.png)
 ### 其它功能
-![image](https://github.com/fandesfyf/JamTools/blob/main/image/other.jpg)
+![image](image/other.jpg)
 
 
 
@@ -215,7 +222,7 @@ PyQt5==5.15.2
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
 numpy
-opencv-contrib-python==3.4.2.17//如果需要完整cv2支持,则安装这个版本的包,一定是这个版本;如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载删减版
+opencv-contrib-python==3.4.2.17//如果需要完整cv2支持,则安装这个版本的包,一定是这个版本(包含sift算法);如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
 Cython==0.29.21//如果需要编译
 #PyAudio//如果需要机器人声音
 #SpeechRecognition//如果需要机器人声音
@@ -227,5 +234,4 @@ setuptools==50.3.0
 此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
 配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
-
 
