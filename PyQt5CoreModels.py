@@ -3295,7 +3295,7 @@ hhh(o゜▽゜)o☆）
         self.payimg.setPixmap(icon)
         self.payimg.setScaledContents(True)
         self.payimg.resize(150, 150)
-        self.payimg.move(20, 230)
+        self.payimg.move(20, 270)
         self.payimg.show()
         self.help_text.clear()
         self.change_show_item([self.about_groupBox])
@@ -3304,11 +3304,12 @@ hhh(o゜▽゜)o☆）
                '感谢以下个人/团队提供接口支持：\n' \
                '   百度AI开放平台http:/ai.baidu.com\n' \
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \
-               '   思知人工智能AI开放平台https:/console.ownthink.com\n\n' \
-               '本软件完全免费，严禁贩卖！如有疑问，联系作者 2861114322@qq.com\n' \
-               'Github项目地址:https://github.com/fandesfyf/JamTools\n'\
+               '   思知人工智能AI开放平台https:/console.ownthink.com\n' \
+               '   本软件完全免费、开源，拒绝商业用途！严禁贩卖！如有疑问，请联系作者 2861114322@qq.com\n\n' \
+               '本软件安装文件的唯一正常来源为Github项目地址:https://github.com/fandesfyf/JamTools和个人CSDN博客\n'\
+               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，本作者不负任何责任！！'\
                '欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
-               '欢迎关注,<<机械酱的小黑屋>>(●ˇ∀ˇ●)⇣⇣⇣⇣,虽然什么都没有...(真的)'
+               '欢迎关注,<<机械酱的小黑屋>>(ˇ∀ˇ),虽然什么都没有...(真的)'
         self.help_text.insertPlainText(text)
 
     def others(self):

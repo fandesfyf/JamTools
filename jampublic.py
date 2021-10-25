@@ -11,6 +11,7 @@ import random
 import re
 import sys
 
+import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices
@@ -412,22 +413,25 @@ class TrThread(QThread):
         m1 = hashlib.md5()
         m1.update(sign.encode(encoding='utf-8'))
         sign = m1.hexdigest()
-        self.re_url = '/api/trans/vip/translate?appid=' + self.appid + '&q=' + quote(
-            self.text) + '&from=' + from_lan + '&to={0}&salt=' + str(
+        q= quote(self.text)
+        self.re_url = '/api/trans/vip/translate?appid=' + self.appid + '&q=' + q + '&from=' + from_lan + '&to={0}&salt=' + str(
             salt) + '&sign=' + sign
         self.geturl = self.re_url.format(self.toLang)
+        # self.args={"sign": sign,"salt":salt, "appid": self.appid,"to": to_lan,"from":from_lan ,"q":q}
 
     def run(self):
+
         if len(str(self.text).replace(" ", "").replace("\n", "")) == 0:
             print("空翻译")
             self.resultsignal.emit("没有文本!")
             return
         try:
-            # res = requests.get("https://api.fanyi.baidu.com", params=self.args)
-            # print(res)
+            # res = requests.get("https://api.fanyi.baidu.com",headers=self.args)
+            # print(res.text)
             httpClient0 = http.client.HTTPConnection('api.fanyi.baidu.com')
             httpClient0.request('GET', self.geturl)
             response = httpClient0.getresponse()
+            print("strat t")
         except:
             print(sys.exc_info())
             self.showm_singal.emit("翻译出错！请确保网络畅通！{}".format(sys.exc_info()[0]))
