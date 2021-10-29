@@ -1,13 +1,15 @@
-JamTools
+[English](README_en.md) | 中文文档
+
+#　JamTools介绍
 
 JamTools是一个跨平台的小工具集类软件，支持Windows7、Windows10、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动/区域)截屏、录屏、文字识别、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能，完全开源!
 
 部分单独的模块已整理为项目：
-[截屏功能](https://github.com/fandesfyf/Jamscreenshot) 
-[滚动截屏功能](https://github.com/fandesfyf/roll_screenshot) 
-[视频播放器项目](https://github.com/fandesfyf/JamVideoPlayer)
-[网页端传输项目](https://github.com/fandesfyf/WEBFilesTransmitter)
-[客户端传输项目](https://github.com/fandesfyf/clientFilesTransmitter)
+[截屏功能](https://github.com/fandesfyf/Jamscreenshot) 　
+[滚动截屏功能](https://github.com/fandesfyf/roll_screenshot) 　
+[视频播放器项目](https://github.com/fandesfyf/JamVideoPlayer)　
+[网页端传输项目](https://github.com/fandesfyf/WEBFilesTransmitter)　
+[客户端传输项目](https://github.com/fandesfyf/clientFilesTransmitter)　
 
 # >>>功能简介:
 
@@ -31,7 +33,9 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift触发,支持自动中英文翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！
 极简模式：(其实就是系统托盘加一个小界面)极简模式下不会显示主界面，截屏(Alt+z)、文字识别(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
 ##大部分功能可以在系统托盘调用！
+
 # 界面展示
+
 所有图片可以看image目录下的
 
 ### macos和ubuntu下的界面
