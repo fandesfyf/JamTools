@@ -1,4 +1,4 @@
-[English](README_en.md) | 中文文档
+[English]([JamTools/README_en.md at main · fandesfyf/JamTools (github.com)](https://github.com/fandesfyf/JamTools/blob/main/README_en.md)) | 中文文档
 
 # JamTools介绍
 
