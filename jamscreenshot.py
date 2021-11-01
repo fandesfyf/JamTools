@@ -909,8 +909,10 @@ class Slabel(QLabel):  # 区域截图功能
             self.init_slabel_ui()
             print("init slabel ui")
         else:
-            self.init_slabel_thread = Commen_Thread(self.init_slabel_ui)
-            self.init_slabel_thread.start()
+            self.init_slabel_ui()
+            print("init slabel ui")
+            # self.init_slabel_thread = Commen_Thread(self.init_slabel_ui)
+            # self.init_slabel_thread.start()
 
         # self.setVisible(False)
         # self.setWindowOpacity(0)
@@ -953,6 +955,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.left_button_push = False
 
     def init_slabel_ui(self):  # 初始化界面的参数
+
         self.shower.hide()
         self.shower.setWindowOpacity(0.8)
         if PLATFORM_SYS == "darwin":
@@ -987,6 +990,7 @@ class Slabel(QLabel):  # 区域截图功能
             self.btn2.setToolTip('滚动截屏功能')
             self.btn2.setIcon(QIcon(":/scroll_icon.png"))
             self.btn1.setGeometry(self.btn2.x() + self.btn2.width(), 0, 60, 35)
+
         self.btn1.clicked.connect(self.cutpic)
         a = self.btn2.width() if PLATFORM_SYS != "darwin" else 0
         self.botton_box.resize(
@@ -1003,12 +1007,15 @@ class Slabel(QLabel):  # 区域截图功能
         self.size_slider.setToolTip('设置画笔大小,也可用鼠标滚轮调节')
         self.size_slider.valueChanged.connect(self.change_size_fun)
         self.sizetextlabel.setText("size")
+
         self.sizetextlabel.setGeometry(self.size_slider.x() - 2, self.size_slider.y() + self.size_slider.height() - 2,
                                        35, 20)
+
         self.sizetextlabel.setStyleSheet('background-color:rgba(0,0,0,0);color: rgb(255,255,255);')
         self.size_slider.setMaximum(99)
-        self.size_slider.setMinimum(1)
         self.size_slider.setValue(5)
+        self.size_slider.setMinimum(1)
+
         self.size_slider_label.move(self.size_slider.x() + 5, 0)
         self.size_slider.show()
 
@@ -1023,8 +1030,9 @@ class Slabel(QLabel):  # 区域截图功能
                                         40, 20)
         self.alphatextlabel.setStyleSheet('background-color:rgba(0,0,0,0);color: rgb(255,255,255);')
         self.alpha_slider.setMaximum(255)
-        self.alpha_slider.setMinimum(1)
         self.alpha_slider.setValue(255)
+        self.alpha_slider.setMinimum(1)
+
         self.alpha_slider_label.move(self.alpha_slider.x() + 2, 0)
         self.alpha_slider.show()
         # print(pic)
@@ -1157,7 +1165,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.nextbtn.setGeometry(self.original_btn.x(), self.original_btn.y() + self.original_btn.height(),
                                  self.choice_clor_btn.width(), self.choice_clor_btn.height())
         self.nextbtn.clicked.connect(self.next_step)
-
+        print(1)
         tipsfont = QFont("", 35)
         # tipsfont.setBold(True)
         self.Tipsshower.setFont(tipsfont)

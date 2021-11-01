@@ -590,10 +590,9 @@ class Commen_Thread(QThread):
         super(QThread, self).__init__()
         self.action = action
         self.args = args
-        # print(self.args)
 
     def run(self):
-        print('start_thread')
+        print('start_thread',self.args)
         if self.args:
             print(self.args)
             if len(self.args) == 1:
@@ -606,6 +605,7 @@ class Commen_Thread(QThread):
                 self.action(self.args[0], self.args[1], self.args[2], self.args[3])
         else:
             self.action()
+
 
 
 if __name__ == '__main__':

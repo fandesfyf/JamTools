@@ -898,6 +898,30 @@ class Small_Ocr(QLabel):
                             background-color:rgb(250,250,250);}"""
                            "QScrollBar{background-color:rgb(200,100,100);width: 4px;}")
 
+    # def keyPressEvent(self, e) -> None:
+    #     if e.key() == Qt.Key_Return:
+    #         self.tra(self.small_show.toPlainText())
+    # def tra(self,text):
+    #     self.showm_signal.emit("正在翻译..")
+    #     if len(text) == 0:
+    #         print("无文本")
+    #         return
+    #     text = re.sub(r'[^\w]', '', text).replace('_', '')
+    #     print(text)
+    #     n = 0
+    #     for i in text:
+    #         if self.is_alphabet(i):
+    #             n += 1
+    #     if n / len(text) > 0.4:
+    #         print("is en")
+    #         fr = "en"
+    #         to = "zh"
+    #     else:
+    #         fr = "zh"
+    #         to = "en"
+    #     self.traThread = TrThread(self.toPlainText(), fr, to)
+    #     self.traThread.resultsignal.connect(self.get_tra_resultsignal)
+    #     self.traThread.start()
     def baidusearch(self, a=1):
         url = """https://www.baidu.com/s?wd={0}&rsv_spt=1&rsv_iqid=0xe12177a6000c90b8&issp=1&f=8&rsv_
         bp=1&rsv_idx=2&ie=utf-8&tn=94819464_hao_pg&rsv_enter=1&rsv_dl=tb&rsv_sug3=4&rsv_sug1=3
