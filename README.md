@@ -43,16 +43,26 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 ### macos和ubuntu下的界面
 
 ![imgae](image/ui.jpg)
+
 ### 截屏界面
+
 ![image](image/jp.png)
+
 ##### 截屏时
+
 ![image](image/jp0.jpg)
 ![image](image/jp1.jpg)
+
 ### 录屏界面
+
 ![image](image/sc.png)
+
 ### 文字提取界面
+
 ![image](image/ocr.png)
+
 ### 多媒体格式转化界面
+
 ![image](image/51.png)
 ![image](image/52.png)
 ![image](image/53.png)
@@ -63,14 +73,15 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 ![image](image/62.png)
 
 ### 聊天机器人界面
+
 ![image](image/chat.png)
+
 ### 其它功能
+
 ![image](image/other.jpg)
 
-
-
-
 # 项目目录
+
 ```c
 目录结构:.
 │  test.py //主程序文件.测试文件.
@@ -209,12 +220,12 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
         连接测试.py
         透视变换test.py
         透视裁剪test.py
-            
 ```
 
-
 # 使用及依赖
+
 测试环境python3.7.8
+
 ```c
 Wheel
 Pillow
@@ -235,9 +246,9 @@ Cython==0.29.21//如果需要编译
 #tencentcloud-sdk-python//如果需要机器人声音
 setuptools==50.3.0
 ```
+
 也可以通过```  pip3 install -r requirement.txt```安装所有依赖
 
 此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
 配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
-

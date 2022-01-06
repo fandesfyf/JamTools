@@ -1,4 +1,3 @@
-#!usr/bin/python3
 # -*- coding: utf-8 -*-
 # @Author  : Fandes
 # @FileName: test.py
@@ -33,7 +32,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCurs
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
-    QProgressBar
+    QProgressBar, QTextBrowser
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from jamscreenshot import Slabel
 from aip import AipOcr
@@ -59,11 +58,8 @@ if PLATFORM_SYS == "darwin":
 elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
-# APP_ID = QSettings('Fandes', 'jamtools').value('BaiduAI_APPID', '17302981', str)  # 获取的 ID，下同
-# API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIXvlNkPa9QWsw', str)
-# SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
 
-VERSON = "0.13.5A"
+VERSON = "0.13.6B"
 
 
 class JHotkey(QThread):
@@ -1094,7 +1090,7 @@ class Swindow(QMainWindow):
                            self.cla_groupBox, self.rec_groupBox, self.chat_groupBox,
                            self.controll_groupBox, self.about_groupBox, self.transmitter_groupBox]
         self.chatthread = None
-        self.help_text = QTextEdit(self.about_groupBox)
+        self.help_text = QTextBrowser(self.about_groupBox)
         self.help_text.setGeometry(35, 35, 500, 444)
         self.payimg = QLabel(self.help_text)
         self.payimg.hide()
@@ -1278,12 +1274,12 @@ class Swindow(QMainWindow):
 
     def initUI(self):
         x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
-        if x < 50 or x>QApplication.desktop().width():
+        if x < 50 or x>QApplication.primaryScreen().size().width():
             self.settings.setValue("windowx", 50)
-            x = 50
-        if y < 50 or y>QApplication.desktop().availableGeometry(0).height():
+            x = QApplication.primaryScreen().size().width()//2
+        if y < 50 or y>QApplication.primaryScreen().size().height():
             self.settings.setValue("windowy", 50)
-            y = 50
+            y = QApplication.primaryScreen().size().height()//2
 
         self.setGeometry(x, y, 800, 550)
         self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
@@ -3324,7 +3320,7 @@ hhh(o゜▽゜)o☆）
         self.help_text.clear()
         self.change_show_item([self.about_groupBox])
 
-        text = 'Edit by Fandes&机械酱 build for 深圳大学帮帮酱\n\n' \
+        text = 'Edit by Fandes&机械酱 build for 帮帮酱团队\n\n' \
                '感谢以下个人/团队提供接口支持：\n' \
                '   百度AI开放平台http:/ai.baidu.com\n' \
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \

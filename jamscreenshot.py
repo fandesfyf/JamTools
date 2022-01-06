@@ -9,7 +9,7 @@ import cv2
 from numpy import array, zeros, uint8, float32
 from PyQt5.QtCore import QPoint, QRectF, QMimeData
 from PyQt5.QtCore import QRect, Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QUrl
-from PyQt5.QtGui import QCursor, QBrush
+from PyQt5.QtGui import QCursor, QBrush, QScreen
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QColor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu, QGroupBox, QSpinBox, \
     QWidget
@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QSlider, QColorDialog
 from jampublic import FramelessEnterSendQTextEdit, OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS
 from jamroll_screenshot import Splicing_shots
 import jamresourse
+from pynput.mouse import Controller
 
 
 def cut_polypng(img, pointlist):  # 多边形裁剪
@@ -1484,6 +1485,17 @@ class Slabel(QLabel):  # 区域截图功能
         if pic:
             self.paintlayer.pixpng = QPixmap(pic)
             self.choise_pix.setIcon(QIcon(pic))
+    def search_in_which_screen(self):
+        mousepos=Controller().position
+        screens = QApplication.screens()
+        secondscreen = QApplication.primaryScreen()
+        for i in screens:
+            rect=i.geometry().getRect()
+            if mousepos[0]in range(rect[0],rect[0]+rect[2]) and mousepos[1]in range(rect[1],rect[1]+rect[3]):
+                secondscreen = i
+                break
+        print("t", self.x(), QApplication.desktop().width(),QApplication.primaryScreen().geometry(),secondscreen.geometry(),mousepos)
+        return secondscreen
 
     def screen_shot(self, pix=None):
         # 截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
@@ -1495,7 +1507,11 @@ class Slabel(QLabel):  # 区域截图功能
             self.init_parameters()
         else:
             self.setup()  # 初始化截屏
-            get_pix = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId())  # 截取屏幕
+            if QApplication.desktop().screenCount()>1:
+                sscreen=self.search_in_which_screen()
+            else:
+                sscreen=QApplication.primaryScreen()
+            get_pix = sscreen.grabWindow(0)  # 截取屏幕
         pixmap = QPixmap(get_pix.width(), get_pix.height())
         pixmap.fill(Qt.transparent)  # 填充透明色,不然没有透明通道
 

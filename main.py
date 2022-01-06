@@ -1,3 +1,5 @@
+import pynput.keyboard
+import pynput.mouse
 import hashlib
 import json
 import socket
@@ -30,8 +32,6 @@ import jamresourse
 import os
 import cv2
 from numpy import asarray
-import pynput.keyboard
-import pynput.mouse
 import base64
 import html
 import http.server

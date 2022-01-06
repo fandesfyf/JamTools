@@ -13,14 +13,13 @@ from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QObj
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QApplication, QLabel
 from pynput.mouse import Controller as MouseController
-from pynput.mouse import Listener as  MouseListenner
+from pynput.mouse import Listener as MouseListenner
 from pynput import mouse
 
 from jampublic import Commen_Thread, TipsShower
 
 if not os.path.exists("j_temp"):
     os.mkdir("j_temp")
-
 
 class PicMatcher:  # 图像匹配类
     def __init__(self, nfeatures=500, draw=False):
@@ -314,14 +313,13 @@ class Splicing_shots(QObject):  # 滚动截屏主类
 
         def on_click(x, y, button, pressed):  # 用户点击了屏幕说明用户想自动滚
             print(x, y, button)
-            if button== mouse.Button.left :
+            if button == mouse.Button.left:
                 if area[0] < x < area[0] + area[2] and area[1] < y < area[1] + area[3] and not pressed:
                     self.mode = 1
                     lis.stop()
-            elif button ==mouse.Button.right:
-                self.mode=2
+            elif button == mouse.Button.right:
+                self.mode = 2
                 lis.stop()
-
 
         def on_scroll(x, y, button, pressed):  # 用户滚动了鼠标说明用户想要手动滚
 
@@ -341,10 +339,10 @@ class Splicing_shots(QObject):  # 滚动截屏主类
         print("等待用户开始")
         lis.join()
         lis.stop()
-        if self.mode==1:  # 判断用户选择的模式
+        if self.mode == 1:  # 判断用户选择的模式
             print("auto_roll")
             self.auto_roll(area)
-        elif self.mode==2:
+        elif self.mode == 2:
             print("exit roller")
             return 1
         else:
