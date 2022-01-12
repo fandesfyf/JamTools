@@ -1,7 +1,7 @@
 import time
 
 jamfilelist = ["PyQt5CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
-               "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger","jamspeak"]
+               "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger", "jamspeak"]
 print("说明:test.py文件为主文件,main.py为存放引入库的文件(无需管),scr文件夹是fbs打包的项目目录.\n"
       "运行本文件打包时,会自动将test.py文件覆盖到PyQt5CoreModels.py(这是前期为了防反编译搞的hh)中,然后会自动解析所有jamfilelist中源码的引入库,"
       "并将所有需要的库格式化后写入main.py文件中,从而让pyinstall可以找到(否则可能有找不到库的错误)"
@@ -19,13 +19,13 @@ if __name__ == '__main__':
     from test import VERSON
 
     WithCompile = False  # 是否编译
-    Debug = False  # 是否debug模式
+    Debug = 0  # 是否debug模式
     print("copy test.py->PyQt5CoreModels.py")
     testsize = os.path.getsize("test.py")
     coresize = os.path.getsize("PyQt5CoreModels.py")
     if testsize != coresize:
-        with open("test.py", "r", encoding="utf-8")as f:
-            with open("PyQt5CoreModels.py", "w", encoding="utf-8")as mo:
+        with open("test.py", "r", encoding="utf-8") as f:
+            with open("PyQt5CoreModels.py", "w", encoding="utf-8") as mo:
                 mo.write(f.read())
 
     if WithCompile:
@@ -57,11 +57,11 @@ if __name__ == '__main__':
         else:
             raise OSError
 
-    with open('main.py', "w", encoding="utf-8")as mainf:
-        importfilelist = []
+    with open('main.py', "w", encoding="utf-8") as mainf:
+        importfilelist = ["import pynput.keyboard\n", "import pynput.mouse\n"]
         for file in jamfilelist:
             print("explaining {}".format(file))
-            with open("{}.py".format(file), "r", encoding="utf-8")as soursef:
+            with open("{}.py".format(file), "r", encoding="utf-8") as soursef:
                 line = soursef.readline()
                 while line:
                     if line[:6] == "import" or (line[:4] == "from" and "import" in line):
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         shutil.rmtree("src/main/resources/base")
     os.makedirs("src/main/resources/base/bin")
     includedir = ["html", "bin/" + PLATFORM_SYS]
-    includefiles = ["log.log"]
+    includefiles = ["log.log", "LICENSE"]
     if PLATFORM_SYS == "win32":
         includefiles.extend(["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"])
     elif PLATFORM_SYS == "linux":
@@ -117,7 +117,7 @@ if __name__ == '__main__':
             print("不存在", f)
 
     if PLATFORM_SYS == "win32":
-        with open("target/installer/Installer.nsi", "r", encoding="ansi")as nsisfile:
+        with open("target/installer/Installer.nsi", "r", encoding="ansi") as nsisfile:
             ns = nsisfile.readlines()
         for i, line in enumerate(ns):
             if "!define PRODUCT_VERSION" in line:
@@ -127,7 +127,7 @@ if __name__ == '__main__':
                 if v != VERSON:
                     print("版本号不同")
                     ns[i] = '!define PRODUCT_VERSION "{}"\n'.format(VERSON)
-                    with open("target/installer/Installer.nsi", "w", encoding="ansi")as nsisfile:
+                    with open("target/installer/Installer.nsi", "w", encoding="ansi") as nsisfile:
                         nsisfile.writelines(ns)
                 break
     print('start freeze')

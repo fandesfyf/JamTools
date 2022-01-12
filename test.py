@@ -1275,11 +1275,12 @@ class Swindow(QMainWindow):
     def initUI(self):
         x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
         if x < 50 or x>QApplication.primaryScreen().size().width():
+            print(QApplication.primaryScreen().size(),'fafe')
             self.settings.setValue("windowx", 50)
-            x = QApplication.primaryScreen().size().width()//2
+            x = (QApplication.primaryScreen().size().width()-self.width())//2
         if y < 50 or y>QApplication.primaryScreen().size().height():
             self.settings.setValue("windowy", 50)
-            y = QApplication.primaryScreen().size().height()//2
+            y = (QApplication.primaryScreen().size().height()-self.height())//2
 
         self.setGeometry(x, y, 800, 550)
         self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
