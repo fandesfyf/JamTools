@@ -6,7 +6,7 @@ import socket
 import gc
 import sys
 import os, re
-from  Logger import Logger
+from Logger import Logger
 import jampublic
 import http.client
 import random

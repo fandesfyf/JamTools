@@ -9,7 +9,7 @@ import socket
 import gc
 import sys
 import os, re
-from  Logger import Logger
+from Logger import Logger
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr
 
@@ -46,7 +46,7 @@ from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, app
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 import jamresourse
 
-sys.stdout = Logger(os.path.join(os.path.expanduser('~'),"jamtools.log"))
+sys.stdout = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
 if PLATFORM_SYS == "win32":
     import win32con
     import ctypes, ctypes.wintypes
@@ -59,7 +59,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.13.6B"
+VERSON = "0.13.7B"
 
 
 class JHotkey(QThread):
@@ -621,7 +621,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
     def init_trayicon(self):
         self.recorded_open = False
         self.tran_open = False
-        self.small_windows=[]
+        self.small_windows = []
         self.open_path = QStandardPaths.writableLocation(
             QStandardPaths.PicturesLocation)
         self.getscreen.triggered.connect(self.parent.screensh)
@@ -657,7 +657,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.chatbot = QAction("酱聊天", self)
         self.mulocr = QAction("批量文字提取", self)
         self.changesimple = QAction("极简模式", self)
-        self.addsimplewin=QAction("添加小窗",self)
+        self.addsimplewin = QAction("添加小窗", self)
 
         self.menu1.addAction(self.OCR)
         self.menu1.addAction(self.mulocr)
@@ -688,11 +688,13 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.icon = self.MessageIcon()
 
         # 设置图标
+
     def add_simple_window(self):
-        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True,autoresetid=len(self.small_windows)+1)
+        simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True, autoresetid=len(self.small_windows) + 1)
         simplemodebox.show()
         simplemodebox.del_myself_signal.connect(self.small_windows.pop)
         self.small_windows.append(simplemodebox)
+
     def iconClied(self, e):
         "鼠标点击icon传递的信号会带有一个整形的值，1是表示单击右键，2是双击，3是单击左键，4是用鼠标中键点击"
         if e == 3:
@@ -765,8 +767,8 @@ class StraThread(QThread):  # 右键画屏翻译线程
         self.signal.connect(jamtools.word_extraction)
 
     def run(self):
-        self.signal.emit(self.w,'正在识别...', '正在翻译...')
-        with open("j_temp/sdf.png", 'rb')as i:
+        self.signal.emit(self.w, '正在识别...', '正在翻译...')
+        with open("j_temp/sdf.png", 'rb') as i:
             img = i.read()
         text0 = ''
         try:
@@ -776,15 +778,15 @@ class StraThread(QThread):  # 右键画屏翻译线程
         # message = client.basicAccurate(img)   # 通用文字高精度识别，每天 800 次免费
         except:
             print("Unexpected error:", sys.exc_info()[0])
-            self.signal.emit(self.w,'Unexpected error...', str(sys.exc_info()[0]))
+            self.signal.emit(self.w, 'Unexpected error...', str(sys.exc_info()[0]))
             return
         else:
             if message is None:
-                text0="没有文字!"
+                text0 = "没有文字!"
             else:
                 for res in message.get('words_result'):
                     text0 += res.get('words')
-            self.signal.emit( self.w,  text0, '正在翻译...')
+            self.signal.emit(self.w, text0, '正在翻译...')
         # appid = '20190928000337891'
         # secretKey = 'SiNITAufl_JCVpk7fAUS'
         salt = str(random.randint(32768, 65536))
@@ -837,9 +839,9 @@ class StraThread(QThread):  # 右键画屏翻译线程
                 # text1 = line['dst']
             except:
                 print("Unexpected error:", sys.exc_info()[0])
-            self.signal.emit(self.w,  text0, text1)
+            self.signal.emit(self.w, text0, text1)
         else:
-            self.signal.emit( self.w, '没有检测到文字...', '请重新操作...')
+            self.signal.emit(self.w, '没有检测到文字...', '请重新操作...')
 
 
 class Draw_grab_width(QLabel):
@@ -848,7 +850,6 @@ class Draw_grab_width(QLabel):
         super(Draw_grab_width, self).__init__(parent)
         self.h = 18
         self.painter = QPainter(self)
-
 
     def paintEvent(self, event):
         self.painter.setPen(QPen(Qt.green, 1, Qt.SolidLine))
@@ -861,30 +862,39 @@ class Draw_grab_width(QLabel):
         super().paintEvent(event)
 
 
-
 class Small_Ocr(QLabel):
     def __init__(self):
         super().__init__()
         self.small_show = QTextEdit(self)
         self.smalltra = QTextEdit(self)
         self.search_botton = QPushButton('', self)
-        self.pix=QPixmap()
+        self.close_botton=QPushButton('X',self)
+
+
+        self.pix = QPixmap()
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.SplashScreen)
         self.setAlignment(Qt.AlignTop)
         self.init_small_ocr_thread = Commen_Thread(self.init_small_ocr)
         self.init_small_ocr_thread.start()
         self.h = QSettings('Fandes', 'jamtools').value('grab_height', 28)
         self.sx = self.sy = self.ex = self.ey = 0
+        self.moving =False
+        self.setMouseTracking(True)
+        self.autoclose =True
 
     def init_small_ocr(self):
         time.sleep(1)
+        self.search_botton.resize(28, 28)
+        self.close_botton.resize(28, 28)
         self.small_show.setPlaceholderText('文字框...')
         self.smalltra.setPlaceholderText('翻译框...')
         self.setToolTip('显示不全可向下滚动...')
         self.search_botton.clicked.connect(self.baidusearch)
         self.search_botton.setIcon(QIcon(":/search.png"))
         self.search_botton.setToolTip('跳转百度搜索')
-        self.setWindowOpacity(0.8)
+        self.close_botton.clicked.connect(self.clearandreset)
+        self.close_botton.setToolTip("关闭这个贴纸")
+        self.setWindowOpacity(0.9)
         self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
                            "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
                            """QTextEdit{border:1px solid gray;
@@ -893,37 +903,18 @@ class Small_Ocr(QLabel):
                             padding:2px 4px;
                             background-color:rgb(250,250,250);}"""
                            "QScrollBar{background-color:rgb(200,100,100);width: 4px;}")
+        self.close_botton.setStyleSheet("QPushButton{color:white;background-color:rgb(200,50,50);padding:1px 4px;}"
+                           "QPushButton:hover{color:green;background-color:rgb(200,200,100);}")
 
-    # def keyPressEvent(self, e) -> None:
-    #     if e.key() == Qt.Key_Return:
-    #         self.tra(self.small_show.toPlainText())
-    # def tra(self,text):
-    #     self.showm_signal.emit("正在翻译..")
-    #     if len(text) == 0:
-    #         print("无文本")
-    #         return
-    #     text = re.sub(r'[^\w]', '', text).replace('_', '')
-    #     print(text)
-    #     n = 0
-    #     for i in text:
-    #         if self.is_alphabet(i):
-    #             n += 1
-    #     if n / len(text) > 0.4:
-    #         print("is en")
-    #         fr = "en"
-    #         to = "zh"
-    #     else:
-    #         fr = "zh"
-    #         to = "en"
-    #     self.traThread = TrThread(self.toPlainText(), fr, to)
-    #     self.traThread.resultsignal.connect(self.get_tra_resultsignal)
-    #     self.traThread.start()
     def baidusearch(self, a=1):
         url = """https://www.baidu.com/s?wd={0}&rsv_spt=1&rsv_iqid=0xe12177a6000c90b8&issp=1&f=8&rsv_
         bp=1&rsv_idx=2&ie=utf-8&tn=94819464_hao_pg&rsv_enter=1&rsv_dl=tb&rsv_sug3=4&rsv_sug1=3
         &rsv_sug7=101&rsv_sug2=0&inputT=1398&rsv_sug4=2340""".format(self.small_show.toPlainText())
         QDesktopServices.openUrl(QUrl(url))
-    def show_extrat_res(self,w, text=None, text1=None):
+
+    def show_extrat_res(self, w, text=None, text1=None):
+        self.autoclose = True
+        self.close_botton.hide()
         self.small_show.clear()
         self.smalltra.clear()
         self.smalltra.hide()
@@ -931,36 +922,82 @@ class Small_Ocr(QLabel):
         self.setPixmap(self.pix)
         self.small_show.setText(text)
         self.smalltra.setText(text1)
-        self.move(self.sx, self.sy - grabheight / 2)
-        font = QFont('黑体' if PLATFORM_SYS == "win32" else "", )
+        self.adjustSize(w)
+
+        self.move(self.sx, self.sy)
+        font = QFont('微软雅黑' if PLATFORM_SYS == "win32" else "", )
         self.small_show.move(0, grabheight)
-        self.smalltra.move(0, grabheight * 2)
+        self.smalltra.move(0, self.small_show.y() + self.small_show.height())
         self.search_botton.move(w, 0)
-        self.search_botton.resize(grabheight, grabheight)
-        font.setBold(True)
+        # font.setBold(True)
         self.small_show.setFont(font)
         self.smalltra.setFont(font)
-        self.adjustSize(w)
         if text1 is not None:
             self.smalltra.show()
         self.show()
         self.small_show.show()
         self.search_botton.show()
         QApplication.processEvents()
-    def adjustSize(self,w) -> None:
-        td=self.smalltra.document()
+
+    def adjustSize(self, w) -> None:
+        td = self.smalltra.document()
         td.adjustSize()
-        sd=self.small_show.document()
+        sd = self.small_show.document()
         sd.adjustSize()
-        trawidth=td.size().width()
-        show_width=sd.size().width()
-        maxw=max([w,trawidth,show_width])
-        self.small_show.resize(maxw + self.h, self.h)
-        self.smalltra.resize(maxw + self.h, self.h)
-        self.resize(maxw + self.h, self.h * 3)
+        show_width=trawidth = td.size().width()
+        traheight = td.size().height() + 5
+        show_height = sd.size().height() + 5
+        self.small_show.resize(w, show_height)
+        self.smalltra.resize(w, traheight)
+        self.resize(w + 28, self.h + traheight + show_height)
         self.small_show.setDocument(sd)
         self.smalltra.setDocument(td)
         # super(Small_Ocr, self).adjustSize()
+
+    def paintEvent(self, e):
+        super(Small_Ocr, self).paintEvent(e)
+        x, y, w, h = self.sx, self.sy, self.ex - self.sx, self.h
+        p = QPainter(self)
+        p.setPen(QPen(QColor(255, 0, 0), 2, Qt.SolidLine))
+        p.drawRect(QRect(0, 0, w - 1, h - 1))
+        p.end()
+
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            if e.x() > self.width() - 25 or e.y() < self.h or e.y() > self.height() - 20:
+                self.moving = True
+                self.dx = e.x()
+                self.dy = e.y()
+                self.setCursor(Qt.SizeAllCursor)
+                self.update()
+            else:
+                super().mousePressEvent(e)
+
+    def mouseReleaseEvent(self, e):
+        super().mouseReleaseEvent(e)
+        if e.button() == Qt.LeftButton:
+            self.moving = False
+            self.setCursor(Qt.ArrowCursor)
+            self.update()
+
+    def mouseMoveEvent(self, e):
+        super().mouseMoveEvent(e)
+        if self.isVisible():
+
+            if e.x() > self.width() - 25 or e.y() < self.h or e.y() > self.height() - 20:
+                self.setCursor(Qt.SizeAllCursor)
+                if self.moving:
+                    if self.autoclose:
+                        self.autoclose = False
+                        self.close_botton.move(self.search_botton.x(),self.search_botton.y()+self.search_botton.height())
+                        self.close_botton.show()
+                    self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
+            else:
+                self.setCursor(Qt.ArrowCursor)
+    def clearandreset(self):
+        self.clear()
+        self.hide()
+
 class FuncBox(QGroupBox):
     def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
@@ -1120,9 +1157,8 @@ class Swindow(QMainWindow):
 
         self.settings.setValue("S_SIMPLE_MODE", False)
 
-        if self.settings.value('right_ocr', False, bool):
+        if self.settings.value('right_ocr', True, bool):
             self.openlistenmouse()
-
 
     def init_other(self):  # 后台初始化
 
@@ -1136,7 +1172,7 @@ class Swindow(QMainWindow):
         self.help_text.setReadOnly(True)
 
         self.delay = 0
-        self.stop_wait = self.waiting = False
+        self.stop_wait = self.waiting = self.alt_push = False
         self.samplingingid = -1
         # self.control_initcount = 1
         # self.recordcount = 1
@@ -1274,13 +1310,13 @@ class Swindow(QMainWindow):
 
     def initUI(self):
         x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
-        if x < 50 or x>QApplication.primaryScreen().size().width():
-            print(QApplication.primaryScreen().size(),'fafe')
+        if x < 50 or x > QApplication.primaryScreen().size().width():
+            print(QApplication.primaryScreen().size(), 'fafe')
             self.settings.setValue("windowx", 50)
-            x = (QApplication.primaryScreen().size().width()-self.width())//2
-        if y < 50 or y>QApplication.primaryScreen().size().height():
+            x = (QApplication.primaryScreen().size().width() - self.width()) // 2
+        if y < 50 or y > QApplication.primaryScreen().size().height():
             self.settings.setValue("windowy", 50)
-            y = (QApplication.primaryScreen().size().height()-self.height())//2
+            y = (QApplication.primaryScreen().size().height() - self.height()) // 2
 
         self.setGeometry(x, y, 800, 550)
         self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
@@ -1307,7 +1343,7 @@ class Swindow(QMainWindow):
         other_act = QAction('其他功能', self)
         other_act.triggered.connect(self.others)
         simplemode = QAction('极简模式', self)
-        simplemode.triggered.connect(lambda x:self.changesimple(show=True))
+        simplemode.triggered.connect(lambda x: self.changesimple(show=True))
         simplemode.setStatusTip('极简模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
         if PLATFORM_SYS == "darwin":
             othermenu = menubar.addMenu("其他")
@@ -1377,7 +1413,6 @@ class Swindow(QMainWindow):
         self.actioncontroller.showm_signal.connect(self.trayicon.showM)
         self.actioncontroller.return_samrate_signal.connect(self.update_samrate)
 
-
     def settings_show(self):  # 设置
         self.settingspage = SettingPage(self)
 
@@ -1407,8 +1442,8 @@ class Swindow(QMainWindow):
         self.shifttime = time.time()
 
         def on_press(key):
-            if key == keyboard.Key.shift and self.settings.value('smartShift', True, bool)and \
-                    time.time() -  self.shifttime < self.settings.value("timeoutshift", 7, type=int):
+            if key == keyboard.Key.shift and self.settings.value('smartShift', True, bool) and \
+                    time.time() - self.shifttime < self.settings.value("timeoutshift", 7, type=int):
                 print('shift pressed', time.time() - self.shifttime)
                 self.canstartkeyboardtra = True
                 self.keboardchange_fucsignal.emit()
@@ -1418,10 +1453,10 @@ class Swindow(QMainWindow):
             self.kbtralistenertimer.stop()
             self.kbtralistener.stop()
 
-        self.kbtralistenertimer=QTimer()
+        self.kbtralistenertimer = QTimer()
         self.kbtralistener = keyboard.Listener(on_press=on_press)
         self.kbtralistener.start()
-        self.kbtralistenertimer.start(self.settings.value("timeoutshift", 7, type=int)*1000)
+        self.kbtralistenertimer.start(self.settings.value("timeoutshift", 7, type=int) * 1000)
         self.kbtralistenertimer.timeout.connect(stopall)
 
     def keboardchange_fuc(self):
@@ -1454,11 +1489,13 @@ class Swindow(QMainWindow):
                         a = re.search(r'提取码[:： ]*((?:[a-zA-Z]|[0-9]){4})', rtext)
                         if a:
                             QApplication.clipboard().setText(a.groups()[0])
-            if self.settings.value("shiftopendir",True,bool) and (re.match("C:|D:|E:|F:|G:|H:",rtext) or "\\" in rtext or "/"in rtext) and os.path.exists(rtext.replace("\"","")):
-                rtext=rtext.replace("\"","")
+            if self.settings.value("shiftopendir", True, bool) and (
+                    re.match("C:|D:|E:|F:|G:|H:", rtext) or "\\" in rtext or "/" in rtext) and os.path.exists(
+                    rtext.replace("\"", "")):
+                rtext = rtext.replace("\"", "")
                 if os.path.isfile(rtext):
-                    rtext=os.path.split(rtext)[0]
-                print("打开文件(夹)",rtext)
+                    rtext = os.path.split(rtext)[0]
+                print("打开文件(夹)", rtext)
                 QDesktopServices.openUrl(QUrl.fromLocalFile(rtext))
                 return
 
@@ -1504,7 +1541,7 @@ class Swindow(QMainWindow):
         self.simplemodebox.setWindowOpacity(0.8)
         self.hide()
 
-    def changesimple(self,show=False):
+    def changesimple(self, show=False):
         print('S_SIMPLE_MODE', QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool))
         if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
@@ -1817,7 +1854,7 @@ class Swindow(QMainWindow):
 
     def start_action_run(self, path=False):
         # if self.controll_trigger.isChecked()
-        print(path,"action")
+        print(path, "action")
         if type(path) == str and os.path.exists(path):
             print("检测到路径")
             self.actioncontroller.running_change(path=path)
@@ -2920,10 +2957,10 @@ class Swindow(QMainWindow):
             f = '-f avfoundation -list_devices true -i ""'
         else:
             f = ' -hide_banner -devices '
-        if not (os.path.exists(ffmpeg_path+"/ffmpeg")or os.path.exists(ffmpeg_path+"/ffmpeg.exe")):
+        if not (os.path.exists(ffmpeg_path + "/ffmpeg") or os.path.exists(ffmpeg_path + "/ffmpeg.exe")):
             print("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件或源码,编译后将ffmpeg可执行文件放于{}下".format(ffmpeg_path))
             self.showm_signal.emit("找不到ffmpeg,请自行到ffmpeg官网下载可执行文件或源码,编译后将ffmpeg可执行文件放于{}下".format(ffmpeg_path))
-            relog=" "
+            relog = " "
         else:
             record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
                                       stdin=subprocess.PIPE,
@@ -3175,45 +3212,59 @@ class Swindow(QMainWindow):
         self.simg = Small_Ocr()  # 划屏提字
 
         def on_click(x, y, button, pressed):
+
             if button == mouse.Button.left:
                 if not pressed:
                     try:
-                        if self.simg.isVisible():
+                        if self.simg.isVisible() and self.simg.autoclose:
                             le = self.simg.h
-                            if x < self.simg.sx - le or x > self.simg.ex + le * 3 or y > self.simg.sy + le * 3 or y < self.simg.sy - le * 2:
-                                self.simg.clear()
-                                self.simg.hide()
+                            if x < self.simg.x() - 20 or x > self.simg.x() + self.simg.width() + 20 or y > self.simg.y() + self.simg.height() + 20 or y < self.simg.y() - 20:
+                                self.simg.clearandreset()
                     except:
                         print(sys.exc_info())
                         pass
-            elif button == mouse.Button.right:
-                if jamtools.settings.value('right_ocr', False, bool):
+            elif self.alt_push and button == mouse.Button.right:
+                if jamtools.settings.value('right_ocr', True, bool):
+                    lef = QSettings('Fandes', 'jamtools').value('grab_height', 28) / 2
                     if pressed:
                         self.simg.sx = x
-                        self.simg.sy = y
+                        self.simg.sy = y - lef
                     else:
                         self.simg.ex = x
                         self.simg.ey = y
                         dx = self.simg.ex - self.simg.sx
                         dy = self.simg.ey - self.simg.sy
-                        lef = self.simg.h / 2
-                        if dx > 20 and abs(dy) <= lef:
+                        self.simg.h = dy if dy > QSettings('Fandes', 'jamtools').value('grab_height', 28) else \
+                            QSettings('Fandes', 'jamtools').value('grab_height', 28)
+                        if dx > 20 and (dy > 0 or abs(dy) <= lef):
                             print(self.simg.h / 2)
                             screen = QApplication.primaryScreen()
 
-                            pix = screen.grabWindow(QApplication.desktop().winId(), self.simg.sx, self.simg.sy - lef,
+                            pix = screen.grabWindow(QApplication.desktop().winId(), self.simg.sx, self.simg.sy,
                                                     dx, self.simg.h)
                             pix.save("j_temp/sdf.png")
-                            self.simg.pix=pix
+                            self.simg.pix = pix
                             jamtools.start_thread = StraThread(dx)
                             jamtools.start_thread.start()
                             QApplication.processEvents()
 
+        def on_press(key):
+            if key == keyboard.Key.alt or key == keyboard.Key.alt_l:
+                self.alt_push = 1
+            # 键盘抬起监听
+
+        def on_release(key):
+            if key == keyboard.Key.alt or key == keyboard.Key.alt_l:
+                self.alt_push = 0
+
         self.jam_mouselisten = mouse.Listener(on_click=on_click)
         self.jam_mouselisten.start()
+        self.jam_keyboardListener = keyboard.Listener(on_press=on_press, on_release=on_release)
+        self.jam_keyboardListener.start()
 
     def closelistenmouse(self):
         self.jam_mouselisten.stop()
+        self.jam_keyboardListener.stop()
 
     def multiocr(self):  # 批量识别
         files, types = QFileDialog.getOpenFileNames(self,
@@ -3250,7 +3301,7 @@ class Swindow(QMainWindow):
                 self.hide()
             # self.ocr_textEdit.show()
 
-    def word_extraction(self,w,text=None, text1=None):  # 画词提取接收信号函数
+    def word_extraction(self, w, text=None, text1=None):  # 画词提取接收信号函数
         self.simg.show_extrat_res(w, text, text1)
 
     def help(self):
@@ -3277,7 +3328,7 @@ class Swindow(QMainWindow):
 
 8.酱聊天：。。。。彩蛋功能。。傻d机器人在线陪聊！！来自思知人工智能平台的机器人（别问为什么不用图灵机器人，因为没q啊！），填写用户ID后支持多轮对话，服务器有点慢。。。。毕竟思知也是免费提供的，还提供支持知识库训练，不能过多要求哈；默认保留50000字节的聊天记录。。
 
-$其他功能：划屏提字：打开软件后可以在任何界面(图片也可)，用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
+$其他功能：划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
 剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！
 极简模式：极简模式下不会显示主界面，截屏(Alt+z)、文字识别(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
 ##大部分功能可以在系统托盘调用！
@@ -3306,7 +3357,7 @@ hhh(o゜▽゜)o☆）
         self.payimg.hide()
         self.change_show_item([self.about_groupBox])
         text = ""
-        with open(os.path.join(apppath, "log.log"), "r", encoding="utf-8")as f:
+        with open(os.path.join(apppath, "log.log"), "r", encoding="utf-8") as f:
             text = f.read()
         self.help_text.insertPlainText(text)
         self.help_text.moveCursor(QTextCursor.Start)
@@ -3327,8 +3378,8 @@ hhh(o゜▽゜)o☆）
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \
                '   思知人工智能AI开放平台https:/console.ownthink.com\n' \
                '   本软件完全免费、开源，拒绝商业用途！严禁贩卖！如有疑问，请联系作者 2861114322@qq.com\n\n' \
-               '本软件安装文件的唯一正常来源为Github项目地址:https://github.com/fandesfyf/JamTools和个人CSDN博客\n'\
-               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，本作者不负任何责任！！'\
+               '本软件安装文件的唯一正常来源为Github项目地址:https://github.com/fandesfyf/JamTools和个人CSDN博客\n' \
+               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，本作者不负任何责任！！' \
                '欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
                '欢迎关注,<<机械酱的小黑屋>>(ˇ∀ˇ),虽然什么都没有...(真的)'
         self.help_text.insertPlainText(text)
@@ -3337,7 +3388,7 @@ hhh(o゜▽゜)o☆）
         self.payimg.hide()
         self.help_text.clear()
 
-        text = """1.右键划屏识字(翻译)\n    用法:任意界面按住右键水平右划过屏幕上文字的中间即可提取出文字并翻译,支持一键跳转百度搜索;如不需要,可以在设置中心关闭这个功能...\n   
+        text = """1.右键划屏识字(翻译)\n    用法:任意界面按住alt键后点击鼠标右键水平右划过屏幕上文字的中间即可提取出文字并翻译,支持一键跳转百度搜索;如不需要,可以在设置中心关闭这个功能...\n   
 2.剪切板监听:\n    用法:复制文字后n秒(默认为7s)内按下shift键触发，检测到复制的内容为英文时直接弹窗并翻译;检测到网址时直接在浏览器打开;可在设置中心设置更加详细的内容...(由于权限原因,macos用户需要复制内容后点击程序后按下shift才可触发弹窗..)
                """
 
@@ -3395,7 +3446,7 @@ hhh(o゜▽゜)o☆）
         # bot.move(50,self.chat_view_textEdit.document().size().height())
         # bot.show()
         # print(self.chat_view_textEdit.document().size(),bot.isVisible(),50,self.chat_view_textEdit.document().size().height()-50)
-        with open(documents_path + '/chat_record.txt', 'a')as file:
+        with open(documents_path + '/chat_record.txt', 'a') as file:
             file.write(me + text + '\n')
             file.flush()
         self.chatthread = Chat_Thread(Tulin, text)
@@ -3413,7 +3464,7 @@ hhh(o゜▽゜)o☆）
         self.chat_view_textEdit.insertPlainText(mess + '\n')
         self.statusBar().showMessage("小酱酱回复完成！")
         QApplication.processEvents()
-        with open(documents_path + '/chat_record.txt', 'a')as file:
+        with open(documents_path + '/chat_record.txt', 'a') as file:
             file.write(jj + mess + '\n')
             file.flush()
 
@@ -3469,7 +3520,7 @@ hhh(o゜▽゜)o☆）
         self.chat_view_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.chat_view_textEdit.setReadOnly(True)
         if os.path.exists(documents_path + '/chat_record.txt'):
-            with open(documents_path + '/chat_record.txt', 'r+')as file:
+            with open(documents_path + '/chat_record.txt', 'r+') as file:
                 text = file.read()
                 if len(text) > 100000:
                     text = text[50000:]
@@ -3569,7 +3620,7 @@ hhh(o゜▽゜)o☆）
             picfile = "j_temp/jam_outputfile.png"
             filename = os.path.basename(picfile)
 
-            with open(picfile, 'rb')as i:
+            with open(picfile, 'rb') as i:
                 img = i.read()
             self.ocrthread = OcrimgThread(filename, img, 1)
             if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
@@ -3639,7 +3690,7 @@ hhh(o゜▽゜)o☆）
         self.setWindowOpacity(0)
         self.settings.setValue("windowx", self.x())
         self.settings.setValue("windowy", self.y())
-        self.move(QApplication.desktop().width(),QApplication.desktop().height())
+        self.move(QApplication.desktop().width(), QApplication.desktop().height())
         self.setWindowOpacity(1)
         # self.setWindowOpacity(0)
         # self.hide()
@@ -3652,7 +3703,7 @@ hhh(o゜▽゜)o☆）
     def screenshoterinit(self):
         print("重置slabel")
         # self.setWindowOpacity(0)
-        self.move(self.settings.value("windowx",500,int),self.settings.value("windowy",100,int))
+        self.move(self.settings.value("windowx", 500, int), self.settings.value("windowy", 100, int))
         if PLATFORM_SYS == "darwin":  # macos使用,不然会有切屏
             self.setWindowOpacity(0)
             self.show()
@@ -3828,7 +3879,7 @@ class SettingPage(QScrollArea):
         auto_run.setChecked(self.settings.value('auto_run', False, type=bool))
         auto_run.stateChanged.connect(self.auto_run_change)
 
-        ocr_rightbtton.setChecked(self.settings.value('right_ocr', False, bool))
+        ocr_rightbtton.setChecked(self.settings.value('right_ocr', True, bool))
         ocr_rightbtton.stateChanged.connect(self.right_ocr_setting_save)
 
         close_note.setChecked(self.settings.value('close_notice', False, type=bool))
@@ -3872,7 +3923,7 @@ class SettingPage(QScrollArea):
         self.openhtmlonce.setEnabled(self.openhtmlbtn.isChecked())
         self.openhtmlonce.move(self.timeoutshift.x(), self.openhtmlbtn.y())
         self.shiftopendir = QCheckBox("打开文件夹路径", shiftbox)
-        self.shiftopendir.move(self.openhtmlbtn.x() , self.openhtmlbtn.y()+ self.openhtmlbtn.height())
+        self.shiftopendir.move(self.openhtmlbtn.x(), self.openhtmlbtn.y() + self.openhtmlbtn.height())
         self.shiftopendir.stateChanged.connect(lambda a: self.settings.setValue("shiftopendir", bool(a)))
         self.shiftopendir.setChecked(self.settings.value("shiftopendir", True, bool))
         self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
@@ -3922,20 +3973,19 @@ class SettingPage(QScrollArea):
 
         self.grab_widthbox = QGroupBox('划屏提字', self.settings_widget)
         self.grab_widthbox.setGeometry(fyapi_groub.x(), fyapi_groub.y() + fyapi_groub.height() + 20, 200, 150)
-        self.grab_widthbox.setEnabled(self.settings.value('right_ocr', False, bool))
-        grab_label = QLabel('大概和这个框↓一样高', self.grab_widthbox)
+        self.grab_widthbox.setEnabled(self.settings.value('right_ocr', True, bool))
+        grab_label = QLabel('高度方向的偏差', self.grab_widthbox)
         grab_label.setGeometry(10, 20, 200, 20)
         self.grab_setedit = QSpinBox(self.grab_widthbox)
         self.grab_setedit.setPrefix('高度:')
-        self.grab_setedit.setToolTip('设置划屏时截取鼠标附近的屏幕高度')
+        self.grab_setedit.setToolTip('设置划屏时截取鼠标附近的屏幕高度,一般为行高')
         self.grab_setedit.setSuffix('px')
-        self.grab_setedit.setGeometry(grab_label.x(), grab_label.y() + grab_label.height() + 10, 100, self.settings.value('grab_height', 28))
+        self.grab_setedit.setGeometry(grab_label.x(), grab_label.y() + grab_label.height() + 10, 100,
+                                      self.settings.value('grab_height', 28))
         self.grab_setedit.setValue(self.settings.value('grab_height', 28))
         self.grab_setedit.valueChanged.connect(self.grab_height_change)
         self.grab_setedit.setMinimum(20)
         self.grab_setedit.setMaximum(100)
-
-
 
         self.settings_widget.show()
         self.show()
@@ -3944,12 +3994,12 @@ class SettingPage(QScrollArea):
         self.activateWindow()
 
     def right_ocr_setting_save(self):
-        if self.settings.value('right_ocr', False, bool):
+        if self.settings.value('right_ocr', True, bool):
             self.parent.closelistenmouse()
         else:
             self.parent.openlistenmouse()
-        self.settings.setValue('right_ocr', not self.settings.value('right_ocr', False, bool))
-        self.grab_widthbox.setEnabled(self.settings.value('right_ocr', False, bool))
+        self.settings.setValue('right_ocr', not self.settings.value('right_ocr', True, bool))
+        self.grab_widthbox.setEnabled(self.settings.value('right_ocr', True, bool))
 
     # 自启动
     def auto_run_change(self):
@@ -3981,7 +4031,7 @@ class SettingPage(QScrollArea):
     def grab_height_change(self, value):
         self.settings.setValue('grab_height', value)
         self.parent.simg.h = value
-        self.grab_setedit.resize(self.grab_setedit.width(),value)
+        self.grab_setedit.resize(self.grab_setedit.width(), value)
 
     def smartShiftsetting_save(self, a):
         self.settings.setValue("smartShift", bool(a))
@@ -3998,7 +4048,7 @@ class SettingPage(QScrollArea):
                 tAPI_KEY = self.apikey.text()
                 tSECRECT_KEY = self.secrectkey.text()
                 QPixmap(':/OCR.png').save('ocr.png')
-                with open('ocr.png', 'rb')as file:
+                with open('ocr.png', 'rb') as file:
                     img = file.read()
                 client = AipOcr(tAPP_ID, tAPI_KEY, tSECRECT_KEY)
                 message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
@@ -4303,7 +4353,7 @@ class Transforma(QObject):
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
         fileinfo = QFileInfo(vds[0]).suffix()
         # self.showm_signal.emit("正在处理，请耐心等待。。。")
-        with open('video_mergelist.txt', 'w+')as f:
+        with open('video_mergelist.txt', 'w+') as f:
             s = ''
             for i in vds:
                 s += "file '%s'\n" % i
@@ -4371,7 +4421,7 @@ class Transforma(QObject):
         self.set_style(self.parent.audio_Splicing_pushButton)
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
         fileinfo = QFileInfo(ads[0]).suffix()
-        with open('video_mergelist.txt', 'w+')as f:
+        with open('video_mergelist.txt', 'w+') as f:
             s = ''
             for i in ads:
                 s += "file '%s'\n" % i
@@ -4722,7 +4772,7 @@ class Transforma(QObject):
         self.showm_signal.emit("正在恢复...")
         shutil.copy(bakupfiles, ".")
         if os.path.exists(os.path.split(bakupfiles)[1]):
-            with open(os.path.split(bakupfiles)[1], "r", encoding="utf-8")as file:
+            with open(os.path.split(bakupfiles)[1], "r", encoding="utf-8") as file:
                 line = file.readline()
                 while line:
                     try:
@@ -5340,7 +5390,7 @@ class CheckForUpdateThread(QThread):
             self.newversonname = info["name"]
             self.clientsocket.send("ready".encode())
             if not os.path.exists(self.newversonname) or os.path.getsize(self.newversonname) != totalsize:
-                with open(self.newversonname, "wb")as apk:
+                with open(self.newversonname, "wb") as apk:
                     adump = self.clientsocket.recv(99999)
                     while adump:
                         sig = adump.find("<<|end|>>".encode())
@@ -5398,7 +5448,6 @@ class InitThread(QThread):
                 jamtools.hide()
 
 
-
 def main():
     global jamtools, ffmpeg_path, documents_path, temp_path, iconpng, paypng, transformater, \
         transtalater
@@ -5447,7 +5496,6 @@ def main():
                     jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, False)
                     jamtools.show()
                     jamtools.activateWindow()
-
 
             client.readyRead.connect(read_)
             print('read server', client.readAll().data())
