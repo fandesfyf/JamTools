@@ -49,6 +49,7 @@ import re
 from numpy import array, zeros, uint8, float32
 from jamroll_screenshot import Splicing_shots
 from aip import AipOcr, AipImageClassify
+from fake_useragent import UserAgent
 from jamspeak import Speaker
 import operator
 from functools import reduce

@@ -10,6 +10,7 @@ import os
 import random
 import re
 import sys
+import time
 
 import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
@@ -19,6 +20,9 @@ from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from aip import AipOcr, AipImageClassify
 from urllib.parse import quote
+
+from fake_useragent import UserAgent
+
 from jamspeak import Speaker
 
 APP_ID = QSettings('Fandes', 'jamtools').value('BaiduAI_APPID', '17302981', str)  # 获取的 ID，下同
@@ -28,6 +32,18 @@ print("platform is", sys.platform)
 PLATFORM_SYS = sys.platform
 
 
+def gethtml(url, times=3):  # 下载一个链接
+    try:
+        response = requests.get(url, headers={"User-Agent": UserAgent().random}, timeout=8, verify=False)
+        response.encoding = 'utf-8'
+        if response.status_code == 200:
+            return response.text
+
+    except requests.exceptions.RequestException:
+        print(sys.exc_info(), '重试中')
+        time.sleep(1)
+        if times > 0:
+            gethtml(url, times=times - 1)
 class TipsShower(QLabel):
     def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=35, timeout=1000):
         super().__init__(parent)

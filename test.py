@@ -11,7 +11,7 @@ import sys
 import os, re
 from Logger import Logger
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr
+    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr,gethtml
 
 import http.client
 
@@ -5306,7 +5306,7 @@ class ChildUpdateWindow(QDialog):
         self.pbar.setMaximum(100)
         self.pbar.setGeometry(70, 12, self.width() - 105, 18)
         self.pbar.hide()
-        self.checkforupdateThread = CheckForUpdateThread()
+        self.checkforupdateThread = CheckForUpdateThread(self)
         self.checkforupdateThread.checkresult_signal.connect(self.showresultsignalhandle)
         self.checkforupdateThread.updating_signal.connect(self.downloading)
         self.checkforupdateThread.close_signal.connect(self.canal)
@@ -5338,6 +5338,7 @@ class ChildUpdateWindow(QDialog):
     def canal(self):
         self.gif.stop()
         self.giflabel.clear()
+        self.active = False
         self.checkforupdateThread.quit()
         try:
             if os.path.exists(self.checkforupdateThread.newversonname):
@@ -5346,70 +5347,55 @@ class ChildUpdateWindow(QDialog):
             print(sys.exc_info(), 5223)
         self.close()
 
-
 class CheckForUpdateThread(QThread):
     checkresult_signal = pyqtSignal(str)
     updating_signal = pyqtSignal(str, int)
     close_signal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self,parent:ChildUpdateWindow):
         super(CheckForUpdateThread, self).__init__()
         self.newversonname = "jam.exe"
+        self.parent=parent
 
     def run(self) -> None:
         try:
-            self.clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.clientsocket.settimeout(20)
-            self.clientsocket.connect(("47.106.169.20", 6941))
-            print("连接成功")
-            V = self.clientsocket.recv(99999).decode()
-            print("最版本{}".format(V))
-            if V != VERSON:
-
+            versiondict,p=self.get_lastversion(PLATFORM_SYS)
+            self.checkresult_signal.emit("链接Github成功,正在分析版本情况...")
+            lastversionst=versiondict["versions"]
+            currentversionst=re.findall("(([1-9]?[0-9])\.([1-9]?[0-9])\.([1-9]?[0-9]*)([A|B]?))",VERSON)[0]
+            a=int(lastversionst[1])
+            a1=int(currentversionst[1])
+            b=int(lastversionst[2])
+            b1=int(currentversionst[2])
+            c=int(lastversionst[3])if lastversionst[3]!=""else -1
+            c1=int(currentversionst[3])if currentversionst[3]!=""else -1
+            d=lastversionst[4]
+            d1=currentversionst[4]
+            if a>a1 or (b>b1 and a==a1)or (c >c1 and a==a1 and b==b1) \
+                or (a==a1 and b==b1 and c==c1 and d=="A" and d1=="B"):
+                print("找到新版本")
+                V=lastversionst[0]
+                print("最版本{}".format(V))
                 self.checkresult_signal.emit("检测到新版本{},正在准备更新..".format(V))
             else:
-                self.checkresult_signal.emit("已是最新版本")
-                self.clientsocket.send("up to date".encode())
+                self.checkresult_signal.emit("JamTools{}已是最新版本".format(VERSON))
                 return
-            self.clientsocket.send("update".encode())
-            self.clientsocket.settimeout(None)
         except:
             print(sys.exc_info(), 7383)
-            self.checkresult_signal.emit("连接更新服务器失败!请稍后再试..")
+            self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..")
             return
         try:
-            info = self.clientsocket.recv(9999).decode()
-            if info == "404":
-                self.checkresult_signal.emit("服务器出错!")
-                return
             self.updating_signal.emit("准备下载:", 0)
-            info = json.loads(info)
-            print(info)
-            totalsize = info["size"]
-            s = 0
-            self.newversonname = info["name"]
-            self.clientsocket.send("ready".encode())
-            if not os.path.exists(self.newversonname) or os.path.getsize(self.newversonname) != totalsize:
-                with open(self.newversonname, "wb") as apk:
-                    adump = self.clientsocket.recv(99999)
-                    while adump:
-                        sig = adump.find("<<|end|>>".encode())
-                        s += len(adump)
-                        if sig != -1:
-                            s -= 9
-                        self.updating_signal.emit(
-                            "正在下载:\n{:.2f}M/{:.2f}M".format(s / 1024 / 1024, totalsize / 1024 / 1024),
-                            int(s / totalsize * 100))
-                        if sig == -1:
-                            apk.write(adump)
-                            adump = self.clientsocket.recv(99999)
-                        else:
-                            apk.write(adump[:sig])
-                            break
-                print("接收完成")
-                self.checkresult_signal.emit("下载完成,正在准备更新...")
-            else:
-                self.checkresult_signal.emit("已经存在安装文件,正在启动安装程序...")
+            self.newversonname = 'JamTools.{}'.format( p)
+
+            totalsize=self.downloadupdate(versiondict["link"])
+            if not self.parent.active:
+                print("下载线程取消")
+                return
+            print("接收完成")
+            self.checkresult_signal.emit("下载完成,正在准备更新...")
+            # else:
+            #     self.checkresult_signal.emit("已经存在安装文件,正在启动安装程序...")
         except:
             print(sys.exc_info(), 7430)
             # self.updating_signal.emit("服务器断开!",-1)
@@ -5417,8 +5403,8 @@ class CheckForUpdateThread(QThread):
             return
         try:
             if os.path.exists(self.newversonname) and os.path.getsize(self.newversonname) == totalsize:
+                print("download success ,running...")
                 QDesktopServices.openUrl(QUrl.fromLocalFile(self.newversonname))
-                print("start end")
                 self.close_signal.emit()
             else:
                 self.checkresult_signal.emit("文件校核出错请重新检查更新!")
@@ -5426,8 +5412,52 @@ class CheckForUpdateThread(QThread):
                     os.remove(self.newversonname)
                 raise OSError
         except OSError:
-
             self.checkresult_signal.emit("文件校核出错请重新检查更新!")
+
+    def get_lastversion(self,platform="win32"):
+        if platform == "win32":
+            p = "exe"
+        else:
+            p = "deb" if platform == "linux" else "dmg"
+        url = "https://github.com/fandesfyf/JamTools/releases"
+        data = gethtml(url)
+        versionsurls = ["https://github.com" + i for i in
+                        re.findall('(/fandesfyf/JamTools/releases/download/.*{})"'.format(p), data)
+                        if i[-3:] in ["deb", "exe", "dmg"]]
+        versiondict = {}
+        for link in versionsurls:
+            versionst = re.findall("\..*/.*(([1-9]?[0-9])\.([1-9]?[0-9])\.([1-9]?[0-9]*)([A|B]?))", link)[0]
+            if versionst[0] != "":
+                versiondict = {"link": link, "versions": versionst}
+                break
+        print(versiondict)
+        return versiondict,p
+
+    def downloadupdate(self,url):
+        response = requests.get(url, stream=True, verify=False)
+        totalsize=int(response.headers["Content-Length"])
+        if os.path.exists(self.newversonname) and os.path.getsize(self.newversonname)==totalsize:
+            print("已存在更新文件!")
+            return
+        lt=time.time()
+        s=0
+        sc=0
+        with open(self.newversonname, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=2048):
+                if not self.parent.active:
+                    return
+                if chunk :
+                    f.write(chunk)
+                    s+=2048
+                    nt=time.time()
+                    sc += 2048
+                    if nt-lt !=0:
+                        self.updating_signal.emit(
+                            "正在下载:\n{:.2f}M 速度:{:.2f}M/s".format(s / 1024 / 1024,sc/1024/1024/(nt-lt)),int(s/totalsize*100))
+                        lt=nt
+                        sc=0
+        return totalsize
+
 
 
 class InitThread(QThread):
