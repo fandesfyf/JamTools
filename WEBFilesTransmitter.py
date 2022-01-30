@@ -64,28 +64,120 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         q.put({"ip": self.client_address[0], "time": self.log_date_time_string(), "action": args})
 
     def do_GET(self):
-        print("do get", self.path, self.headers["Cookie"])
-        f = self.respond_get()
-        if f:
-            line = f.read(999999)
-            try:
-                while line:
-                    print("doget action")
-                    if type(line) is str:
-                        self.wfile.write(line.encode("utf-8"))
-                    else:
-                        # print("2")
-                        self.wfile.write(line)
+        print(">>>>>>\n do get", self.path, self.headers, "\n<<<<<<")
+        if self.need_login and (self.path.startswith("/home") or self.path == "/"):  # 登录界面
+            if self.judge_cookie():
+                if self.path == "/":
+                    print("已登录重定向")
+                    self.send_response(302)
+                    self.send_header("Location", "/home")
+                    self.end_headers()
+                    return
+            else:  # no cookie
+                if self.path != "/":  # 重定向到登录页面
+                    print("未登录重定向00")
+                    self.send_response(302)
+                    self.send_header("Location", "/")
+                    self.end_headers()
+                    return
+        path = self.translate_path(self.path)
+        print("respond_get path:", self.path, path)
+        if path is None or not os.path.exists(path):
+            self.send_error(404, "File not found")
+            return
+        if os.path.isdir(path):  # 如果是文件夹路径,返回文件列表页面
+            f = self.list_directory(path)
+            self.send_a_file_chunk(f)
+            return
+        else:
+            if os.path.getsize(path) > 1048576:
+                self.respond_send_Slice_file(path)
+                return
+            else:
+                self.respond_send_file(path)
+                return
 
-                    line = f.read(999999)
-            except WindowsError:
-                print(sys.exc_info(), 103)
+    def respond_send_Slice_file(self, path):
+        chunksize = 204800
+        print("get 大文件")
+        f = None
+        ctype = self.guess_type(path)
+        try:
+            f = open(path, 'rb')
+        except IOError:
+            self.send_error(404, "File not found")
+            return None
+        fs = os.fstat(f.fileno())
+        if "Range" in self.headers.keys():
+            start, b = str(self.headers["Range"]).replace("bytes=", "").split("-")
+            if b != "" and b != fs[6] and b != fs[6] - 1:
+                end = int(b) + 1
+            else:
+                end = fs[6]
+            print("chunk", start, b, fs[6])
+        else:
+            start = 0
+            end = fs[6]
+        start, end = int(start), int(end)
+
+        self.send_response(206)
+        self.send_header("Content-type", ctype)
+        self.send_header("Content-Range", "bytes {}-{}/{}".format(start, end, fs[6]))
+        self.send_header("Content-Length", str(end - start))
+        self.send_header("Last-Modified", self.date_time_string(int(fs.st_mtime)))
+        self.end_headers()
+        print(self.headers)
+
+        self.send_a_file_chunk(f, (start, end))
+
+    def respond_send_file(self, path):  # 发送小文件
+        print("get 小文件")
+        ctype = self.guess_type(path)
+        try:
+            f = open(path, 'rb')
+        except IOError:
+            self.send_error(404, "File not found")
+            return None
+        else:
+            self.send_response(200)
+            self.send_header("Content-type", ctype)
+            fs = os.fstat(f.fileno())
+            self.send_header("Content-Length", str(fs[6]))
+            self.send_header("Last-Modified", self.date_time_string(int(fs.st_mtime)))
+            self.end_headers()
+            self.send_a_file_chunk(f)
+
+    def send_a_file_chunk(self, f, chunk: tuple = None):
+        print("send chunk", chunk)
+        chunksize = 1048576
+        try:
+            if chunk is None:
+                line = f.read(chunksize)
+                while line:
+                    self.send_data(line)
+                    line = f.read(chunksize)
+
+            else:
+                f.seek(chunk[0])
+                total = chunk[1] - chunk[0]
+                while total > chunksize:
+                    self.send_data(f.read(chunksize))
+                    total -= chunksize
+                self.send_data(f.read(total))
+
+            f.close()
+        except WindowsError:
+            print(sys.exc_info(), 103)
+
+    def send_data(self, line):
+        if type(line) is str:
+            self.wfile.write(line.encode("utf-8"))
+        else:
+            self.wfile.write(line)
 
     def do_HEAD(self):
         print("do head")
-        f = self.respond_get()
-        if f:
-            f.close()
+        self.do_GET()
 
     def do_POST(self):
         print("do post", self.path)
@@ -127,7 +219,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 startdata = datadict["checkdata"]
                 startdata = base64.b64decode(startdata[startdata.find("base64,") + 7:])  # 提取出base64数据
                 print("存在同名文件", startdata[:50])
-                with open(location, "rb")as f:
+                with open(location, "rb") as f:
                     filedata = f.read(1024)
                     print(filedata[:50])
                 if startdata == filedata and size == os.path.getsize(location):
@@ -151,7 +243,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print("存在未完成传输")
                 startdata = datadict["checkdata"]
                 startdata = base64.b64decode(startdata[startdata.find("base64,") + 7:])  # 提取出base64数据
-                with open(prlocation, "rb")as f:
+                with open(prlocation, "rb") as f:
                     filedata = f.read(1024)
                 if startdata == filedata:
                     print("文件正确,继续传输", startdata[:10], filedata[:10])
@@ -194,7 +286,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print(sys.exc_info(), 209)
                 self.response_post(500)
             else:
-                with open(location, "ab")as f:
+                with open(location, "ab") as f:
                     f.write(d)
                 self.response_post(200)
         elif requesttype == "stopupload":
@@ -264,50 +356,6 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         except:
             print(sys.exc_info())
         return False
-
-    def respond_get(self):  # 响应get请求
-        if self.need_login and (self.path.startswith("/home") or self.path == "/"):
-            if self.judge_cookie():
-                if self.path == "/":
-                    print("已登录重定向")
-                    self.send_response(302)
-                    self.send_header("Location", "/home")
-                    self.end_headers()
-                    return None
-            else:  # no cookie
-                if self.path != "/":
-                    print("未登录重定向00")
-                    self.send_response(302)
-                    self.send_header("Location", "/")
-                    self.end_headers()
-                    return None
-        path = self.translate_path(self.path)
-        print("respond_get path:", self.path, path)
-        if path == None: return
-        if os.path.isdir(path):
-            # if not self.path.endswith('/'):
-            #     print("重定向00")
-            #     self.send_response(302)
-            #     self.send_header("Location",path+"/")
-            #     self.end_headers()
-            #     return None
-            return self.list_directory(path)
-        print("not dir")
-        f = None
-        ctype = self.guess_type(path)
-        try:
-            f = open(path, 'rb')
-        except IOError:
-            self.send_error(404, "File not found")
-            return None
-
-        self.send_response(200)
-        self.send_header("Content-type", ctype)
-        fs = os.fstat(f.fileno())
-        self.send_header("Content-Length", str(fs[6]))
-        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
-        self.end_headers()
-        return f
 
     def list_directory(self, path):
         try:
@@ -391,11 +439,11 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             for word in words:
                 if word in ["jamcss", "jamjs", "jamhtmlpic", "jamlistdir.html", "favicon.ico"] or (
                         word == "jamupload.html" and self.canupload):
-                    print(os.path.join(Work_Path, "html/" + word + path.split(word)[1]))
+                    # print(os.path.join(Work_Path, "html/" + word + path.split(word)[1]))
                     p = os.path.join(Work_Path, "html/" + word + path.split(word)[1])
                     return p
         if "home" == words[0]:
-            print("取根目录")
+            # print("取根目录")
             words.pop(0)
         p = self.pathm
         for word in words:
@@ -559,7 +607,7 @@ class serverloghandle(QThread):
                 ip = log["ip"]
                 actiontime = log["time"].split()[1]
                 ms = ""
-                print("action", log["action"])
+                # print("action", log["action"])
                 if ip not in self.iplist:
                     self.iplist.append(ip)
                     ms = "{}正在访问你的共享文件\n{}".format(ip, actiontime)
@@ -567,20 +615,20 @@ class serverloghandle(QThread):
                 elif type(log["action"][0]) == str and log["action"][1] == "200":
                     if "get" in log["action"][0].lower():
                         getfile = urllib.parse.unquote(log["action"][0].split()[1])
-                        print("getfile", getfile)
+                        # print("getfile", getfile)
                         if getfile[-1] == "/" or "/home" in getfile:
-                            print("正在访问:", getfile)
+                            # print("正在访问:", getfile)
                             if getfile != olddir:
                                 olddir = getfile
                                 ms = "{}正在访问{}\nat{}".format(ip, getfile, actiontime)
                         elif not initems(["/favicon.ico", "jamcss", "jamjs", "jamhtmlpic"], getfile):
-                            print("下载了", getfile)
+                            # print("下载了", getfile)
                             ms = "{}下载了一个文件:\n{}\nat{}".format(ip, getfile, actiontime)
                     elif "post" in log["action"][0].lower():
                         ms = "{}上传了一个文件到共享文件夹\nat{}".format(ip, actiontime)
                 if ms != "":
                     with open(os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
-                                           "jamWebTransmitter.log"), "a", encoding="utf-8")as log:
+                                           "jamWebTransmitter.log"), "a", encoding="utf-8") as log:
                         log.write(actiontime + ms.replace("\n", "") + "\n")
                     self.showm_signal.emit(ms)
                 time.sleep(0.2)

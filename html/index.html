@@ -34,7 +34,7 @@
             <div class="item">
 <!--                <i class="fa fa-key" aria-hidden="true"></i>-->
                 <input id="username" type="text" autocomplete="on" value="JamLogin" hidden>
-                <input id="password" type="password" autocomplete="on" placeholder="需要密码" name="password">
+                <input id="password" type="password" onkeydown="login_check()" autocomplete="on" placeholder="需要密码" name="password">
             </div>
         </div>
         <div>
@@ -48,6 +48,7 @@
 
     // 请求路径
     var httpurl = "/loginrequest";
+
 
     // 数据请求
     function LoginClick() {
@@ -91,6 +92,16 @@
         });
         console.log("fffffffffffffffffdss");
     }
+    function login_check(frm,event){
+
+    event=window.event?window.event:event;
+   console.log(event.keyCode)
+    if(event.keyCode==13){
+        LoginClick()
+    }
+
+    }
+
     function SaveLoginChange(){
         console.log("change")
         if (!$(":checkbox[id='savelogin']").prop("checked")){

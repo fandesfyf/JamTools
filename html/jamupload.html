@@ -367,7 +367,7 @@
 
                     var reader = new FileReader();//新建一个读文件的对象
 
-                    var step = 1024 * 1024*2; //每次读取文件大小  1MB
+                    var step = 1024 * 1024; //每次读取文件大小  1MB
 
                     var cuLoaded = startindex; //当前已经读取总数
 
@@ -555,7 +555,7 @@
 
                     var m = 0;
 
-                    //关键代码上传到服务器
+                    //上传到服务器
 
                     function uploadFile(result, startIndex, loadedlen,onSuccess) {
 

@@ -2,19 +2,16 @@ import base64
 import hashlib
 import json
 
-from PyQt5.QtNetwork import QNetworkInterface, QHostInfo
+from PyQt5.QtNetwork import QNetworkInterface
 
 import html
 import http.server
 import mimetypes
 import os
-import platform
 import posixpath
 import queue
 import random
-import re
 import shutil
-import socket
 import sys
 import time
 import urllib.error
@@ -23,43 +20,22 @@ import urllib.request
 from io import StringIO
 from socketserver import ThreadingMixIn
 
-import psutil
 import qrcode
 from PIL import ImageQt
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QObject, QSettings
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QObject, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QDesktopServices, QIcon
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGroupBox, QComboBox, QFileDialog, QCheckBox, QLineEdit
 
-SHOW_PATH = os.getcwd()
-Work_Path = os.getcwd()
+
+def get_apppath():
+    p = sys.path[0].replace("\\", "/").rstrip("/") if os.path.isdir(sys.path[0]) else os.path.split(sys.path[0])[0]
+    # print("apppath",p)
+    if sys.platform == "darwin" and p.endswith("MacOS"):
+        p = os.path.join(p.rstrip("MacOS"), "Resources")
+    return p
 
 
-def get_ips():
-    match_ip_list = []
-    ipconfig_result_list = os.popen('ipconfig|findstr IPv4').readlines()
-    for i in range(0, len(ipconfig_result_list)):
-        if 'IPv4 地址' in ipconfig_result_list[i] and "自动配置" not in ipconfig_result_list[i]:
-            match_ip = ipconfig_result_list[i].split(":")[-1].replace(" ", "").replace("\n", "")
-
-            match_ip_list.append(match_ip)
-    # print("使用中的ip:", match_ip_list)
-    return match_ip_list
-
-
-def get_all_networks_nameandip():
-    r""" 打印多网卡 mac 和 ip 信息 """
-    dic = psutil.net_if_addrs()
-    # print(dic)
-    networks = {}
-    for adapter in dic:
-        snicList = dic[adapter]
-        ipv4 = '无 ipv4 地址'
-        for snic in snicList:
-            if snic.family.name == 'AF_INET':
-                ipv4 = snic.address
-        networks[adapter] = ipv4
-    # print(networks)
-    return networks
+Work_Path = SHOW_PATH = apppath = get_apppath()
 
 
 def sizeof_fmt(num):
@@ -88,7 +64,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         q.put({"ip": self.client_address[0], "time": self.log_date_time_string(), "action": args})
 
     def do_GET(self):
-        print("do get", self.path, self.headers["Cookie"])
+        print("do get", self.path, self.headers["Cookie"], self.headers)
         f = self.respond_get()
         if f:
             line = f.read(999999)
@@ -151,7 +127,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 startdata = datadict["checkdata"]
                 startdata = base64.b64decode(startdata[startdata.find("base64,") + 7:])  # 提取出base64数据
                 print("存在同名文件", startdata[:50])
-                with open(location, "rb")as f:
+                with open(location, "rb") as f:
                     filedata = f.read(1024)
                     print(filedata[:50])
                 if startdata == filedata and size == os.path.getsize(location):
@@ -175,7 +151,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print("存在未完成传输")
                 startdata = datadict["checkdata"]
                 startdata = base64.b64decode(startdata[startdata.find("base64,") + 7:])  # 提取出base64数据
-                with open(prlocation, "rb")as f:
+                with open(prlocation, "rb") as f:
                     filedata = f.read(1024)
                 if startdata == filedata:
                     print("文件正确,继续传输", startdata[:10], filedata[:10])
@@ -218,7 +194,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 print(sys.exc_info(), 209)
                 self.response_post(500)
             else:
-                with open(location, "ab")as f:
+                with open(location, "ab") as f:
                     f.write(d)
                 self.response_post(200)
         elif requesttype == "stopupload":
@@ -308,7 +284,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         path = self.translate_path(self.path)
         print("respond_get path:", self.path, path)
         if path == None: return
-        if os.path.isdir(path):
+        if os.path.isdir(path):  # 返回文件列表
             # if not self.path.endswith('/'):
             #     print("重定向00")
             #     self.send_response(302)
@@ -329,7 +305,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Content-type", ctype)
         fs = os.fstat(f.fileno())
         self.send_header("Content-Length", str(fs[6]))
-        self.send_header("Last-Modified", self.date_time_string(fs.st_mtime))
+        self.send_header("Last-Modified", self.date_time_string(int(fs.st_mtime)))
         self.end_headers()
         return f
 
@@ -570,30 +546,46 @@ class serverloghandle(QThread):
     def run(self) -> None:
         self.servering = True
         olddir = ""
+
+        def initems(list1, target):
+            for i in list1:
+                if i in target:
+                    return True
+            return False
+
         while self.servering:
             if not self.q.empty():
                 log = self.q.get()
                 ip = log["ip"]
                 actiontime = log["time"].split()[1]
-                # if ip not in self.iplist:
-                #     self.iplist.append(ip)
-                #     self.showm_signal.emit("{}正在访问你的共享文件\n{}".format(ip, actiontime))
-                # print("action", log["action"])
-                # if type(log["action"][0]) == str and log["action"][1] == "200":
-                #     if "get" in log["action"][0].lower():
-                #         getfile = urllib.parse.unquote(log["action"][0].split()[1])
-                #         if getfile[-1] == "/":
-                #             print("正在访问:", getfile)
-                #             if getfile != olddir:
-                #                 olddir = getfile
-                #                 self.showm_signal.emit("{}正在访问{}\nat{}".format(ip, getfile, actiontime))
-                #         else:
-                #             print("下载了", getfile)
-                #             self.showm_signal.emit("{}下载了一个文件:\n{}\nat{}".format(ip, getfile, actiontime))
-                #     elif "post" in log["action"][0].lower():
-                #         self.showm_signal.emit("{}上传了一个文件到共享文件夹\nat{}".format(ip, actiontime))
+                ms = ""
+                print("action", log["action"])
+                if ip not in self.iplist:
+                    self.iplist.append(ip)
+                    ms = "{}正在访问你的共享文件\n{}".format(ip, actiontime)
 
-            time.sleep(0.1)
+                elif type(log["action"][0]) == str and log["action"][1] == "200":
+                    if "get" in log["action"][0].lower():
+                        getfile = urllib.parse.unquote(log["action"][0].split()[1])
+                        print("getfile", getfile)
+                        if getfile[-1] == "/" or "/home" in getfile:
+                            print("正在访问:", getfile)
+                            if getfile != olddir:
+                                olddir = getfile
+                                ms = "{}正在访问{}\nat{}".format(ip, getfile, actiontime)
+                        elif not initems(["/favicon.ico", "jamcss", "jamjs", "jamhtmlpic"], getfile):
+                            print("下载了", getfile)
+                            ms = "{}下载了一个文件:\n{}\nat{}".format(ip, getfile, actiontime)
+                    elif "post" in log["action"][0].lower():
+                        ms = "{}上传了一个文件到共享文件夹\nat{}".format(ip, actiontime)
+                if ms != "":
+                    with open(os.path.join(QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation),
+                                           "jamWebTransmitter.log"), "a", encoding="utf-8") as log:
+                        log.write(actiontime + ms.replace("\n", "") + "\n")
+                    self.showm_signal.emit(ms)
+                time.sleep(0.2)
+            else:
+                time.sleep(0.5)
 
     def quit(self) -> None:
         self.servering = False
@@ -624,6 +616,8 @@ class WebFilesTransmitter(QThread):
         serverlog = serverloghandle()
         serverlog.showm_signal.connect(self.tranformshowmsignal)
         serverlog.start()
+        if sys.platform == "darwin":
+            self.showm_signal.emit("macos下启动相对较慢,请稍等....")
         try:
             self.threadingServer = ThreadingServer(("", self.port), self.http_handler)
         except:
@@ -652,14 +646,21 @@ class WebFilesTransmitter(QThread):
         self.showm_signal.emit(s)
 
     def get_alldevices(self):
-
         dv = QNetworkInterface.allInterfaces()
-        availabledevices = {interface.humanReadableName(): interface.addressEntries()[-1].ip().toString() for interface in dv if
-                  (not interface.addressEntries()[-1].ip().isLinkLocal()and interface.addressEntries()[-1].ip().toString()!="127.0.0.1")}
+        # nan = [interface.addressEntries() for interface
+        #        in dv]
+        availabledevices = {interface.humanReadableName(): interface.addressEntries()[i].ip().toString() for interface
+                            in dv for i in range(len(interface.addressEntries())) if
+                            (len(interface.addressEntries()) and not interface.addressEntries()[
+                                i].ip().isLinkLocal() and interface.addressEntries()[
+                                 i].ip().toString() != "127.0.0.1" and ":" not in interface.addressEntries()[
+                                 i].ip().toString() and "." in interface.addressEntries()[
+                                 i].ip().toString())}
 
         self.devicedict = {k: v for k, v in sorted(availabledevices.items(), key=lambda item: item[1], reverse=True)}
+        # if len(self.devicedict)==0:
+        #     self.showm_signal.emit("未接入网络!")
         print(self.devicedict)
-
         return self.devicedict
 
     def change_SHOWPATH(self, path):
@@ -730,7 +731,7 @@ class WebFilesTransmitterBox(QGroupBox):
         self.transmitter_web_allowupload.setToolTip("允许网页端上传文件,文件将保存于共享的文件夹内")
         self.transmitter_web_allowupload.setStatusTip("允许网页端上传文件,文件将保存于共享的文件夹内")
         self.transmitter_web_allowupload.setChecked(
-            QSettings('Fandes', 'jamtools').value('transmitter/allowupload', False, type=bool))
+            QSettings('Fandes', 'jamtools').value('transmitter/allowupload', True, type=bool))
         self.transmitter_web_allowupload.move(self.transmitter_reset_web_port_btn.x() + 2,
                                               self.transmitter_reset_web_port_btn.y() + self.transmitter_reset_web_port_btn.height() + 15)
 
@@ -791,15 +792,19 @@ class WebFilesTransmitterBox(QGroupBox):
                 self.WebFilesTransmitter.show_some_files(files, self.transmitter_web_allowupload.isChecked(),
                                                          self.transmitter_web_need_login.isChecked())
                 self.transmitter_web_info.sharepath = os.path.split(files[0])[0] + "/{}个文件".format(len(files))
+
                 QSettings('Fandes', 'jamtools').setValue('transmitter/sharepath', os.path.split(files[0])[0])
 
         def choicedir():
-            dir = QFileDialog.getExistingDirectory(self, "选择要共享的文件夹", "")
+            dir = QFileDialog.getExistingDirectory(self, "选择要共享的文件夹",
+                                                   QSettings('Fandes', 'jamtools').value('transmitter/sharepath', "",
+                                                                                         str))
             print(dir)
             if len(dir):
                 self.WebFilesTransmitter.show_a_dir(dir, self.transmitter_web_allowupload.isChecked(),
                                                     self.transmitter_web_need_login.isChecked())
                 self.transmitter_web_info.sharepath = dir
+                self.transmitter_web_info.update()
                 QSettings('Fandes', 'jamtools').setValue('transmitter/sharepath', dir)
 
         self.transmitter_web_choice_files = QPushButton("选择文件", self)
@@ -867,6 +872,7 @@ class WebFilesTransmitterBox(QGroupBox):
         self.updatedevice()
 
     def updatedevice(self):
+        # print("baseppppppppppppp", sys.path)
         self.transmitter_web_devices.clear()
         self.transmitter_web_devices.addItems(self.WebFilesTransmitter.get_alldevices().keys())
 
