@@ -608,7 +608,7 @@ class Commen_Thread(QThread):
         self.args = args
 
     def run(self):
-        print('start_thread',self.args)
+        print('start_thread params:{}'.format(self.args))
         if self.args:
             print(self.args)
             if len(self.args) == 1:

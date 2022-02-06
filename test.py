@@ -59,7 +59,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.13.7B"
+VERSON = "0.13.5B"
 
 
 class JHotkey(QThread):
@@ -3372,16 +3372,16 @@ hhh(o゜▽゜)o☆）
         self.help_text.clear()
         self.change_show_item([self.about_groupBox])
 
-        text = 'Edit by Fandes&机械酱 build for 帮帮酱团队\n\n' \
-               '感谢以下个人/团队提供接口支持：\n' \
+        text = 'Jamtools version:{}\nEdit by Fandes&机械酱 build for 帮帮酱团队\n' \
+               '感谢以下平台/团队提供接口支持：\n' \
                '   百度AI开放平台http:/ai.baidu.com\n' \
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \
                '   思知人工智能AI开放平台https:/console.ownthink.com\n' \
                '   本软件完全免费、开源，拒绝商业用途！严禁贩卖！如有疑问，请联系作者 2861114322@qq.com\n\n' \
                '本软件安装文件的唯一正常来源为Github项目地址:https://github.com/fandesfyf/JamTools和个人CSDN博客\n' \
-               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，本作者不负任何责任！！' \
-               '欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
-               '欢迎关注,<<机械酱的小黑屋>>(ˇ∀ˇ),虽然什么都没有...(真的)'
+               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，作者(Fandes)概不负责！！' \
+               '也欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
+               '欢迎关注 公众号<机械酱的小黑屋>,虽然什么都没有啦...(真的)'.format(VERSON)
         self.help_text.insertPlainText(text)
 
     def others(self):
@@ -5310,6 +5310,7 @@ class ChildUpdateWindow(QDialog):
         self.checkforupdateThread.checkresult_signal.connect(self.showresultsignalhandle)
         self.checkforupdateThread.updating_signal.connect(self.downloading)
         self.checkforupdateThread.close_signal.connect(self.canal)
+        self.checkforupdateThread.haveupdate_signal.connect(self.haveupdate)
         self.checkforupdateThread.start()
         self.show()
 
@@ -5327,6 +5328,14 @@ class ChildUpdateWindow(QDialog):
         self.giflabel.clear()
         self.giflabel.hide()
         self.label.setText(res)
+    def haveupdate(self,v):
+        msg = QMessageBox.question(self, '是否下载?', '当前版本:{}\n新版本:{}\n\n要现在开始从Github下载更新吗?\t\t\t'.format(VERSON,v),
+                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if msg==QMessageBox.Yes:
+            self.checkforupdateThread.waiting=False
+        else:
+            self.canal()
+
 
     def hide(self) -> None:
         super(ChildUpdateWindow, self).hide()
@@ -5351,13 +5360,16 @@ class CheckForUpdateThread(QThread):
     checkresult_signal = pyqtSignal(str)
     updating_signal = pyqtSignal(str, int)
     close_signal = pyqtSignal()
+    haveupdate_signal=pyqtSignal(str)
 
     def __init__(self,parent:ChildUpdateWindow):
         super(CheckForUpdateThread, self).__init__()
         self.newversonname = "jam.exe"
         self.parent=parent
+        self.waiting=False
 
     def run(self) -> None:
+        self.waiting = False
         try:
             versiondict,p=self.get_lastversion(PLATFORM_SYS)
             self.checkresult_signal.emit("链接Github成功,正在分析版本情况...")
@@ -5385,7 +5397,15 @@ class CheckForUpdateThread(QThread):
             self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..")
             return
         try:
-            self.updating_signal.emit("准备下载:", 0)
+            self.haveupdate_signal.emit(str(V))
+            self.waiting=True
+            while self.waiting and self.parent.active:
+                time.sleep(0.2)
+            if not self.parent.active:
+                return
+            for i in range(3):
+                self.updating_signal.emit("准备中{}s\n当前版本:{} ->新版本:{}".format(3-i,VERSON,V), 0)
+                time.sleep(1)
             self.newversonname = 'JamTools.{}'.format( p)
 
             totalsize=self.downloadupdate(versiondict["link"])

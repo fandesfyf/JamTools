@@ -18,7 +18,7 @@ if __name__ == '__main__':
     from jampublic import PLATFORM_SYS
     from test import VERSON
 
-    WithCompile = False  # 是否编译
+    WithCompile = 1  # 是否编译
     Debug = 0  # 是否debug模式
     print("copy test.py->PyQt5CoreModels.py")
     testsize = os.path.getsize("test.py")
@@ -29,8 +29,12 @@ if __name__ == '__main__':
                 mo.write(f.read())
 
     if WithCompile:
-        Compiler = subprocess.Popen('python3 setjam.py build_ext --inplace', shell=True)
+        Compiler = subprocess.Popen('python setjam.py build_ext --inplace', shell=True,stderr=subprocess.PIPE)
         Compiler.wait()
+        error=Compiler.stderr.read().decode("utf-8")
+        print(">>>>>{}\n><<<<<<".format(error))
+        if "error"in error:
+            raise Exception("Compiler fail!\n{}".format(error))
         if PLATFORM_SYS == "win32":
             ext = ".pyd"
             suffix = ".cp37-win_amd64"
@@ -55,7 +59,7 @@ if __name__ == '__main__':
                 os.remove("{}{}{}".format(file, suffix, ext))
             print('copy {}{}'.format(file, ext))
         else:
-            raise OSError
+            raise OSError('{}{}{} not found'.format(file, suffix, ext))
 
     with open('main.py', "w", encoding="utf-8") as mainf:
         importfilelist = ["import pynput.keyboard\n", "import pynput.mouse\n"]
