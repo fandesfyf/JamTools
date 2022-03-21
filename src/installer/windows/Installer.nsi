@@ -4,8 +4,8 @@ SetCompressor /SOLID LZMA
 InstallDir "$PROGRAMFILES64\JamTools"
 ;InstallDirRegKey HKCU "Software\JamTools" "$PROGRAMFILES64\JamTools"
 !define PRODUCT_NAME "JamTools"
-!define PRODUCT_VERSION "0.13.55B"
-Unicode True
+!define PRODUCT_VERSION "0.12.201211Alpha"
+
 
 ;--------------------------------
 ;Perform Machine-level install, if possible
@@ -79,19 +79,11 @@ FunctionEnd
 ;--------------------------------
 ;Pages
   !define MUI_ICON "${NSISDIR}\Contrib\Graphics\Icons\Icon.ico"
-  !define MUI_WELCOMEPAGE_TEXT "本向导将把JamTools安装到你的电脑上！$\软件主要功能:(滚动)截屏、文字识别、翻译、图像主体识别、录屏(支持自定义参数)、格式转换(支持图片音视频的简单裁剪拼接、压缩转码、提取混合操作)、键鼠动作录制/(倍速)播放、划屏提字(翻译)等功能$\r$\n本工具完全免费，严禁用于二次打包、贩卖等商业用途$\r$\n$\r$\n$\r$\nClick Next to continue."
+  !define MUI_WELCOMEPAGE_TEXT "本向导将把JamTools安装到你的电脑上！$\r$\n本软件是作者在日常生活中自己常用到的功能集合，算是一个小工具集吧。$\n主要功能:(滚动)截屏、文字识别、翻译、图像主体识别、录屏(支持自定义参数)、格式转换(支持图片音视频的简单裁剪拼接、压缩转码、提取混合操作)、键鼠动作录制/(倍速)播放、划屏提字(翻译)等功能$\r$\n本工具完全免费，严禁用于二次打包、贩卖等商业用途$\r$\n$\r$\n$\r$\nClick Next to continue."
   !define MUI_DIRECTORYPAGE_TEXT_TOP  "选择安装的位置，不建议安装到系统盘(因为太大了...) "
   !define MUI_
   !insertmacro MUI_PAGE_WELCOME
-  ; 许可页面
-  !define MUI_PAGE_CUSTOMFUNCTION_SHOW LicenseShow 
-!insertmacro MUI_PAGE_LICENSE "..\JamTools\LICENSE" 
-Function LicenseShow 
-    
-FunctionEnd 
-
-
-
+  
   ; 安装目录选择页面
   !insertmacro MUI_PAGE_DIRECTORY
   !insertmacro MUI_PAGE_INSTFILES
@@ -204,5 +196,5 @@ FunctionEnd
 
 Function LaunchLink
   !addplugindir "."
-  ExecShell  "" "$InstDir\JamTools.exe"
+  ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\JamTools.lnk"
 FunctionEnd
