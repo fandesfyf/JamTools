@@ -230,7 +230,7 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 Wheel
 Pillow
 pynput
-fbs 
+fbs==0.9.0 #高版本fbs变成收费了,但支持了更高版本的python
 qrcode
 requests
 PyInstaller==3.4
@@ -249,6 +249,6 @@ setuptools==50.3.0
 
 也可以通过```  pip3 install -r requirement.txt```安装所有依赖
 
-此外,需要自行下载ffmpeg(用于录屏和多媒体处理)和gifsicle(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
+此外,本软件多媒体处理能力主要依赖于[ffmpeg库](https://ffmpeg.org/),需要自行下载[ffmpeg](https://ffmpeg.org/)(用于录屏和多媒体处理)和[gifsicle](http://www.lcdf.org/gifsicle/)(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
 配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
