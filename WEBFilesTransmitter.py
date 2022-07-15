@@ -58,7 +58,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # print("初始化")
 
         self.pathm = SHOW_PATH
-        super().__init__(*args, directory=directory, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def log_message(self, format, *args):
         q.put({"ip": self.client_address[0], "time": self.log_date_time_string(), "action": args})
