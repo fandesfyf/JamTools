@@ -2964,7 +2964,7 @@ class Swindow(QMainWindow):
         else:
             record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
                                       stdin=subprocess.PIPE,
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             relog = record.stderr.read()
             # print(relog)
             record.terminate()
