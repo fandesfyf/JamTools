@@ -18,7 +18,7 @@ if __name__ == '__main__':
     from jampublic import PLATFORM_SYS
     from test import VERSON
 
-    WithCompile = 1  # 是否编译
+    WithCompile = 0  # 是否编译
     Debug = 0  # 是否debug模式
     print("copy test.py->PyQt5CoreModels.py")
     testsize = os.path.getsize("test.py")

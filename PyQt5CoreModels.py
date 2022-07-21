@@ -59,7 +59,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.13.5B"
+VERSON = "0.13.7B"
 
 
 class JHotkey(QThread):
@@ -2964,9 +2964,8 @@ class Swindow(QMainWindow):
         else:
             record = subprocess.Popen('"' + ffmpeg_path + '/ffmpeg" {}'.format(f), shell=True,
                                       stdin=subprocess.PIPE,
-                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8')
-            relog = record.stderr.read()
-            # print(relog)
+                                      stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            relog = record.stderr.read().decode()
             record.terminate()
         audio_divice = []
         video_divice = []
