@@ -1440,14 +1440,23 @@ class Swindow(QMainWindow):
 
         self.canstartkeyboardtra = False
         self.shifttime = time.time()
+        self.shift_ctrl_press=0
 
         def on_press(key):
-            if key == keyboard.Key.shift and self.settings.value('smartShift', True, bool) and \
+            if self.settings.value('smartShift', True, bool) and key in (keyboard.Key.shift, keyboard.Key.ctrl_l) and \
                     time.time() - self.shifttime < self.settings.value("timeoutshift", 7, type=int):
-                print('shift pressed', time.time() - self.shifttime)
-                self.canstartkeyboardtra = True
-                self.keboardchange_fucsignal.emit()
-                stopall()
+                if self.shift_ctrl_press==0:
+                    self.shift_ctrl_press=1 if key == keyboard.Key.shift else -1
+                elif self.shift_ctrl_press ==-1 and key == keyboard.Key.shift:
+                    self.shift_ctrl_press=-2
+                elif self.shift_ctrl_press == 1 and key == keyboard.Key.ctrl_l:
+                    self.shift_ctrl_press=2
+   
+                if abs(self.shift_ctrl_press)>=2:        
+                    print('shift pressed', time.time() - self.shifttime)
+                    self.canstartkeyboardtra = True
+                    self.keboardchange_fucsignal.emit()
+                    stopall()
 
         def stopall():
             self.kbtralistenertimer.stop()
