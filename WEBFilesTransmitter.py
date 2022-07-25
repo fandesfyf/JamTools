@@ -18,7 +18,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from io import StringIO
-from socketserver import ThreadingMixIn
+from socketserver import ThreadingMixIn,TCPServer
+import gzip
 
 import qrcode
 from PIL import ImageQt
@@ -53,9 +54,9 @@ def modification_date(filename):
 q = queue.Queue()
 
 
-class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+class SimpleHTTPRequestHandler(http.server.BaseHTTPRequestHandler):
     def __init__(self, *args, directory=SHOW_PATH, **kwargs):
-        # print("初始化")
+        print("初始化1")
 
         self.pathm = SHOW_PATH
         super().__init__(*args, **kwargs)
@@ -64,7 +65,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         q.put({"ip": self.client_address[0], "time": self.log_date_time_string(), "action": args})
 
     def do_GET(self):
-        print(">>>>>>\n do get", self.path, self.headers, "\n<<<<<<")
+        print("\n\n>>>>>> do get", self.path, "<<<<<<")
         if self.need_login and (self.path.startswith("/home") or self.path == "/"):  # 登录界面
             if self.judge_cookie():
                 if self.path == "/":
@@ -81,7 +82,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self.end_headers()
                     return
         path = self.translate_path(self.path)
-        print("respond_get path:", self.path, path)
+        print("respond_get path:", self.path)
         if path is None or not os.path.exists(path):
             self.send_error(404, "File not found")
             return
@@ -98,7 +99,6 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 return
 
     def respond_send_Slice_file(self, path):
-        chunksize = 204800
         print("get 大文件")
         f = None
         ctype = self.guess_type(path)
@@ -114,21 +114,27 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
                 end = int(b) + 1
             else:
                 end = fs[6]
-            print("chunk", start, b, fs[6])
+            print("chunk range:", start, b, fs[6])
         else:
             start = 0
             end = fs[6]
         start, end = int(start), int(end)
+        # dlen=end-start
+        # if dlen > chunksize:
+        #     print("resize chunk")
+        #     end=start+chunksize
 
+        compress=False#压缩
         self.send_response(206)
         self.send_header("Content-type", ctype)
+        self.send_header("Accept-Ranges","bytes")
+        # self.send_header("Content-Encoding","gzip")
+
         self.send_header("Content-Range", "bytes {}-{}/{}".format(start, end, fs[6]))
         self.send_header("Content-Length", str(end - start))
         self.send_header("Last-Modified", self.date_time_string(int(fs.st_mtime)))
         self.end_headers()
-        print(self.headers)
-
-        self.send_a_file_chunk(f, (start, end))
+        self.send_a_file_chunk(f, chunk=(start, end),compress=compress)
 
     def respond_send_file(self, path):  # 发送小文件
         print("get 小文件")
@@ -147,33 +153,34 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.send_a_file_chunk(f)
 
-    def send_a_file_chunk(self, f, chunk: tuple = None):
+    def send_a_file_chunk(self, f, chunk: tuple = None,compress=False):
         print("send chunk", chunk)
-        chunksize = 1048576
+        chunksize = 40960#一次读写的大小
         try:
             if chunk is None:
                 line = f.read(chunksize)
                 while line:
-                    self.send_data(line)
+                    self.send_data(line,compress)
                     line = f.read(chunksize)
 
             else:
                 f.seek(chunk[0])
                 total = chunk[1] - chunk[0]
                 while total > chunksize:
-                    self.send_data(f.read(chunksize))
+                    self.send_data(f.read(chunksize),compress)
                     total -= chunksize
-                self.send_data(f.read(total))
+                self.send_data(f.read(total),compress)
 
             f.close()
         except WindowsError:
             print(sys.exc_info(), 103)
 
-    def send_data(self, line):
-        if type(line) is str:
-            self.wfile.write(line.encode("utf-8"))
-        else:
-            self.wfile.write(line)
+    def send_data(self, line,compress=False):
+        line=line.encode("utf-8")  if type(line) is str else line
+        if compress:
+            line=gzip.compress(line)
+            
+        self.wfile.write(line)
 
     def do_HEAD(self):
         print("do head")
@@ -480,7 +487,7 @@ class SimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     })
 
 
-class ThreadingServer(ThreadingMixIn, http.server.HTTPServer):
+class ThreadingServer(ThreadingMixIn, TCPServer):
     pass
 
 
