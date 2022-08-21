@@ -1,3 +1,6 @@
+# !usr/bin/python3
+# -*- coding: utf-8 -*-
+# 本文件由jamtoolsbuild.py 打包脚本自动生成, 直接运行的主程序文件为test.py
 import pynput.keyboard
 import pynput.mouse
 import hashlib
@@ -42,7 +45,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from io import StringIO
-from socketserver import ThreadingMixIn
+from socketserver import ThreadingMixIn,TCPServer
+import gzip
 from PIL import ImageQt
 import math
 import re
@@ -57,6 +61,6 @@ from numpy import zeros, uint8, asarray, vstack, float32
 import io
 import sys, time
 from playsound import playsound
-from PyQt5CoreModels import main
+from CoreModels import main
 main()
 

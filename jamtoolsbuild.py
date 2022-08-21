@@ -1,10 +1,10 @@
 import time
 
-jamfilelist = ["PyQt5CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
+jamfilelist = ["CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
                "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger", "jamspeak"]
-print("说明:test.py文件为主文件,main.py为存放引入库的文件(无需管),scr文件夹是fbs打包的项目目录.\n"
-      "运行本文件打包时,会自动将test.py文件覆盖到PyQt5CoreModels.py(这是前期为了防反编译搞的hh)中,然后会自动解析所有jamfilelist中源码的引入库,"
-      "并将所有需要的库格式化后写入main.py文件中,从而让pyinstall可以找到(否则可能有找不到库的错误)"
+print("说明:main.py为存放引入库的文件(无需管),scr文件夹是fbs打包的项目目录.\n"
+      "运行本文件打包时,会自动解析所有jamfilelist中源码的引入库,"
+      "并将所有需要的库格式化后写入main.py文件中,从而让pyinstaller可以找到(否则可能有找不到库的错误)"
       "同时会自动配置scr项目目录,然后通过命令行运行打包程序实现自动打包,如需生成安装文件Windows下需要nsis环境,请自行探索..\n"
       "通过更改下面的WithCompile 和Debug变量可以调整是否编译和是否debug模式.\n"
       "需要编译时会将所有源码文件编译为c然后编译为pyd文件,可以实现源码保护,而且运行速度略有提升,需要自行配置好c和cython环境\n"
@@ -16,17 +16,11 @@ if __name__ == '__main__':
     import shutil
     import subprocess, setuptools
     from jampublic import PLATFORM_SYS
-    from test import VERSON
+    from CoreModels import VERSON
 
     WithCompile = 0  # 是否编译
     Debug = 0  # 是否debug模式
-    print("copy test.py->PyQt5CoreModels.py")
-    testsize = os.path.getsize("test.py")
-    coresize = os.path.getsize("PyQt5CoreModels.py")
-    if testsize != coresize:
-        with open("test.py", "r", encoding="utf-8") as f:
-            with open("PyQt5CoreModels.py", "w", encoding="utf-8") as mo:
-                mo.write(f.read())
+
 
     if WithCompile:
         Compiler = subprocess.Popen('python setjam.py build_ext --inplace', shell=True,stderr=subprocess.PIPE)
@@ -62,7 +56,8 @@ if __name__ == '__main__':
             raise OSError('{}{}{} not found'.format(file, suffix, ext))
 
     with open('main.py', "w", encoding="utf-8") as mainf:
-        importfilelist = ["import pynput.keyboard\n", "import pynput.mouse\n"]
+        importfilelist = ["# !usr/bin/python3\n","# -*- coding: utf-8 -*-\n",
+                          "# 本文件由jamtoolsbuild.py 打包脚本自动生成\n","import pynput.keyboard\n", "import pynput.mouse\n"]
         for file in jamfilelist:
             print("explaining {}".format(file))
             with open("{}.py".format(file), "r", encoding="utf-8") as soursef:
@@ -84,7 +79,7 @@ if __name__ == '__main__':
                     line = soursef.readline()
 
         mainf.writelines(importfilelist)
-        mainf.writelines(["from PyQt5CoreModels import main\n", "main()\n\n"])
+        mainf.writelines(["from CoreModels import main\n", "main()\n\n"])
     shutil.copy2('main.py', 'src/main/python/main.py')
     print('copy main.py')
     shutil.copy2('imagefiles/jamresourse.py', 'src/main/python/jamresourse.py')

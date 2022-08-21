@@ -79,8 +79,8 @@ All pictures can be viewed in the image directory
 
 ```c
 directory structure:.
-│  test.py //Main program files. Test files.
-│  main.py //It is not the main program, but only used to store the imported and stored files to prevent packaging errors. Running the one click build script will automatically write the file
+│  main.py //the main program, but only used to store the imported and stored files to prevent packaging errors. Running the one click build script will automatically write the file
+│  CoreModels.py //Intermediate file, copy the main source code here when running the one click build script
 │  WEBFilesTransmitter.py //Web side transmission module
 │  WEBFilesTransmittertest.py //Web side transmission module test example, separate UI
 │  clientFilesTransmitter.py //Client transport module
@@ -99,7 +99,6 @@ directory structure:.
 │ \ libopencv_world.3.4.1.dylib
 │ \ cv2.so //linux下编译的opencv库
 │ \ libopencv_world.so.3.4.1
-│  PyQt5CoreModels.py //Intermediate file, copy the main source code here when running the one click build script (HH was used for code confusion before, so it's too lazy to change. This file should be consistent with the test.py file)
 │  requirement.txt //Dependency list
 │  audio_sniffer-x64.dll //windows下录音驱动
 │  screen-capture-recorder-x64.dll //windows下录屏驱动
@@ -186,7 +185,7 @@ directory structure:.
 │      │  │  jamroll_screenshot.py
 │      │  │  jamscreenshot.py
 │      │  │  main.py
-│      │  │  PyQt5CoreModels.py
+│      │  │  CoreModels.py
 │      │  │  WEBFilesTransmitter.py
 │      │  │  
 │      │  └─__pycache__
