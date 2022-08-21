@@ -1,6 +1,6 @@
 # !usr/bin/python3
 # -*- coding: utf-8 -*-
-# 本文件由jamtoolsbuild.py 打包脚本自动生成, 直接运行的主程序文件为test.py
+# 本文件由jamtoolsbuild.py 打包脚本自动生成
 import pynput.keyboard
 import pynput.mouse
 import hashlib

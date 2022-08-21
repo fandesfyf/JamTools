@@ -1441,11 +1441,13 @@ class Swindow(QMainWindow):
         self.canstartkeyboardtra = False
         self.shifttime = time.time()
         self.shift_ctrl_press=0
+        self.shift_ctrl_press_first_time=time.time()
 
         def on_press(key):
             if self.settings.value('smartShift', True, bool) and key in (keyboard.Key.shift, keyboard.Key.ctrl_l) and \
                     time.time() - self.shifttime < self.settings.value("timeoutshift", 7, type=int):
-                if self.shift_ctrl_press==0:
+                if self.shift_ctrl_press==0 or time.time()-self.shift_ctrl_press_first_time > 0.4:
+                    self.shift_ctrl_press_first_time=time.time()
                     self.shift_ctrl_press=1 if key == keyboard.Key.shift else -1
                 elif self.shift_ctrl_press ==-1 and key == keyboard.Key.shift:
                     self.shift_ctrl_press=-2
@@ -1510,11 +1512,12 @@ class Swindow(QMainWindow):
 
             if self.settings.value("shiftFY", True, bool) and fy and not re.match('http|https|file:/|C:|D:|E:|F:|G:|H:',
                                                                                   rtext):
+                print("fasd")
                 n = 0
                 for i in text:
                     if self.is_alphabet(i):
                         n += 1
-                if n / len(text) > 0.4 or self.settings.value("shiftFYzh", False, bool):
+                if n / len(text) > 0.4 or self.settings.value("shiftFYzh", True, bool):
                     print('is en')
                     self.simplemodebox.show()
                     self.simplemodebox.clear()
@@ -3336,9 +3339,13 @@ class Swindow(QMainWindow):
 
 8.酱聊天：。。。。彩蛋功能。。傻d机器人在线陪聊！！来自思知人工智能平台的机器人（别问为什么不用图灵机器人，因为没q啊！），填写用户ID后支持多轮对话，服务器有点慢。。。。毕竟思知也是免费提供的，还提供支持知识库训练，不能过多要求哈；默认保留50000字节的聊天记录。。
 
-$其他功能：划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
-剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！
+$其他功能：
+划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
+
+剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！
+
 极简模式：极简模式下不会显示主界面，截屏(Alt+z)、文字识别(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
+
 ##大部分功能可以在系统托盘调用！
 
 留意软件内状态栏和悬浮提示。。。enjoy it！
@@ -3397,7 +3404,7 @@ hhh(o゜▽゜)o☆）
         self.help_text.clear()
 
         text = """1.右键划屏识字(翻译)\n    用法:任意界面按住alt键后点击鼠标右键水平右划过屏幕上文字的中间即可提取出文字并翻译,支持一键跳转百度搜索;如不需要,可以在设置中心关闭这个功能...\n   
-2.剪切板监听:\n    用法:复制文字后n秒(默认为7s)内按下shift键触发，检测到复制的内容为英文时直接弹窗并翻译;检测到网址时直接在浏览器打开;可在设置中心设置更加详细的内容...(由于权限原因,macos用户需要复制内容后点击程序后按下shift才可触发弹窗..)
+2.剪切板监听:\n    用法:复制文字后n秒(默认为7s)内按下shift+ctrl键触发，检测到复制的内容为英文时直接弹窗并翻译;检测到网址时直接在浏览器打开;可在设置中心设置更加详细的内容...(由于权限原因,macos用户需要复制内容后点击程序后才可触发弹窗..)
                """
 
         self.help_text.insertPlainText(text)
@@ -3896,7 +3903,7 @@ class SettingPage(QScrollArea):
         # 智能shift键
         shiftbox = QGroupBox("智能剪切板", self.settings_widget)
         shiftbox.setGeometry(groub.x(), groub.y() + groub.height() + 10, 350, 150)
-        self.smartShift = QCheckBox('智能shift键', shiftbox)
+        self.smartShift = QCheckBox('允许触发', shiftbox)
         self.smartShift.setToolTip('复制文本后按shift键显示并翻译,占用极低')
         self.smartShift.move(10, 20)
         self.smartShift.setChecked(self.settings.value('smartShift', True, bool))
@@ -3917,7 +3924,7 @@ class SettingPage(QScrollArea):
         self.shiftFYzh.move(self.timeoutshift.x(), self.shiftFY.y())
         self.shiftFYzh.stateChanged.connect(lambda a: self.settings.setValue("shiftFYzh", bool(a)))
         self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift键翻译为英文")
-        self.shiftFYzh.setChecked(self.settings.value("shiftFYzh", False, bool))
+        self.shiftFYzh.setChecked(self.settings.value("shiftFYzh", True, bool))
 
         self.openhtmlbtn = QCheckBox('识别网址', shiftbox)
         self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift直接在浏览器打开网址")
