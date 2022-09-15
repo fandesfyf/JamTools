@@ -30,7 +30,7 @@ API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIX
 SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
 print("platform is", sys.platform)
 PLATFORM_SYS = sys.platform
-
+CONFIG_DICT = {"last_pic_save_name":"{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))}
 
 def gethtml(url, times=3):  # 下载一个链接
     try:

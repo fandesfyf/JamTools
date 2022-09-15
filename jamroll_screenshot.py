@@ -16,7 +16,7 @@ from pynput.mouse import Controller as MouseController
 from pynput.mouse import Listener as MouseListenner
 from pynput import mouse
 
-from jampublic import Commen_Thread, TipsShower
+from jampublic import Commen_Thread, TipsShower, CONFIG_DICT
 
 if not os.path.exists("j_temp"):
     os.mkdir("j_temp")
@@ -189,9 +189,10 @@ class Splicing_shots(QObject):  # 滚动截屏主类
                 time.sleep(0.05)  # 后台线程没有收到图片时,睡眠一下避免占用过高
         self.in_rolling = False
         print("end merge")
-        cv2.imwrite("j_temp/jam_outputfile.png", self.finalimg)
+        CONFIG_DICT["last_pic_save_name"]="{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))
+        cv2.imwrite("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]), self.finalimg)
 
-        print("长图片保存到j_temp/jam_outputfile.png")
+        print("长图片保存到j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]))
         # cv2.imshow("finalimg", self.finalimg)
         # cv2.waitKey(0)
 

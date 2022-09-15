@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileD
     QWidget
 from PyQt5.QtWidgets import QSlider, QColorDialog
 
-from jampublic import FramelessEnterSendQTextEdit, OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS
+from jampublic import FramelessEnterSendQTextEdit, OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS,CONFIG_DICT
 from jamroll_screenshot import Splicing_shots
 import jamresourse
 from pynput.mouse import Controller
@@ -1637,10 +1637,11 @@ class Slabel(QLabel):  # 区域截图功能
         self.shower.show()
         self.shower.clear()
         self.cutpic(save_as=2)
-        self.final_get_img.save('j_temp/jam_outputfile.png')
-        with open("j_temp/jam_outputfile.png", 'rb') as i:
+        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
+        self.final_get_img.save(ocrimg_temp_path)
+        with open(ocrimg_temp_path, 'rb') as i:
             img = i.read()
-        self.ocrthread = OcrimgThread('jam_outputfile', img, 1)
+        self.ocrthread = OcrimgThread('ocrtemp', img, 1)
         self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
         self.ocrthread.start()
         QApplication.processEvents()
@@ -1669,8 +1670,9 @@ class Slabel(QLabel):  # 区域截图功能
         self.shower.show()
         self.shower.clear()
         self.cutpic(save_as=2)
-        self.final_get_img.save('j_temp/jam_outputfile.png')
-        with open("j_temp/jam_outputfile.png", 'rb') as i:
+        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
+        self.final_get_img.save(ocrimg_temp_path)
+        with open(ocrimg_temp_path, 'rb') as i:
             img = i.read()
         options = {"top_num": 5}
         self.ocrthread = OcrimgThread(img, options, 2)
@@ -1732,9 +1734,8 @@ class Slabel(QLabel):  # 区域截图功能
             self.clear_and_hide()
             return
 
-        self.final_get_img = QPixmap("j_temp/jam_outputfile.png")
+        self.final_get_img = QPixmap('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
         if __name__ == '__main__':  # 当直接运行本文件时直接保存,测试用
-            # self.final_get_img.save("jam_outputfile.png")
             QApplication.clipboard().setPixmap(self.final_get_img)
             self.clear_and_hide()
             print("已复制到剪切板")
@@ -1785,8 +1786,8 @@ class Slabel(QLabel):  # 区域截图功能
                     return
             elif save_as == 2:
                 return
-        if __name__ == '__main__':  # 当直接允许本文件时直接保存,测试用
-            self.final_get_img.save("j_temp/jam_outputfile.png")
+        if __name__ == '__main__':  # 当直接运行本文件时直接保存,测试用
+            self.final_get_img.save('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
             QApplication.clipboard().setPixmap(self.final_get_img)
             print("已复制到剪切板")
             self.clear_and_hide()
@@ -1819,12 +1820,13 @@ class Slabel(QLabel):  # 区域截图功能
             self.clear_and_hide()
         else:
             def save():
-                self.final_get_img.save("j_temp/jam_outputfile.png")
+                CONFIG_DICT["last_pic_save_name"]="{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))
+                self.final_get_img.save('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
                 if not self.parent.bdocr:
                     try:
                         if self.parent.settings.value('screenshot/open_png', False, type=bool):
                             os.startfile(QStandardPaths.writableLocation(
-                                QStandardPaths.TempLocation) + "/j_temp/jam_outputfile.png")
+                                QStandardPaths.TempLocation) + '/j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
                     except:
                         print("can't open", sys.exc_info())
                     try:
@@ -1862,10 +1864,10 @@ class Slabel(QLabel):  # 区域截图功能
                 elif self.parent.settings.value('screenshot/copy_type_ss', '图像数据', type=str) == '图像文件':
                     data = QMimeData()
                     url = QUrl.fromLocalFile(
-                        QStandardPaths.writableLocation(QStandardPaths.TempLocation) + '/j_temp/jam_outputfile.png')
+                        QStandardPaths.writableLocation(QStandardPaths.TempLocation) + '/j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
                     data.setUrls([url])
                     clipboard.setMimeData(data)
-                    print('save url')
+                    print('save url {}'.format(url))
                     self.showm_signal.emit('图像文件已复制到剪切板！')
             except:
                 clipboard.setPixmap(self.final_get_img)
@@ -1891,9 +1893,9 @@ class Slabel(QLabel):  # 区域截图功能
         ptr.setsize(self.qimg.byteCount())
         cv2img = array(ptr, dtype=uint8).reshape(temp_shape)[..., :3]
         polygoncv2pic = cut_polypng(cv2img, self.polygon_ss_pointlist)
-        cv2.imwrite("j_temp/jam_outputfile.png", polygoncv2pic)
+        cv2.imwrite('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]), polygoncv2pic)
         self.polygon_ss_pointlist = []
-        QApplication.clipboard().setImage(QImage("j_temp/jam_outputfile.png"))
+        QApplication.clipboard().setImage(QImage('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"])))
         self.showm_signal.emit("已复制到剪切板")
         self.polygon_ss_btn.setStyleSheet('')
         self.clear_and_hide()

@@ -11,7 +11,7 @@ import sys
 import os, re
 from Logger import Logger
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr,gethtml
+    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr,gethtml,CONFIG_DICT
 
 import http.client
 
@@ -59,7 +59,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.13.7B"
+VERSON = "0.13.8B"
 
 
 class JHotkey(QThread):
@@ -1013,8 +1013,8 @@ class ImgShower(QScrollArea):
         self.label.setScaledContents(True)
         self.setWidget(self.label)
         # self.setWidgetResizable(True)
-        if os.path.exists('j_temp/jam_outputfile.png'):
-            self.pix = QPixmap('j_temp/jam_outputfile.png')
+        if os.path.exists('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"])):
+            self.pix = QPixmap('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
             self.pix.scaled(self.pix.size(), Qt.KeepAspectRatio)
             self.label.setPixmap(self.pix)
             self.label.resize(self.pix.width(), self.pix.height())
@@ -1031,7 +1031,6 @@ class ImgShower(QScrollArea):
         self.setStyleSheet('border:None')
 
     def setpic(self, pix):
-        # if os.path.exists('j_temp/jam_outputfile.png'):
         self.pix = pix
         self.pix.scaled(self.pix.size(), Qt.KeepAspectRatio)
         self.label.resize(self.pix.width(), self.pix.height())
@@ -1934,7 +1933,7 @@ class Swindow(QMainWindow):
     def init_ssview(self):
         def open_png():
             try:
-                p = temp_path + "/j_temp/jam_outputfile.png"
+                p = temp_path + "/j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])
                 QDesktopServices.openUrl(QUrl.fromLocalFile(p))
                 # if PLATFORM_SYS == "darwin":
                 #     subprocess.call(["open", p])
@@ -1947,8 +1946,8 @@ class Swindow(QMainWindow):
                 self.statusBar().showMessage('找不到文件，请先截图！')
 
         def save_png():
-            if os.path.exists("j_temp/jam_outputfile.png"):
-                img = QImage("j_temp/jam_outputfile.png")  # 创建图片实例
+            if os.path.exists("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])):
+                img = QImage("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]))  # 创建图片实例
                 try:
                     file_path = QFileDialog.getSaveFileName(self, "save file", QStandardPaths.writableLocation(
                         QStandardPaths.PicturesLocation), "img Files (*.PNG *.jpg *.JPG *.JPEG *.BMP)"
@@ -1959,7 +1958,7 @@ class Swindow(QMainWindow):
                     self.statusBar().showMessage('找不到文件，请先截图！')
 
         def ocr_png():
-            if os.path.exists("j_temp/jam_outputfile.png"):
+            if os.path.exists("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])):
                 try:
                     self.bdocr = True
                     self.BaiduOCR()
@@ -1968,7 +1967,7 @@ class Swindow(QMainWindow):
                     self.statusBar().showMessage('找不到文件，请先截图！')
 
         # def cla_png():
-        #     if os.path.exists("j_temp/jam_outputfile.png"):
+        #     if os.path.exists('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"])):
         #         try:
         #             self.bdcla = True
         #             self.BDimgcla()
@@ -3632,7 +3631,7 @@ hhh(o゜▽゜)o☆）
     def BaiduOCR(self):
         """利用百度api识别文本"""
         if self.bdocr == True:
-            picfile = "j_temp/jam_outputfile.png"
+            picfile = "j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])
             filename = os.path.basename(picfile)
 
             with open(picfile, 'rb') as i:
