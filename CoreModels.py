@@ -1199,8 +1199,8 @@ class Swindow(QMainWindow):
         self.ss_btn.clicked.connect(self.screenshot)
         self.ss_btn.setIcon(QIcon(":/screenshot.png"))
 
-        self.ocr_btn.setToolTip('文字识别Alt+X')
-        self.ocr_btn.setStatusTip('文字识别Alt+X')
+        self.ocr_btn.setToolTip('文字识别')
+        self.ocr_btn.setStatusTip('文字识别')
         self.ocr_btn.setFont(btn_font)
         self.ocr_btn.move(first_distance, s_distance + 1 * d_distance)
         self.ocr_btn.resize(110, 35)
@@ -1402,7 +1402,8 @@ class Swindow(QMainWindow):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
         self.hotkey.ss_signal.connect(self.screensh)
-        self.hotkey.ocr_signal.connect(self.BaiduOCR)
+        # self.hotkey.ocr_signal.connect(self.BaiduOCR)
+        self.hotkey.ocr_signal.connect(self.trayicon.add_simple_window)
         self.hotkey.showm_signal.connect(self.trayicon.showM)
         self.hotkey.recordchange_signal.connect(self.recorder.recordchange)
         self.recorder.showm_signal.connect(self.trayicon.showM)
@@ -1914,8 +1915,8 @@ class Swindow(QMainWindow):
     def ocr(self):
         if not self.OCR:
             btn2 = QPushButton("截屏提取", self.ocr_groupBox)
-            btn2.setToolTip('文字识别Alt+X')
-            btn2.setStatusTip('文字识别Alt+X')
+            btn2.setToolTip('文字识别')
+            btn2.setStatusTip('文字识别')
             btn2.setGeometry(50, 420, 100, 50)
             btn2.clicked.connect(self.BaiduOCR)
             btn2.setIcon(QIcon(":/OCR.png"))
@@ -3324,7 +3325,7 @@ class Swindow(QMainWindow):
         text = """>>>功能简介:
 1.酱截屏：截图功能.快捷键Alt+z；支持选区截图、多边形截图、滚动截屏等、支持复制截屏文件或图像数据到剪切板、支持截图中文字识别(翻译)、图像识别等，左侧工具栏提供画笔橡皮擦等；支持滚动截屏，滚动过程中支持自动和手动滚动。
 
-2.酱识字：文字识别功能；截屏提取.快捷键Alt+x：截屏并提取文字；批量识别：可上传一张或多张图片进行文字提取
+2.酱识字：文字识别功能；截屏提取：截屏并提取文字(在截屏界面已经集成小窗的文字识别,更方便使用)；批量识别：可上传一张或多张图片进行文字提取
 
 3.酱翻译：多语言翻译功能.无快捷键(极简模式下可通过浮窗使用)；输入文字翻译，支持多种语言互译！已集成到截屏等界面下。
 
@@ -3341,9 +3342,9 @@ class Swindow(QMainWindow):
 $其他功能：
 划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
 
-剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！
+剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！翻译小窗可以通过快捷键alt+x弹出
 
-极简模式：极简模式下不会显示主界面，截屏(Alt+z)、文字识别(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
+极简模式：极简模式下不会显示主界面，截屏(Alt+z)、小窗翻译(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
 
 ##大部分功能可以在系统托盘调用！
 
