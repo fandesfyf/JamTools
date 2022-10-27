@@ -1861,6 +1861,7 @@ class Slabel(QLabel):  # 区域截图功能
                     print('sava 图像数据')
                     self.showm_signal.emit('图像数据已复制到剪切板！')
                 elif self.parent.settings.value('screenshot/copy_type_ss', '图像数据', type=str) == '图像文件':
+                    self.save_data_thread.wait()
                     data = QMimeData()
                     url = QUrl.fromLocalFile(os.getcwd()+'/j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
                     data.setUrls([url])
