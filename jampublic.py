@@ -32,14 +32,32 @@ print("platform is", sys.platform)
 PLATFORM_SYS = sys.platform
 CONFIG_DICT = {"last_pic_save_name":"{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))}
 
+def get_apppath():
+    p = sys.path[0].replace("\\", "/").rstrip("/") if os.path.isdir(sys.path[0]) else os.path.split(sys.path[0])[0]
+    # print("apppath",p)
+    if sys.platform == "darwin" and p.endswith("MacOS"):
+        p = os.path.join(p.rstrip("MacOS"), "Resources")
+    return p
+
+
+apppath = get_apppath()
+
+def get_UserAgent():
+    ua = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36 Edg/108.0.1462.54"
+    try:
+        UserAgent(path=os.path.join(apppath,"fake_useragent_0.1.11.json"),verify_ssl=False).random
+    except Exception as e:
+        print(e)
+    return ua
 def gethtml(url, times=3):  # 下载一个链接
     try:
-        response = requests.get(url, headers={"User-Agent": UserAgent().random}, timeout=8, verify=False)
+        ua = get_UserAgent()
+        response = requests.get(url, headers={"User-Agent": ua}, timeout=8, verify=False)
         response.encoding = 'utf-8'
         if response.status_code == 200:
             return response.text
 
-    except requests.exceptions.RequestException:
+    except Exception as e:
         print(sys.exc_info(), '重试中')
         time.sleep(1)
         if times > 0:

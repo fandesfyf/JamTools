@@ -26,17 +26,17 @@ from PIL import ImageQt
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QUrl, QObject, QSettings, QStandardPaths
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor, QDesktopServices, QIcon
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QGroupBox, QComboBox, QFileDialog, QCheckBox, QLineEdit
+from jampublic import apppath
+
+# def get_apppath():
+#     p = sys.path[0].replace("\\", "/").rstrip("/") if os.path.isdir(sys.path[0]) else os.path.split(sys.path[0])[0]
+#     # print("apppath",p)
+#     if sys.platform == "darwin" and p.endswith("MacOS"):
+#         p = os.path.join(p.rstrip("MacOS"), "Resources")
+#     return p
 
 
-def get_apppath():
-    p = sys.path[0].replace("\\", "/").rstrip("/") if os.path.isdir(sys.path[0]) else os.path.split(sys.path[0])[0]
-    # print("apppath",p)
-    if sys.platform == "darwin" and p.endswith("MacOS"):
-        p = os.path.join(p.rstrip("MacOS"), "Resources")
-    return p
-
-
-Work_Path = SHOW_PATH = apppath = get_apppath()
+Work_Path = SHOW_PATH = str(apppath)
 
 
 def sizeof_fmt(num):
