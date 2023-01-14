@@ -88,7 +88,7 @@ if __name__ == '__main__':
         shutil.rmtree("src/main/resources/base")
     os.makedirs("src/main/resources/base/bin")
     includedir = ["html", "bin/" + PLATFORM_SYS]
-    includefiles = ["log.log", "LICENSE"]
+    includefiles = ["log.log", "LICENSE","fake_useragent_0.1.11.json"]
     if PLATFORM_SYS == "win32":
         includefiles.extend(["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"])
     elif PLATFORM_SYS == "linux":
@@ -115,7 +115,8 @@ if __name__ == '__main__':
         else:
             print("不存在", f)
 
-    if PLATFORM_SYS == "win32":
+    if PLATFORM_SYS == "win32" and os.path.exists("target/installer/Installer.nsi"):
+        """重写windows下的nsis配置文件版本号"""
         with open("target/installer/Installer.nsi", "r", encoding="ansi") as nsisfile:
             ns = nsisfile.readlines()
         for i, line in enumerate(ns):
