@@ -5304,9 +5304,9 @@ class ChildUpdateWindow(QDialog):
         self.setFixedSize(400, 100)
         self.setWindowModality(Qt.ApplicationModal)
         self.label = QLabel("    正在检查更新", self)
-        self.label.setGeometry(20, 10, 360, 60)
-        self.giflabel = QLabel(self.label)
-        self.giflabel.setGeometry(200, 15, 35, 35)
+        self.label.setGeometry(38, 10, 360, 60)
+        self.giflabel = QLabel(self)
+        self.giflabel.setGeometry(0, 20, 35, 35)
         self.gif = QMovie(':./load.gif')
         self.gif.setScaledSize(QSize(30, 30))
         self.giflabel.setMovie(self.gif)
@@ -5339,11 +5339,15 @@ class ChildUpdateWindow(QDialog):
         self.pbar.setValue(value)
         self.label.setText(text)
 
-    def showresultsignalhandle(self, res):
+    def showresultsignalhandle(self, res, waiting = False):
         self.pbar.hide()
-        self.gif.stop()
-        self.giflabel.clear()
-        self.giflabel.hide()
+        if waiting:
+            self.gif.start()
+            self.giflabel.show()
+        else:
+            self.gif.stop()
+            # self.giflabel.clear()
+            self.giflabel.hide()
         self.label.setText(res)
     def haveupdate(self,v):
         msg = QMessageBox.question(self, '是否下载?', '当前版本:{}\n新版本:{}\n\n要现在开始从Github下载更新吗?\t\t\t'.format(VERSON,v),
@@ -5374,7 +5378,7 @@ class ChildUpdateWindow(QDialog):
         self.close()
 
 class CheckForUpdateThread(QThread):
-    checkresult_signal = pyqtSignal(str)
+    checkresult_signal = pyqtSignal(str,bool)
     updating_signal = pyqtSignal(str, int)
     close_signal = pyqtSignal()
     haveupdate_signal=pyqtSignal(str)
@@ -5389,7 +5393,7 @@ class CheckForUpdateThread(QThread):
         self.waiting = False
         try:
             versiondict,p=self.get_lastversion(PLATFORM_SYS)
-            self.checkresult_signal.emit("链接Github成功,正在分析版本情况...")
+            
             lastversionst=versiondict["versions"]
             currentversionst=re.findall("(([1-9]?[0-9])\.([1-9]?[0-9])\.([1-9]?[0-9]*)([A|B]?))",VERSON)[0]
             a=int(lastversionst[1])
@@ -5405,13 +5409,13 @@ class CheckForUpdateThread(QThread):
                 print("找到新版本")
                 V=lastversionst[0]
                 print("最版本{}".format(V))
-                self.checkresult_signal.emit("检测到新版本{},正在准备更新..".format(V))
+                self.checkresult_signal.emit("检测到新版本{},正在准备更新..".format(V),True)
             else:
-                self.checkresult_signal.emit("JamTools{}已是最新版本".format(VERSON))
+                self.checkresult_signal.emit("JamTools{}已是最新版本".format(VERSON),False)
                 return
         except:
             print(sys.exc_info(), 7383)
-            self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..")
+            self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..",False)
             return
         try:
             self.haveupdate_signal.emit(str(V))
@@ -5430,13 +5434,13 @@ class CheckForUpdateThread(QThread):
                 print("下载线程取消")
                 return
             print("接收完成")
-            self.checkresult_signal.emit("下载完成,正在准备更新...")
+            self.checkresult_signal.emit("下载完成,正在准备更新...",True)
             # else:
             #     self.checkresult_signal.emit("已经存在安装文件,正在启动安装程序...")
         except:
             print(sys.exc_info(), 7430)
             # self.updating_signal.emit("服务器断开!",-1)
-            self.checkresult_signal.emit("服务器断开!")
+            self.checkresult_signal.emit("服务器断开!",False)
             return
         try:
             if os.path.exists(self.newversonname) and os.path.getsize(self.newversonname) == totalsize:
@@ -5444,12 +5448,12 @@ class CheckForUpdateThread(QThread):
                 QDesktopServices.openUrl(QUrl.fromLocalFile(self.newversonname))
                 self.close_signal.emit()
             else:
-                self.checkresult_signal.emit("文件校核出错请重新检查更新!")
+                self.checkresult_signal.emit("文件校核出错请重新检查更新!",False)
                 if os.path.exists(self.newversonname):
                     os.remove(self.newversonname)
                 raise OSError
         except OSError:
-            self.checkresult_signal.emit("文件校核出错请重新检查更新!")
+            self.checkresult_signal.emit("文件校核出错请重新检查更新!",False)
 
     def get_lastversion(self,platform="win32"):
         if platform == "win32":
@@ -5458,6 +5462,7 @@ class CheckForUpdateThread(QThread):
             p = "deb" if platform == "linux" else "dmg"
         url = "https://github.com/fandesfyf/JamTools/releases"
         data = gethtml(url)
+        self.checkresult_signal.emit("连接Github成功,正在分析版本情况...",True)
         tags = [i for i in re.findall('JamTools/releases/tag/(.*?)"', data)]
         print(tags)
         all_version_urls = []
