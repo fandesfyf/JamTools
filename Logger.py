@@ -24,17 +24,21 @@ class Logger(QThread):
 
     def run(self) -> None:
         if os.path.exists(self.log_path):
-            ls = os.path.getsize(self.log_path)
-            print("日志文件大小为:", ls, " 保存于:", self.log_path)
-            if ls > 2485760:
-                print("日志文件过大")
-                with open(self.log_path, "r+", encoding="utf-8")as f:
-                    f.seek(ls - 1885760)
-                    log = "已截断日志" + time.strftime("%Y-%m-%d %H:%M:%S:\n", time.localtime(time.time())) + f.read()
-                    f.seek(0)
-                    f.truncate()
-                    f.write(log)
-                print("新日志大小", os.path.getsize(self.log_path))
+            try:
+                ls = os.path.getsize(self.log_path)
+                print("日志文件大小为:", ls, " 保存于:", self.log_path)
+                if ls > 2485760:
+                    print("日志文件过大")
+                    with open(self.log_path, "r+", encoding="utf8")as f:
+                        f.seek(ls - 1885760)
+                        log = "已截断日志" + time.strftime("%Y-%m-%d %H:%M:%S:\n", time.localtime(time.time())) + f.read()
+                        f.seek(0)
+                        f.truncate()
+                        f.write(log)
+                    print("新日志大小", os.path.getsize(self.log_path))
+            except Exception as e:
+                with open(self.log_path, "w", encoding="utf8")as f:
+                    f.write("已清空日志, {}".format(e))
         self.log = open(self.log_path, "a", encoding='utf8')
         self.log.write("\n\nOPEN@" + time.strftime("%Y-%m-%d %H:%M:%S:\n", time.localtime(time.time())))
         try:
@@ -54,7 +58,7 @@ class Logger(QThread):
         now = time.time()
         timestr = ""
         if now - self.logtime > 1:
-            timestr = "\n@" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "-" * 40 + "\n"
+            timestr = "\n"+"-" * 20 + "@" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())) + "-" * 20 + "\n"
 
         log = timestr + message
         self.log.write(log)
