@@ -40,9 +40,7 @@ from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from pynput import keyboard, mouse
 from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
-
-# from voice_and_text import Text2voice
-"""由于腾讯的api改为付费了,所以不显示播放声音(作者没钱了qaq),如需使用可以打开注释然后在voice_and_text和txpythonsdk中修改api即可"""
+from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 import jamresourse
 
@@ -656,7 +654,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.OCR = QAction("截屏文字识别", self)
         self.chatbot = QAction("酱聊天", self)
         self.mulocr = QAction("批量文字提取", self)
-        self.changesimple = QAction("极简模式", self)
+        self.changesimple = QAction("小窗模式", self)
         self.addsimplewin = QAction("添加小窗", self)
 
         self.menu1.addAction(self.OCR)
@@ -1341,9 +1339,9 @@ class Swindow(QMainWindow):
         option = menubar.addMenu("选项")
         other_act = QAction('其他功能', self)
         other_act.triggered.connect(self.others)
-        simplemode = QAction('极简模式', self)
+        simplemode = QAction('小窗模式', self)
         simplemode.triggered.connect(lambda x: self.changesimple(show=True))
-        simplemode.setStatusTip('极简模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
+        simplemode.setStatusTip('小窗模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
         if PLATFORM_SYS == "darwin":
             othermenu = menubar.addMenu("其他")
             othermenu.addActions([other_act, simplemode])
@@ -3327,7 +3325,7 @@ class Swindow(QMainWindow):
 
 2.酱识字：文字识别功能；截屏提取：截屏并提取文字(在截屏界面已经集成小窗的文字识别,更方便使用)；批量识别：可上传一张或多张图片进行文字提取
 
-3.酱翻译：多语言翻译功能.无快捷键(极简模式下可通过浮窗使用)；输入文字翻译，支持多种语言互译！已集成到截屏等界面下。
+3.酱翻译：多语言翻译功能.无快捷键(小窗模式下可通过浮窗使用)；输入文字翻译，支持多种语言互译！已集成到截屏等界面下。
 
 4.酱录屏：录屏功能.快捷键Alt+c;屏幕录制功能，支持gif等多种格式录制；可以选定录制区，不选则为全屏录制；支持自定义编码速率、帧率、视频质量、声音源鼠标等；录屏结束后点击通知将直接播放！
 
@@ -3344,7 +3342,7 @@ $其他功能：
 
 剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！翻译小窗可以通过快捷键alt+x弹出
 
-极简模式：极简模式下不会显示主界面，截屏(Alt+z)、小窗翻译(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出极简模式
+小窗模式：小窗模式下不会显示主界面，截屏(Alt+z)、小窗翻译(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出小窗模式
 
 ##大部分功能可以在系统托盘调用！
 
@@ -3555,26 +3553,25 @@ hhh(o゜▽゜)o☆）
         self.chatbt.setStyleSheet('background-color:rgb(50,150,200)')
         self.chatbt.setGeometry(393, 452, 55, 26)
         self.chatbt.clicked.connect(self.chat)
-        """由于腾讯的api改为付费了,所以不显示播放声音(作者没钱啊qaq),如需使用可以打开注释然后在txpythonsdk中修改api即可"""
-        # voicebtn = QPushButton("", self.chat_groupBox)
-        # if self.settings.value("chater/playvoice", False, type=bool):
-        #     voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
-        # else:
-        #     voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
-        # voicebtn.setGeometry(self.chat_send_textEdit.x() + self.chat_send_textEdit.width() + 5,
-        #                      self.chat_send_textEdit.y() - 65,
-        #                      25, 25)
-        #
-        # def viocebtnclick():
-        #     if self.settings.value("chater/playvoice", False, type=bool):
-        #         voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
-        #     else:
-        #         voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
-        #     self.settings.setValue("chater/playvoice", not self.settings.value("chater/playvoice", False, type=bool))
-        #
-        # voicebtn.clicked.connect(viocebtnclick)
-        # # voicebtn.setToolTip("是否播放声音")
-        # voicebtn.setStatusTip("是否播放声音")
+        voicebtn = QPushButton("", self.chat_groupBox)
+        if self.settings.value("chater/playvoice", False, type=bool):
+            voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+        else:
+            voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+        voicebtn.setGeometry(self.chat_send_textEdit.x() + self.chat_send_textEdit.width() + 5,
+                             self.chat_send_textEdit.y() - 25,
+                             25, 25)
+        
+        def viocebtnclick():
+            if self.settings.value("chater/playvoice", False, type=bool):
+                voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+            else:
+                voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+            self.settings.setValue("chater/playvoice", not self.settings.value("chater/playvoice", False, type=bool))
+        
+        voicebtn.clicked.connect(viocebtnclick)
+        # voicebtn.setToolTip("是否播放声音")
+        voicebtn.setStatusTip("是否播放声音")
         # voicetypedict = {"默认": 7, "智侠|情感": 101000, "智瑜|情感": 101001, "智聆|通用": 101002, "智美|客服": 101003,
         #                  "智云|通用": 101004, "智莉|通用": 101005, "智言|助手": 101006, "智娜|客服": 101007, "智琪|客服": 101008,
         #                  "智芸|知性": 101009, "智华|通用": 101010, "WeJack|英文": 101050, "WeRose|英文": 101051,
@@ -3591,7 +3588,6 @@ hhh(o゜▽゜)o☆）
         #     self.settings.value("chater/voicetype", 7, type=int))])
         # voicetype.setStatusTip("设置音色")
         # voicetype.setToolTip("设置音色")
-        """由于腾讯的api改为付费了,所以不显示播放声音(作者没钱啊qaq),如需使用可以打开注释然后在txpythonsdk中修改api即可"""
 
         self.change_show_item([self.chat_groupBox])
 
@@ -3876,7 +3872,7 @@ class SettingPage(QScrollArea):
         close_box = QGroupBox('关闭窗口时:', groub)
         close_box.setToolTip('关闭窗口时的动作')
         self.closechoise = QComboBox(close_box)
-        self.closechoise.addItems(['开启极简模式', '直接关闭!', '提示选择'])
+        self.closechoise.addItems(['开启小窗模式', '直接关闭!', '提示选择'])
         clo = self.settings.value('neverask', 'default', str)
         if clo == 'yes':
             self.closechoise.setCurrentIndex(1)
@@ -5287,10 +5283,8 @@ class Chat_Thread(QThread):
         try:
             mess = self.action(self.args)
             self.signal.emit(mess)
-            """由于腾讯的api改为付费了,所以不显示播放声音(作者没钱了qaq),如需使用可以打开注释然后在voice_and_text和txpythonsdk中修改api即可"""
-            # if jamtools.settings.value("chater/playvoice", False, type=bool):
-            #     Text2voice().get_voice_and_paly_it(mess, voicetype=jamtools.settings.value("chater/voicetype", 101001,
-            #                                                                                type=int))
+            if jamtools.settings.value("chater/playvoice", False, type=bool):
+                Speaker().speak(mess)
         except:
             print("Unexpected error:", sys.exc_info())
             jamtools.statusBar().showMessage(str(sys.exc_info()[0]))

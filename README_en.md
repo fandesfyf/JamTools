@@ -102,8 +102,6 @@ directory structure:.
 │  requirement.txt //Dependency list
 │  audio_sniffer-x64.dll //windows下录音驱动
 │  screen-capture-recorder-x64.dll //windows下录屏驱动
-│  voice_and_text.py //Deprecated. The voice synthesis + voice to text + playback module is not supported because the API call is completed. If you need to use it, you can replace the API yourself
-│  txpythonsdk.py //Deprecated. The SDK of Tencent AI platform is rewritten
 │  log.log //log file
 │  README.md
 │  LICENSE
@@ -225,6 +223,7 @@ Wheel
 Pillow
 pynput
 fbs==0.9.0
+pyttsx3
 qrcode
 requests
 PyInstaller==3.4

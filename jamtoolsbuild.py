@@ -9,8 +9,6 @@ print("说明:main.py为存放引入库的文件(无需管),scr文件夹是fbs�
       "通过更改下面的WithCompile 和Debug变量可以调整是否编译和是否debug模式.\n"
       "需要编译时会将所有源码文件编译为c然后编译为pyd文件,可以实现源码保护,而且运行速度略有提升,需要自行配置好c和cython环境\n"
       "debug模式下运行打包文件将会有命令行窗口")
-# "voice_and_text","txpythonsdk"这两个是机器人语音合成的库,由于tx的api改为付费的了,所以不能播放声音(作者没钱了qaq),
-# 如需使用可以在test.py中引入相关的包(已注释掉)然后在voice_and_text和txpythonsdk中修改api即可
 if __name__ == '__main__':
     import os
     import shutil

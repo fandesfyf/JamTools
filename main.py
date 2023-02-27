@@ -30,6 +30,7 @@ import fbs_runtime.application_context.PyQt5
 import pynput
 from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
+from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 import jamresourse
 import os
@@ -54,13 +55,12 @@ from numpy import array, zeros, uint8, float32
 from jamroll_screenshot import Splicing_shots
 from aip import AipOcr, AipImageClassify
 from fake_useragent import UserAgent
-from jamspeak import Speaker
 import operator
 from functools import reduce
 from numpy import zeros, uint8, asarray, vstack, float32
 import io
 import sys, time
-from playsound import playsound
+import pyttsx3
 from CoreModels import main
 main()
 

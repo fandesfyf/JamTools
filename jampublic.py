@@ -62,6 +62,8 @@ def gethtml(url, times=3):  # 下载一个链接
         time.sleep(1)
         if times > 0:
             gethtml(url, times=times - 1)
+        else:
+            return "网络连接失败!"
 class TipsShower(QLabel):
     def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=35, timeout=1000):
         super().__init__(parent)
@@ -202,6 +204,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
         self.setToolTip('Ctrl+回车可快速翻译,拖动边框可改变位置')
         self.clear_signal.connect(self.clear)
         self.textAreaChanged()
+        self.activateWindow()
+        self.setFocus()
 
         if enter_tra:
             self.action = self.tra
@@ -244,8 +248,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 无边框回车文本框
     def speak(self):
         text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
         if text != "":
-            s = Speaker()
-            s.speak(text)
+            Speaker().speak(text)
 
     def textAreaChanged(self, minsize=180, recheck=True):
         self.document.adjustSize()
