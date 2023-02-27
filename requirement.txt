@@ -13,9 +13,7 @@ PyQt5-stubs==5.14.2.2
 numpy
 Cython==0.29.21
 fake-useragent==0.1.11
-#PyAudio
-#SpeechRecognition
-#tencentcloud-sdk-python
+
 setuptools==50.3.0
 opencv-contrib-python==3.4.2.17
 

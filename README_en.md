@@ -234,9 +234,7 @@ PyQt5-stubs==5.14.2.2
 numpy
 opencv-contrib-python==3.4.2.17//If full CV2 support is required, install this version of the package (including SIFT algorithm); If a smaller volume of CV2 is required, it can be obtained from[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
 Cython==0.29.21//If you need to compile
-#PyAudio//If you need to compile
-#SpeechRecognition//If robot sound is required
-#tencentcloud-sdk-python//如果需要机器人声音
+
 setuptools==50.3.0
 ```
 
