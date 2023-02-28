@@ -1,14 +1,14 @@
 {
-  "windows": {
-    "version": "0.13.9B",
-    "url": "https://github.com/fandesfyf/JamTools/releases/download/0.13.8B/JamTools0.13.8BSetup_for_windows.exe"
-  },
-  "linux": {
-    "version": "0.13.8B",
-    "url": ""
-  },
-  "darwin": {
-    "version": "0.13.8B",
-    "url": ""
-  }
+    "windows": {
+        "version": "0.13.8B",
+        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.13.8B/JamTools0.13.8BSetup_for_windows.exe"
+    },
+    "linux": {
+        "version": "0.13.7B",
+        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.13.7B/JamTools_for_ubuntu16.deb"
+    },
+    "darwin": {
+        "version": "0.12.200225B",
+        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.12.200226beta/JamTools0.12.200225Beta_For_macOS.dmg"
+    }
 }
