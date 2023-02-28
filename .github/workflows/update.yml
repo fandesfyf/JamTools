@@ -30,8 +30,14 @@ jobs:
        # run: cd JamTools
 
       # Runs a set of commands using the runners shell
-      - name: gen_versions
+      - name: ls
         run: |
           pwd
           ls
+      - name: gen_versions
+        run: |
+          python3 ci_scripts/gen_versions.py
+      - name: commit
+        run: |    
+          git status
           
