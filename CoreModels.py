@@ -5388,20 +5388,11 @@ class CheckForUpdateThread(QThread):
         try:
             versiondict,p=self.get_lastversion(PLATFORM_SYS)
             
-            lastversionst=versiondict["versions"]
-            currentversionst=re.findall("(([1-9]?[0-9])\.([1-9]?[0-9])\.([1-9]?[0-9]*)([A|B]?))",VERSON)[0]
-            a=int(lastversionst[1])
-            a1=int(currentversionst[1])
-            b=int(lastversionst[2])
-            b1=int(currentversionst[2])
-            c=int(lastversionst[3])if lastversionst[3]!=""else -1
-            c1=int(currentversionst[3])if currentversionst[3]!=""else -1
-            d=lastversionst[4]
-            d1=currentversionst[4]
-            if a>a1 or (b>b1 and a==a1)or (c >c1 and a==a1 and b==b1) \
-                or (a==a1 and b==b1 and c==c1 and d=="A" and d1=="B"):
+            lastversionst=versiondict["version"]
+           
+            if lastversionst != VERSON:
                 print("找到新版本")
-                V=lastversionst[0]
+                V=lastversionst
                 print("最版本{}".format(V))
                 self.checkresult_signal.emit("检测到新版本{},正在准备更新..".format(V),True)
             else:
@@ -5423,7 +5414,7 @@ class CheckForUpdateThread(QThread):
                 time.sleep(1)
             self.newversonname = 'JamTools.{}'.format( p)
 
-            totalsize=self.downloadupdate(versiondict["link"])
+            totalsize=self.downloadupdate(versiondict["url"])
             if not self.parent.active:
                 print("下载线程取消")
                 return
@@ -5454,26 +5445,15 @@ class CheckForUpdateThread(QThread):
             p = "exe"
         else:
             p = "deb" if platform == "linux" else "dmg"
-        url = "https://github.com/fandesfyf/JamTools/releases"
+        url = "https://raw.githubusercontent.com/fandesfyf/JamTools/main/ci_scripts/versions.json"
         data = gethtml(url)
         self.checkresult_signal.emit("连接Github成功,正在分析版本情况...",True)
-        tags = [i for i in re.findall('JamTools/releases/tag/(.*?)"', data)]
-        print(tags)
-        all_version_urls = []
-        for tag in tags:
-            get_tag_page = gethtml("https://github.com/fandesfyf/JamTools/releases/expanded_assets/{}".format(tag))
-            
-            versionsurls = ["https://github.com" + i for i in
-                            re.findall('(/fandesfyf/JamTools/releases/download/.*{})"'.format(p), get_tag_page)
-                            if i[-3:] in ["deb", "exe", "dmg"]]
-            all_version_urls.extend(versionsurls)
-        versiondict = {}
-        for link in all_version_urls:
-            versionst = re.findall("\..*/.*(([1-9]?[0-9])\.([1-9]?[0-9])\.([1-9]?[0-9]*)([A|B]?))", link)[0]
-            if versionst[0] != "":
-                versiondict = {"link": link, "versions": versionst}
-                break
-        print(versiondict)
+        time.sleep(1)#just for fun
+        print(data)
+        jsondata = json.loads(data)
+        platform_dict = {"win32":"windows","linux":"linux","darwin":"darwin"}
+        versiondict = jsondata[platform_dict[platform]]
+
         return versiondict,p
 
     def downloadupdate(self,url):

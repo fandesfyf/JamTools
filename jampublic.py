@@ -646,8 +646,11 @@ class Commen_Thread(QThread):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    w = Transparent_windows(20, 20, 500, 200)
-    w.show()
+    # app = QApplication(sys.argv)
+    # w = Transparent_windows(20, 20, 500, 200)
+    # w.show()
+    import json
+    a = gethtml("https://raw.githubusercontent.com/fandesfyf/JamTools/main/ci_scripts/versions.json")
+    print(json.loads(a))
     # w.setGeometry()
-    sys.exit(app.exec_())
+    # sys.exit(app.exec_())
