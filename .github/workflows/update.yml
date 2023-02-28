@@ -43,5 +43,5 @@ jobs:
           git config --global user.name "Fandesfyf"
           git add ci_scripts/versions.json
           git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
-          git push origin main
+          git push -f origin main
 
