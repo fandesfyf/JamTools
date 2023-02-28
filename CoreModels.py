@@ -5417,6 +5417,8 @@ class CheckForUpdateThread(QThread):
             totalsize=self.downloadupdate(versiondict["url"])
             if not self.parent.active:
                 print("下载线程取消")
+                if os.path.exists(self.newversonname):
+                    os.remove(self.newversonname)
                 return
             print("接收完成")
             self.checkresult_signal.emit("下载完成,正在准备更新...",True)
@@ -5461,7 +5463,7 @@ class CheckForUpdateThread(QThread):
         totalsize=int(response.headers["Content-Length"])
         if os.path.exists(self.newversonname) and os.path.getsize(self.newversonname)==totalsize:
             print("已存在更新文件!")
-            return
+            return totalsize
         lt=time.time()
         s=0
         sc=0
