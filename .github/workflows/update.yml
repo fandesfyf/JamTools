@@ -6,9 +6,10 @@ name: updater_gen
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+    - '*'
+#   pull_request:
+#     branches: [ "main" ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -43,5 +44,6 @@ jobs:
           git config --global user.name "Fandesfyf"
           git add ci_scripts/versions.json
           git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
-          git push -f origin main
+          git checkout -b updater
+          git push origin updater
 
