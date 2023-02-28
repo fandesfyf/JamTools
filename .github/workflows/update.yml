@@ -37,6 +37,7 @@ jobs:
       - name: gen_versions
         run: |
           python3 ci_scripts/gen_versions.py
+          git status
       - name: commit
         run: |    
           git status
