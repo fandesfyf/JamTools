@@ -45,9 +45,9 @@ apppath = get_apppath()
 def get_UserAgent():
     ua = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36 Edg/108.0.1462.54"
     try:
-        UserAgent(path=os.path.join(apppath,"fake_useragent_0.1.11.json"),verify_ssl=False).random
+        ua = UserAgent(path=os.path.join(apppath,"fake_useragent_0.1.11.json"),verify_ssl=False).random
     except Exception as e:
-        print(e)
+        print(e,"get_UserAgent")
     return ua
 def gethtml(url, times=3):  # 下载一个链接
     try:
