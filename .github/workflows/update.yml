@@ -44,6 +44,11 @@ jobs:
           git config --global user.name "Fandesfyf"
           git add ci_scripts/versions.json
           git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
-          git checkout -b updater
-          git push origin updater
+          #git checkout -b updater
+          #git push origin updater
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
 
