@@ -6,7 +6,7 @@ import sys
 import time
 
 import cv2
-from numpy import array, zeros, uint8, float32
+from numpy import array, zeros, uint8, float32,array
 from PyQt5.QtCore import QPoint, QRectF, QMimeData
 from PyQt5.QtCore import QRect, Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QUrl
 from PyQt5.QtGui import QCursor, QBrush, QScreen
@@ -394,8 +394,9 @@ class MaskLayer(QLabel):
                 self.parent.painter_tools['pen_on'] or self.parent.painter_tools['eraser_on'] or
                 self.parent.painter_tools['drawtext_on'] or self.parent.painter_tools['backgrounderaser_on']
                 or self.parent.painter_tools['drawpix_bs_on'] or self.parent.move_rect):
-
-            painter.setPen(QPen(self.parent.pencolor, 2, Qt.SolidLine))
+            
+            select_color_mode = True if self.parent.painter_tools['selectcolor_on'] or self.parent.painter_tools['bucketpainter_on'] else False  # 取色器或油漆桶
+            
             if self.parent.mouse_posx > self.width() - 140:
                 enlarge_box_x = self.parent.mouse_posx - 140
             else:
@@ -405,15 +406,23 @@ class MaskLayer(QLabel):
             else:
                 enlarge_box_y = self.parent.mouse_posy + 20
             enlarge_rect = QRect(enlarge_box_x, enlarge_box_y, 120, 120)
+            painter.setPen(QPen(QColor(Qt.green), 1, Qt.SolidLine))
             painter.drawRect(enlarge_rect)
-            painter.drawText(enlarge_box_x, enlarge_box_y - 8,
-                             '({0}x{1})'.format(self.parent.mouse_posx, self.parent.mouse_posy))
-            if self.parent.painter_tools['selectcolor_on'] or self.parent.painter_tools['bucketpainter_on']:  # 取色器或油漆桶
-                color = QColor(self.parent.qimg.pixelColor(self.parent.mouse_posx, self.parent.mouse_posy))
-                painter.drawText(enlarge_box_x + 70, enlarge_box_y - 8,
-                                 color.name())
-                painter.drawText(enlarge_box_x, enlarge_box_y - 25,
-                                 " rgb({},{},{})".format(color.red(), color.green(), color.blue()))
+            painter.setBrush(QBrush(QColor(80, 80, 80, 180)))
+            painter.drawRect(QRect(enlarge_box_x, enlarge_box_y-43, enlarge_rect.width(), 43))
+            painter.setBrush(Qt.NoBrush)
+            # painter.drawRect(QRect(enlarge_box_x, enlarge_box_y-42, enlarge_rect.width(), 42))
+            color = QColor(self.parent.qimg.pixelColor(self.parent.mouse_posx, self.parent.mouse_posy))
+            RGB_color = [color.red(), color.green(), color.blue()]
+            HSV_color = cv2.cvtColor(array([[RGB_color]], dtype=uint8),cv2.COLOR_RGB2HSV).tolist()[0][0]
+            painter.drawText(enlarge_box_x, enlarge_box_y - 6,
+                             ' POS:({},{}) {}'.format(self.parent.mouse_posx, self.parent.mouse_posy,color.name().upper()if select_color_mode else ""))
+            painter.drawText(enlarge_box_x, enlarge_box_y - 18,
+                                 " HSV:({},{},{})".format(HSV_color[0], HSV_color[1], HSV_color[2]))
+            painter.drawText(enlarge_box_x, enlarge_box_y - 30,
+                                 " RGB:({},{},{})".format(RGB_color[0],RGB_color[1],RGB_color[2]))
+
+            if select_color_mode:
                 painter.setBrush(QBrush(color))
                 painter.drawRect(QRect(enlarge_box_x - 20, enlarge_box_y, 20, 20))
                 painter.setBrush(Qt.NoBrush)
@@ -2262,7 +2271,9 @@ class Slabel(QLabel):  # 区域截图功能
                     self.setCursor(Qt.SizeVerCursor)
                 elif (minx + 8 < event.x() < maxx - 8) and (
                         miny + 8 < event.y() < maxy - 8):
-                    self.setCursor(Qt.SizeAllCursor)
+                    if self.move_rect:
+                        self.setCursor(Qt.SizeAllCursor)
+                    # self.setCursor(Qt.SizeAllCursor)
                 elif self.move_x1 or self.move_x0 or self.move_y1 or self.move_y0:  # 再次判断防止光标抖动
                     b = (self.x1 - self.x0) * (self.y1 - self.y0) > 0
                     if (self.move_x0 and self.move_y0) or (self.move_x1 and self.move_y1):
@@ -2279,8 +2290,8 @@ class Slabel(QLabel):  # 区域截图功能
                         self.setCursor(Qt.SizeHorCursor)
                     elif not (self.move_x0 or self.move_x1) and (self.move_y0 or self.move_y1):
                         self.setCursor(Qt.SizeVerCursor)
-                    elif self.move_rect:
-                        self.setCursor(Qt.SizeAllCursor)
+                    # elif self.move_rect:
+                    #     self.setCursor(Qt.SizeAllCursor)
                 else:
                     self.setCursor(Qt.ArrowCursor)
                 # 以上几个ifelse都是判断鼠标移动的位置和选框的关系然后设定光标形状
