@@ -37,8 +37,10 @@ jobs:
       - name: gen_versions
         run: |
           python3 ci_scripts/gen_versions.py
-          git status
       - name: commit
         run: |    
-          git status
-          
+          git config --global user.email "2861114322@qq.com"
+          git config --global user.name "Fandesfyf"
+          git add ci_scripts/versions.json
+          git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
+
