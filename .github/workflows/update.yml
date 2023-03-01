@@ -42,7 +42,7 @@ jobs:
         run: |
           git diff
           echo "df" | grep "f"
-          result=$(echo "ff" | grep "f")
+          result=$(echo "ff" | grep "ci_scripts/versions.json")
           echo $result "Test"
       - name: commit
         run: |
