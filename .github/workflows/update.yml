@@ -40,12 +40,13 @@ jobs:
           python3 ci_scripts/gen_versions.py
       - name: commit
         run: |
-          git status
+          
           result=$(git diff ci_scripts/versions.json | grep "ci_scripts/versions.json")
           echo $result "Test"
           if [[ "$result" != "" ]]
           then
               echo "版本信息已修改"
+              git status
               git config --global user.email "2861114322@qq.com"
               git config --global user.name "Fandesfyf"
               git add ci_scripts/versions.json
