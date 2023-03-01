@@ -38,18 +38,12 @@ jobs:
       - name: gen_versions
         run: |
           python3 ci_scripts/gen_versions.py
-      - name: diff
-        run: |
-          git diff
-          echo "df" | grep "f"
-          result=$(echo "ff" | grep "ci_scripts/versions.json")
-          echo $result "Test"
       - name: commit
         run: |
-          git diff
-          result=$(git diff | grep "ci_scripts/versions.json")
+          result=$(git status)
+          target="ci_scripts/versions.json"
           echo $result "Test"
-          if [[ "$result" != "" ]]
+          if [[ $result =~ $target ]]
           then
               echo "版本信息已修改"
               git status
