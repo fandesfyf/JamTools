@@ -39,7 +39,8 @@ jobs:
         run: |
           python3 ci_scripts/gen_versions.py
       - name: commit
-        run: |    
+        run: |
+          git status
           git config --global user.email "2861114322@qq.com"
           git config --global user.name "Fandesfyf"
           git add ci_scripts/versions.json
