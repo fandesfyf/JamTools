@@ -41,6 +41,8 @@ jobs:
       - name: diff
         run: |
           git diff
+          grep
+          echo "df" | grep "f"
           result=$(git diff | grep "ci_scripts/versions.json")
           echo $result "Test"
       - name: commit
