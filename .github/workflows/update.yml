@@ -42,7 +42,7 @@ jobs:
         run: |
           git status
           result=$(git diff ci_scripts/versions.json | grep "ci_scripts/versions.json")
-          echo $result
+          echo $result "Test"
           if [[ "$result" != "" ]]
           then
               echo "版本信息已修改"
