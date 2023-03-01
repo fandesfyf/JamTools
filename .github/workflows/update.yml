@@ -40,7 +40,7 @@ jobs:
           python3 ci_scripts/gen_versions.py
       - name: commit
         run: |
-          
+          git diff
           result=$(git diff | grep "ci_scripts/versions.json")
           echo $result "Test"
           if [[ "$result" != "" ]]
