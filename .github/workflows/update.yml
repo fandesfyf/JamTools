@@ -38,6 +38,9 @@ jobs:
       - name: gen_versions
         run: |
           python3 ci_scripts/gen_versions.py
+      - name: diff
+        run: |
+          git diff
       - name: commit
         run: |
           git diff
