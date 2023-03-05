@@ -11,6 +11,7 @@ import sys
 import os, re
 from Logger import Logger
 import jampublic
+from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
 import http.client
 import random
 import shutil
@@ -32,6 +33,7 @@ from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
 from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
+from jam_transtalater import Translator
 import jamresourse
 import os
 import cv2

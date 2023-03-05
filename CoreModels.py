@@ -10,9 +10,9 @@ import gc
 import sys
 import os, re
 from Logger import Logger
-from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, FramelessEnterSendQTextEdit, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, TrThread, mutilocr,gethtml,CONFIG_DICT
-
+from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
+    SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT
+from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
 import http.client
 
 import random
@@ -42,6 +42,7 @@ from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
 from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
+from jam_transtalater import Translator
 import jamresourse
 
 sys.stdout = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
@@ -522,78 +523,6 @@ def Tulin(text):
     return s
 
 
-# 百度翻译
-class Transtalater():
-    def __init__(self, parent=None):
-        self.fromLang = 'auto'
-        self.toLang = 'zh'
-        self.parent = parent
-        self.text = ' '
-        self.thread = None
-
-    def Bdtra(self):
-        print('翻译开始')
-
-        if self.parent.screenshoter.isVisible():
-            self.text = self.parent.screenshoter.shower.toPlainText()
-            print('screenshoter tra', self.text)
-        elif not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False,
-                                                       bool) and not self.parent.simplemodebox.isVisible():
-            self.parent.tra_to_edit.clear()
-            self.text = self.parent.tra_from_edit.toPlainText()
-            self.parent.statusBar().showMessage("翻译中，请稍后...")
-        else:
-            self.text = self.parent.simplemodebox.toPlainText()
-        # print(text)
-        if not self.text:
-            self.text = "Empty text"
-            print('text is empty')
-
-        QApplication.processEvents()
-        self.get_lang()
-
-        try:
-            self.thread.quit()
-            self.thread.wait()
-        except:
-            print(sys.exc_info())
-        self.thread = TrThread(self.text, self.fromLang, self.toLang)
-        try:
-            self.thread.change_item_signal.connect(self.parent.tra_to.setCurrentText)
-            self.thread.showm_singal.connect(self.parent.statusBar().showMessage)
-        except:
-            print(sys.exc_info(), 586)
-        self.thread.resultsignal.connect(self.translate_signal)
-        self.thread.start()
-        QApplication.processEvents()
-
-    def get_lang(self):
-        try:
-            dictl = {'自动检测': 'auto', '中文': 'zh', '英语': 'en', '文言文': 'wyw', '粤语': 'yue', '日语': 'jp', '德语': 'de',
-                     '韩语': 'kor',
-                     '法语': 'fra', '俄语': 'ru', '泰语': 'th', '意大利语': 'it', '葡萄牙语': 'pt', '西班牙语': 'spa'}
-            self.fromLang = dictl[self.parent.tra_from.currentText()]
-            self.toLang = dictl[self.parent.tra_to.currentText()]
-        except:
-            print('auto')
-
-    def show_detal(self):
-        self.get_lang()
-        url = 'https://fanyi.baidu.com/#' + self.fromLang + '/' + self.toLang + '/' + self.text
-        QDesktopServices.openUrl(QUrl(url))
-
-    def translate_signal(self, text):
-        if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False,
-                                                     bool) and not self.parent.simplemodebox.isVisible():
-            self.parent.tra_to_edit.moveCursor(QTextCursor.End)
-            self.parent.tra_to_edit.insertPlainText(text)
-            self.parent.statusBar().showMessage("翻译完成！")
-        else:
-            self.parent.simplemodebox.moveCursor(QTextCursor.End)
-            self.parent.simplemodebox.get_tra_resultsignal(text)
-        QApplication.processEvents()
-
-
 class Recording_trayicon(QSystemTrayIcon):
     def __init__(self, parent=None):
         super(Recording_trayicon, self).__init__(parent)
@@ -717,7 +646,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
             self.parent.simplemodebox.show()
         else:
             self.parent.show()
-            self.parent.BaiduTRA()
+            self.parent.translate_ui_show()
 
     def chat(self):
         if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
@@ -1210,7 +1139,7 @@ class Swindow(QMainWindow):
         self.translate_btn.setFont(btn_font)
         self.translate_btn.move(first_distance, s_distance + 2 * d_distance)
         self.translate_btn.resize(110, 35)
-        self.translate_btn.clicked.connect(self.BaiduTRA)
+        self.translate_btn.clicked.connect(self.translate_ui_show)
         self.translate_btn.setIcon(QIcon(":/tra.png"))
 
         self.screenrecord_btn.setToolTip('选定范围后按Alt+C开始/结束录制')
@@ -1520,7 +1449,7 @@ class Swindow(QMainWindow):
                     self.simplemodebox.show()
                     self.simplemodebox.clear()
                     self.simplemodebox.insertPlainText(rtext)
-                    transtalater.Bdtra()
+                    self.simplemodebox.tra()
 
     def change_top(self):
         if self.on_top:
@@ -1545,7 +1474,6 @@ class Swindow(QMainWindow):
         self.simplemodebox.show()
 
     def simple_mode(self):
-        self.simplemodebox.keyenter_connect(transtalater.Bdtra)
         self.simplemodebox.setToolTip('Ctrl+回车可快速翻译!')
         self.simplemodebox.resize(250, 250)
         self.simplemodebox.setWindowOpacity(0.8)
@@ -3335,7 +3263,7 @@ class Swindow(QMainWindow):
 
 7.酱传输：提供快速的局域网传输功能,有客户端点对点连接传输和网页端共享两种方式。均支持数据双向传输。客户端连接需要通过连接码自动搜索并连接主机，建立连接之后即可互相发送文件或文件夹。网页端传输相当于共享文件夹，支持共享一个文件夹或文件夹下的某几个文件，通过选择对应网络适配器即可生成共享链接，连入该与适配器同一网络的其他设备即可通过链接或扫码访问共享文件，网页端勾选允许上传后支持文件上传。
 
-8.酱聊天：。。。。彩蛋功能。。傻d机器人在线陪聊！！来自思知人工智能平台的机器人（别问为什么不用图灵机器人，因为没q啊！），填写用户ID后支持多轮对话，服务器有点慢。。。。毕竟思知也是免费提供的，还提供支持知识库训练，不能过多要求哈；默认保留50000字节的聊天记录。。
+8.酱聊天：。。。。彩蛋功能。。傻d机器人在线陪聊！！来自思知人工智能平台的机器人，填写用户ID后支持多轮对话，服务器有点慢。。。。毕竟思知也是免费提供的，还提供支持知识库训练，不能过多要求哈；默认保留50000字节的聊天记录。。
 
 $其他功能：
 划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
@@ -3591,8 +3519,10 @@ hhh(o゜▽゜)o☆）
 
         self.change_show_item([self.chat_groupBox])
 
-    def BaiduTRA(self):
+    def translate_ui_show(self):
         items = ['自动检测', '中文', '英语', '文言文', '粤语', '日语', '德语', '韩语', '法语', '俄语', '泰语', '意大利语', '葡萄牙语', '西班牙语']
+        available_langs = translator.get_available_langs(engine=QSettings('Fandes', 'jamtools').value("Translator_Engine", "YouDao", str))
+        items = [i for i in items if i in available_langs]
         self.tra_from = QComboBox(self.tra_groupBox)
         self.tra_from.addItems(items)
         self.tra_from.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
@@ -3607,7 +3537,7 @@ hhh(o゜▽゜)o☆）
         self.tra_to_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.tra_to_edit.setGeometry(30, 274, 420, 210)
         self.tra_from_edit = EnterSendQTextEdit(self.tra_groupBox)
-        self.tra_from_edit.keyenter_connect(transtalater.Bdtra)
+        self.tra_from_edit.keyenter_connect(self.translate)
         self.tra_from_edit.setPlaceholderText('在此输入文字')
 
         self.tra_from_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
@@ -3616,15 +3546,34 @@ hhh(o゜▽゜)o☆）
         self.tra_detal = QPushButton("详细释义", self.tra_groupBox)
         self.tra_detal.setGeometry(465, 230, 86, 20)
         self.tra_detal.setStatusTip('跳转百度翻译网页版查看详细解析...')
-        self.tra_detal.clicked.connect(transtalater.show_detal)
+        self.tra_detal.clicked.connect(translator.show_detal)
         self.trabot = QPushButton("翻译", self.tra_groupBox)
         self.trabot.setStatusTip('开始翻译')
         self.trabot.setGeometry(465, 180, 86, 40)
         self.trabot.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
-        self.trabot.clicked.connect(transtalater.Bdtra)
-
+        self.trabot.clicked.connect(self.translate)
+        
+        
+        translator.result_signal.connect(self.translate_callback)
+        translator.status_signal.connect(self.statusBar().showMessage)
         self.change_show_item([self.tra_groupBox])
-
+        
+    def translate_callback(self,text,from_lang,to_lang):
+        self.tra_to_edit.moveCursor(QTextCursor.End)
+        self.tra_to_edit.insertPlainText(text)
+        self.tra_to.setCurrentText(to_lang)
+        
+    def translate(self):
+        text = self.tra_from_edit.toPlainText()
+        self.statusBar().showMessage("翻译中，请稍后...")
+        self.tra_to_edit.clear()
+        if not text:
+            text = "Empty text"
+            print('text is empty')
+        fromLang = self.tra_from.currentText()
+        toLang = self.tra_to.currentText()
+        translator.translate(text,from_lang=fromLang,to_lang=toLang)
+        
     def BaiduOCR(self):
         """利用百度api识别文本"""
         if self.bdocr == True:
@@ -5505,7 +5454,7 @@ class InitThread(QThread):
 
 def main():
     global jamtools, ffmpeg_path, documents_path, temp_path, iconpng, paypng, transformater, \
-        transtalater
+        translator
     start_t = time.time()
     appctxt = ApplicationContext()
     A = QObject()
@@ -5568,7 +5517,7 @@ def main():
             if os.path.exists("j_temp/triggerpix.png"):
                 os.remove("j_temp/triggerpix.png")
         jamtools = Swindow()
-        transtalater = Transtalater(jamtools)  # 翻译
+        translator = Translator(jamtools)  # 翻译
         transformater = Transforma(jamtools)  # 格式转换
 
         # 初始化录屏线程

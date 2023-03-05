@@ -14,8 +14,9 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QColor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu, QGroupBox, QSpinBox, \
     QWidget
 from PyQt5.QtWidgets import QSlider, QColorDialog
+from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
 
-from jampublic import FramelessEnterSendQTextEdit, OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS,CONFIG_DICT
+from jampublic import OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS,CONFIG_DICT
 from jamroll_screenshot import Splicing_shots
 import jamresourse
 from pynput.mouse import Controller
