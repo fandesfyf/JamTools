@@ -39,12 +39,27 @@ jobs:
         run: |
           python3 ci_scripts/gen_versions.py
       - name: commit
-        run: |    
-          git config --global user.email "2861114322@qq.com"
-          git config --global user.name "Fandesfyf"
-          git add ci_scripts/versions.json
-          git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
-          git checkout -b updater
-          git push -f origin updater
+        run: |
+          result=$(git status)
+          target="ci_scripts/versions.json"
+          echo $result "Test"
+          if [[ $result =~ $target ]]
+          then
+              echo "版本信息已修改"
+              git status
+              git config --global user.email "2861114322@qq.com"
+              git config --global user.name "Fandesfyf"
+              git add ci_scripts/versions.json
+              git commit -m "GitHub Actions Auto commit at $(date +'%Y-%m-%d %H:%M:%S')"
+              git checkout -b updater
+              git push -f origin updater
+          else
+              echo "版本信息未修改"
+          fi
+
+        
+        
+          
+          
 
 
