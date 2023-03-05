@@ -63,6 +63,9 @@ from numpy import zeros, uint8, asarray, vstack, float32
 import io
 import sys, time
 import pyttsx3
+import pyttsx3.drivers
+import pyttsx3.drivers.sapi5
+from threading import Thread
 from CoreModels import main
 main()
 
