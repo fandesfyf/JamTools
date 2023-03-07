@@ -9,7 +9,7 @@ import cv2
 from numpy import array, zeros, uint8, float32,array
 from PyQt5.QtCore import QPoint, QRectF, QMimeData
 from PyQt5.QtCore import QRect, Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QUrl
-from PyQt5.QtGui import QCursor, QBrush, QScreen
+from PyQt5.QtGui import QCursor, QBrush, QScreen,QWindow
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QColor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu, QGroupBox, QSpinBox, \
     QWidget
@@ -1512,6 +1512,7 @@ class Slabel(QLabel):  # 区域截图功能
         # if PLATFORM_SYS=="darwin":
         self.sshoting = True
         t1 = time.process_time()
+        pixRat = QWindow().devicePixelRatio()
         if type(pix) is QPixmap:
             get_pix = pix
             self.init_parameters()
@@ -1522,7 +1523,9 @@ class Slabel(QLabel):  # 区域截图功能
             else:
                 sscreen=QApplication.primaryScreen()
             get_pix = sscreen.grabWindow(0)  # 截取屏幕
+            get_pix.setDevicePixelRatio(pixRat)
         pixmap = QPixmap(get_pix.width(), get_pix.height())
+        pixmap.setDevicePixelRatio(pixRat)
         pixmap.fill(Qt.transparent)  # 填充透明色,不然没有透明通道
 
         painter = QPainter(pixmap)
