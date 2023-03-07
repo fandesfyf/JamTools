@@ -969,8 +969,8 @@ class Slabel(QLabel):  # 区域截图功能
 
         self.shower.hide()
         self.shower.setWindowOpacity(0.8)
-        if PLATFORM_SYS == "darwin":
-            self.move(-QApplication.desktop().width(), -QApplication.desktop().height())
+        # if PLATFORM_SYS == "darwin":
+        #     self.move(-QApplication.desktop().width(), -QApplication.desktop().height())
 
         self.setToolTip("左键框选，右键返回")
 
