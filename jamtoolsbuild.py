@@ -53,10 +53,10 @@ if __name__ == '__main__':
             print('copy {}{}'.format(file, ext))
         else:
             raise OSError('{}{}{} not found'.format(file, suffix, ext))
-
+    file_tips = "\n####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######\n\n"
     with open('main.py', "w", encoding="utf-8") as mainf:
         importfilelist = ["# !usr/bin/python3\n","# -*- coding: utf-8 -*-\n",
-                          "# 本文件由jamtoolsbuild.py 打包脚本自动生成\n","import pynput.keyboard\n", "import pynput.mouse\n"]
+                          file_tips,"import pynput.keyboard\n", "import pynput.mouse\n"]
         for file in jamfilelist:
             print("explaining {}".format(file))
             with open("{}.py".format(file), "r", encoding="utf-8") as soursef:
@@ -78,7 +78,7 @@ if __name__ == '__main__':
                     line = soursef.readline()
 
         mainf.writelines(importfilelist)
-        mainf.writelines(["from CoreModels import main\n", "main()\n\n"])
+        mainf.writelines(["from CoreModels import main\n", "main()\n\n",file_tips])
     shutil.copy2('main.py', 'src/main/python/main.py')
     print('copy main.py')
     shutil.copy2('imagefiles/jamresourse.py', 'src/main/python/jamresourse.py')

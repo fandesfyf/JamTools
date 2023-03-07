@@ -1,6 +1,8 @@
 # !usr/bin/python3
 # -*- coding: utf-8 -*-
-# 本文件由jamtoolsbuild.py 打包脚本自动生成
+
+####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
+
 import pynput.keyboard
 import pynput.mouse
 import hashlib
@@ -63,9 +65,10 @@ from numpy import zeros, uint8, asarray, vstack, float32
 import io
 import sys, time
 import pyttsx3
-import pyttsx3.drivers
-import pyttsx3.drivers.sapi5
 from threading import Thread
 from CoreModels import main
 main()
+
+
+####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
 
