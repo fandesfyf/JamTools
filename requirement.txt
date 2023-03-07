@@ -1,6 +1,6 @@
 Wheel
 Pillow
-pynput==1.6.8
+pynput
 fbs==0.9.0
 qrcode
 requests
