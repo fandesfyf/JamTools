@@ -1020,7 +1020,7 @@ class ImgShower(QScrollArea):
 
 
 # 主窗口
-class Swindow(QMainWindow):
+class JamToolsWindow(QMainWindow):
     keboardchange_fucsignal = pyqtSignal()
     showm_signal = pyqtSignal(str)
 
@@ -3762,7 +3762,7 @@ hhh(o゜▽゜)o☆）
 
     def showEvent(self, e) -> None:
         self.setWindowOpacity(1)
-        super(Swindow, self).showEvent(e)
+        super(JamToolsWindow, self).showEvent(e)
 
 
 class SettingPage(QScrollArea):
@@ -4077,7 +4077,7 @@ class SettingPage(QScrollArea):
 class Transforma(QObject):
     showm_signal = pyqtSignal(str)
 
-    def __init__(self, parent: Swindow):
+    def __init__(self, parent: JamToolsWindow):
         super(Transforma, self).__init__()
         self.parent = parent
         self.init_transforma_thread = Commen_Thread(self.init_transforma)
@@ -5450,82 +5450,84 @@ class InitThread(QThread):
                 jamtools.start_action_run(sys.argv[1])
                 print('start control')
                 jamtools.hide()
-
-
+class StartUpChecker():
+    """"检查是否有实例运行"""
+    def __init__(self,app):
+        A = QObject()
+        serverName = 'jamtoolsserver'
+        # QLocalServer.removeServer(serverName)
+        self.ssocket = QLocalSocket(A)
+        self.ssocket.connectToServer(serverName)
+        # print("e",  ssocket.errorString(), ssocket.error())
+        # refuse:0  invalid name:2 unknown error:-1
+        # 如果连接成功，表明server已经存在，当前已有实例在运行
+        if self.ssocket.waitForConnected(500):
+            print('connected server')
+            self.ssocket.write(str(sys.argv).encode('utf-8'))
+            self.ssocket.waitForBytesWritten()
+            print("another instance is existed! ")
+            time.sleep(0.5)
+            app.quit()
+            sys.exit()
+        else:
+            if self.ssocket.error() == 0:
+                QLocalServer.removeServer(serverName)
+                print(self.ssocket.errorString(), ",Remove it")
+            print('no server')
+            self.localServer = QLocalServer()  # 没有实例运行，创建服务器
+            self.localServer.listen(serverName)
+            self.localServer.newConnection.connect(self.connection_callback)
+            
+    def connection_callback(self):
+        self.client = self.localServer.nextPendingConnection()
+        self.client.readyRead.connect(self.read_)
+        print('read server', self.client.readAll().data())
+        
+    def read_(self):
+        data = self.client.readAll().data().decode('utf-8')
+        data = data.replace('[', '').replace(']', '').replace("'", "").replace('"', '').replace(' ', '').split(
+            ',')
+        print(data, len(data))
+        if len(data) >= 2:
+            print(sys.argv)
+            if os.path.splitext(data[1].lower())[-1] == '.jam':
+                jamtools.start_action_run(data[1])
+                print('start')
+                jamtools.hide()
+        else:
+            QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
+            jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+            jamtools.show()
+            jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            jamtools.show()
+            jamtools.activateWindow()
+            
 def main():
     global jamtools, ffmpeg_path, documents_path, temp_path, iconpng, paypng, transformater, \
         translator
     start_t = time.time()
     appctxt = ApplicationContext()
-    A = QObject()
-    serverName = 'jamtoolsserver'
-    # QLocalServer.removeServer(serverName)
-    ssocket = QLocalSocket(A)
-    ssocket.connectToServer(serverName)
-    # print("e",  ssocket.errorString(), ssocket.error())
-    # refuse:0  invalid name:2 unknown error:-1
-    # 如果连接成功，表明server已经存在，当前已有实例在运行
-    if ssocket.waitForConnected(500):
-        print('connected server')
-        ssocket.write(str(sys.argv).encode('utf-8'))
-        ssocket.waitForBytesWritten()
-        appctxt.app.quit()
-        sys.exit()
+    single_instance_check = StartUpChecker(appctxt.app)
+    ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
+    documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+
+    temp_path = QStandardPaths.writableLocation(QStandardPaths.TempLocation)
+    os.chdir(temp_path)
+    if not os.path.exists("j_temp"):
+        os.mkdir("j_temp")
     else:
-        if ssocket.error() == 0:
-            QLocalServer.removeServer(serverName)
-            print(ssocket.errorString(), ",Remove it")
-        print('no server')
-        localServer = QLocalServer()  # 没有实例运行，创建服务器
-        localServer.listen(serverName)
+        if os.path.exists("j_temp/triggerpix.png"):
+            os.remove("j_temp/triggerpix.png")
+    jamtools = JamToolsWindow()
+    translator = Translator(jamtools)  # 翻译
+    transformater = Transforma(jamtools)  # 格式转换
 
-        def ready_():
-            client = localServer.nextPendingConnection()
-
-            def read_():
-                data = client.readAll().data().decode('utf-8')
-                data = data.replace('[', '').replace(']', '').replace("'", "").replace('"', '').replace(' ', '').split(
-                    ',')
-                print(data, len(data))
-                if len(data) >= 2:
-                    print(sys.argv)
-                    if os.path.splitext(data[1].lower())[-1] == '.jam':
-                        jamtools.start_action_run(data[1])
-                        print('start')
-                        jamtools.hide()
-                else:
-                    QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
-                    jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-                    jamtools.show()
-                    jamtools.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-                    jamtools.show()
-                    jamtools.activateWindow()
-
-            client.readyRead.connect(read_)
-            print('read server', client.readAll().data())
-
-        localServer.newConnection.connect(ready_)
-
-        ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
-        documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
-
-        temp_path = QStandardPaths.writableLocation(QStandardPaths.TempLocation)
-        os.chdir(temp_path)
-        if not os.path.exists("j_temp"):
-            os.mkdir("j_temp")
-        else:
-            if os.path.exists("j_temp/triggerpix.png"):
-                os.remove("j_temp/triggerpix.png")
-        jamtools = Swindow()
-        translator = Translator(jamtools)  # 翻译
-        transformater = Transforma(jamtools)  # 格式转换
-
-        # 初始化录屏线程
-        jamtools.init_rec_con_thread = InitThread()
-        jamtools.init_rec_con_thread.start()
-        jamtools.statusBar().showMessage('初始化用时：%f' % float(time.time() - start_t))
-        print('init_swindowtime:', time.time() - start_t)
-        sys.exit(appctxt.app.exec_())
+    # 初始化录屏线程
+    jamtools.init_rec_con_thread = InitThread()
+    jamtools.init_rec_con_thread.start()
+    jamtools.statusBar().showMessage('初始化用时：%f' % float(time.time() - start_t))
+    print('init_swindowtime:', time.time() - start_t)
+    sys.exit(appctxt.app.exec_())
 
 
 if __name__ == '__main__':
