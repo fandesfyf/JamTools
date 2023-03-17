@@ -49,8 +49,10 @@ sys.stdout = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
 if PLATFORM_SYS == "win32":
     import win32con
     import ctypes, ctypes.wintypes
-
-    ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    try:# win7 don't have SetProcessDpiAwareness
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception as e:
+        print(e)
 if PLATFORM_SYS == "darwin":
     import pynput.keyboard._darwin
     import pynput.mouse._darwin
