@@ -27,13 +27,15 @@ from PIL import Image
 import qrcode
 import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer, QSettings, QFileInfo, \
-    QUrl, QObject, QSize
+    QUrl, QObject, QSize,pyqtSlot
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCursor, QColor, QDesktopServices, QMovie
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
-    QProgressBar, QTextBrowser
+    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
+from qt_material import apply_stylesheet,list_themes
+
 from jamscreenshot import Slabel
 from aip import AipOcr
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -202,7 +204,7 @@ class EnterSendQTextEdit(QTextEdit):
 
 class Recordingthescreen(QObject):
     showm_signal = pyqtSignal(str)
-
+    counter_display_signal = pyqtSignal(str)
     def __init__(self, parent):
         super(Recordingthescreen, self).__init__()
         self.parent = parent
@@ -284,7 +286,7 @@ class Recordingthescreen(QObject):
             self.showrect.show()
         if self.delay != 0:
             print('delay')
-            self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,180,10)}")
+            # self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,180,10)}")
             self.waiting = True
             self.wait_()
             self.waiting = False
@@ -292,27 +294,27 @@ class Recordingthescreen(QObject):
                 self.stop_wait = False
                 print('stopwait')
                 self.recording = False
-                try:
-                    self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-                                                         "QPushButton:hover{background-color:rgb(200,10,10)}"
-                                                         "QPushButton:!hover{background-color:rgb(200,200,200)}"
-                                                         "QPushButton{background-color:rgb(239,239,239)}"
-                                                         "QPushButton{border:6px solid rgb(50, 50, 50)}"
-                                                         "QPushButton{border-radius:60px}")
-                except:
-                    print(sys.exc_info())
+                # try:
+                    # self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+                    #                                      "QPushButton:hover{background-color:rgb(200,10,10)}"
+                    #                                      "QPushButton:!hover{background-color:rgb(200,200,200)}"
+                    #                                      "QPushButton{background-color:rgb(239,239,239)}"
+                    #                                      "QPushButton{border:6px solid rgb(50, 50, 50)}"
+                    #                                      "QPushButton{border-radius:60px}")
+                # except:
+                #     print(sys.exc_info())
                 self.showm_signal.emit('录屏等待中止！')
                 self.showrect.hide()
                 return
-        try:
-            self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,10,10)}"
-                                                 "QPushButton{color:rgb(200,100,100)}"
-                                                 "QPushButton{border:6px solid rgb(50, 50, 50)}"
-                                                 )
-        except:
-            print(sys.exc_info(), 308)
+        # try:
+        #     self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,10,10)}"
+        #                                          "QPushButton{color:rgb(200,100,100)}"
+        #                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
+        #                                          )
+        # except:
+        #     print(sys.exc_info(), 308)
         self.c = 0
-        self.parent.counter.display('00:00')
+        self.counter_display_signal.emit('00:00')
         self.timer.start(1000)
         f_path = '"' + ffmpeg_path + '/ffmpeg" '
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
@@ -458,7 +460,7 @@ class Recordingthescreen(QObject):
         # self.delay += 1
         while self.delay > 0 and not self.stop_wait:
             time_text = '%02d:%02d' % (int((self.delay + 0.9) // 60), int((self.delay + 0.9) % 60))
-            self.parent.counter.display(time_text)
+            self.counter_display_signal.emit(time_text)
             QApplication.processEvents()
             time.sleep(0.1)
             # print(self.delay)
@@ -468,21 +470,21 @@ class Recordingthescreen(QObject):
     def count(self):
         self.c += 1
         time_text = '%02d:%02d' % (self.c // 60, self.c % 60)
-        self.parent.counter.display(time_text)
+        self.counter_display_signal.emit(time_text)
 
     def stop_recording(self):
         self.timer.stop()
         self.recording = False
         self.stop_record()
-        try:
-            self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-                                                 "QPushButton:hover{background-color:rgb(200,10,10)}"
-                                                 "QPushButton:!hover{background-color:rgb(200,200,200)}"
-                                                 "QPushButton{background-color:rgb(239,239,239)}"
-                                                 "QPushButton{border:6px solid rgb(50, 50, 50)}"
-                                                 "QPushButton{border-radius:60px}")
-        except:
-            pass
+        # try:
+        #     self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+        #                                          "QPushButton:hover{background-color:rgb(200,10,10)}"
+        #                                          "QPushButton:!hover{background-color:rgb(200,200,200)}"
+        #                                          "QPushButton{background-color:rgb(239,239,239)}"
+        #                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
+        #                                          "QPushButton{border-radius:60px}")
+        # except:
+        #     pass
         if self.file_format != 'gif':
             self.showm_signal.emit("录屏结束，文件保存于：视频/Jam_screenrecord/" + self.name + '文件夹中\n点击此处可打开')
             self.parent.trayicon.recorded_open = True
@@ -553,7 +555,7 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
         self.small_windows = []
         self.open_path = QStandardPaths.writableLocation(
             QStandardPaths.PicturesLocation)
-        self.getscreen.triggered.connect(self.parent.screensh)
+        self.getscreen.triggered.connect(self.parent.screenshot_slot)
         self.recordscreen.triggered.connect(self.connect_record_fun)
         self.setarea.triggered.connect(self.parent.set_area)
         self.Tray_tra.triggered.connect(self.BaiduTRA)
@@ -648,13 +650,13 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
             self.parent.simplemodebox.show()
         else:
             self.parent.show()
-            self.parent.translate_ui_show()
+            self.parent.setup_ui_translater()
 
     def chat(self):
         if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             QSettings('Fandes', 'jamtools').setValue("S_SIMPLE_MODE", False)
             self.parent.show()
-        self.parent.Tulinchat()
+        self.parent.setup_ui_Tulinchat()
 
     def JP(self):
         self.showMessage("图像数据已复制到剪切板", "可在聊天界面或画板粘贴", self.NoIcon, )
@@ -824,16 +826,16 @@ class Small_Ocr(QLabel):
         self.close_botton.clicked.connect(self.clearandreset)
         self.close_botton.setToolTip("关闭这个贴纸")
         self.setWindowOpacity(0.9)
-        self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
-                           "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
-                           """QTextEdit{border:1px solid gray;
-                            width:300px;
-                            border-radius:5px;
-                            padding:2px 4px;
-                            background-color:rgb(250,250,250);}"""
-                           "QScrollBar{background-color:rgb(200,100,100);width: 4px;}")
-        self.close_botton.setStyleSheet("QPushButton{color:white;background-color:rgb(200,50,50);padding:1px 4px;}"
-                           "QPushButton:hover{color:green;background-color:rgb(200,200,100);}")
+        # self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
+        #                    "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
+        #                    """QTextEdit{border:1px solid gray;
+        #                     width:300px;
+        #                     border-radius:5px;
+        #                     padding:2px 4px;
+        #                     background-color:rgb(250,250,250);}"""
+        #                    "QScrollBar{background-color:rgb(200,100,100);width: 4px;}")
+        # self.close_botton.setStyleSheet("QPushButton{color:white;background-color:rgb(200,50,50);padding:1px 4px;}"
+        #                    "QPushButton:hover{color:green;background-color:rgb(200,200,100);}")
 
     def baidusearch(self, a=1):
         url = """https://www.baidu.com/s?wd={0}&rsv_spt=1&rsv_iqid=0xe12177a6000c90b8&issp=1&f=8&rsv_
@@ -957,7 +959,7 @@ class ImgShower(QScrollArea):
         self.scale = 1
         self.drag = False
         self.dpos = (0, 0)
-        self.setStyleSheet('border:None')
+        # self.setStyleSheet('border:None')
 
     def setpic(self, pix):
         self.pix = pix
@@ -1028,18 +1030,138 @@ class JamToolsWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
+        self.load_config()
+        self.init_main_window()
+        self.init_function_ui()
+        self.init_others()
+        
+    def load_config(self):
         self.settings = QSettings('Fandes', 'jamtools')
-        self.main_groupBox = QGroupBox(self)
-        self.main_groupBox.setGeometry(QRect(10, 30, 160, 490))
-        self.main_groupBox.setTitle("主要功能")
-        self.main_groupBox.setFont(groupfont)
+        self.on_top = self.settings.value('win_ontop', False, type=bool)
+        
+    def init_main_window(self):
+        x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
+        if x < 50 or x > QApplication.primaryScreen().size().width():
+            print(QApplication.primaryScreen().size(), 'fafe')
+            self.settings.setValue("windowx", 50)
+            x = (QApplication.primaryScreen().size().width() - self.width()) // 2
+        if y < 50 or y > QApplication.primaryScreen().size().height():
+            self.settings.setValue("windowy", 50)
+            y = (QApplication.primaryScreen().size().height() - self.height()) // 2
 
-        self.main_scroll = QScrollArea(self)
-        self.main_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.main_scroll.setGeometry(QRect(10, 38, 160, 490))
-        self.main_scroll.setWidget(self.main_groupBox)
-        self.view_groupBox = FuncBox(self)
+        self.setGeometry(x, y,800, 550)
+        self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
+        self.setWindowIcon(QIcon(":/ico.png"))
+        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setAcceptDrops(True)
+        self.setFixedSize(self.width(), self.height())
+        
+        
+        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
+        
+        # 左侧功能区
+        self.main_list_widget = QListWidget(self)
+        # 设置选择模式为单选
+        self.main_list_widget.setSelectionMode(QListWidget.SingleSelection)
+        # self.main_list_widget.setGeometry(QRect(10, 30, 160, 490))
+        self.main_list_widget.setFont(groupfont) 
+        main_list_map = [{"name": "酱截屏",
+                          "icon": ":/screenshot.png",
+                          "tips": '截图功能,快捷键Alt+Z',
+                          "func": self.setup_ui_screenshot},
+                         {"name": "酱识字",
+                          "icon": ":/OCR.png",
+                          "tips": '文字识别',
+                          "func": self.setup_ui_ocr},
+                         {"name": "酱翻译",
+                          "icon": ":/tra.png",
+                          "tips": '翻译功能',
+                          "func": self.setup_ui_translater},
+                         {"name": "酱录屏",
+                          "icon": ":/record.png",
+                          "tips": '录屏功能,快捷键Alt+c',
+                          "func": self.setup_ui_record_screen},
+                         {"name": "酱转换",
+                          "icon": ":/switch.png",
+                          "tips": '多媒体格式转换',
+                          "func": self.setup_ui_transforma},
+                         {"name": "酱控制",
+                          "icon": ":/Control.png",
+                          "tips": '按键动作录制功能!',
+                          "func": self.setup_ui_controller},
+                         {"name": "酱传输",
+                          "icon": ":/filestransmitter.png",
+                          "tips": '局域网传输功能',
+                          "func": self.setup_ui_Filestransmitter},
+                         {"name": "酱聊天",
+                          "icon": ":/chat.png",
+                          "tips": '小酱酱机器人在等你哦！',
+                          "func": self.setup_ui_Tulinchat}
+                         ]
+        btn_font = QFont('黑体' if PLATFORM_SYS == "win32" else "", 10)
+        QToolTip.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 8))
+        
+        for main_func in main_list_map:
+            item = QListWidgetItem(QIcon(main_func["icon"]) ,main_func["name"])
+            item.setTextAlignment(Qt.AlignCenter)  # 将文本水平居中和垂直居中
+            item.setToolTip(main_func["tips"])
+            item.setStatusTip(main_func["tips"])
+            item.setFont(btn_font)
+            item.func = main_func["func"]
+            self.main_list_widget.addItem(item)
+        self.main_list_widget.setMouseTracking(True)
+        # 定义槽函数处理单击事件
+        def handle_item_clicked(item):
+            print(f"Item {item.text()} clicked!")  # 打印出点击的项的文本
+            item.func()
+        # 将 itemClicked 信号连接到槽函数
+        self.main_list_widget.itemClicked.connect(handle_item_clicked)
+        self.main_list_widget.setStyleSheet('''
+            QListWidget {
+                border: none;
+                padding: 0px;
+                spacing: 0px;
+                margin: 0px;
+                
+            }
+            QListWidget::item {
+                
+                border: none;
+                padding: 12px;
+                border-radius: 6px; 
+                
+            }
+            QListWidget::item:selected {
+                border: none;
+                border-radius: 6px;
+            }
+           
+        ''')
+        
+        # 右侧页面
+        right_widget = QStackedWidget()
+        
+        main_layout = QHBoxLayout()
+        main_layout.addWidget(self.main_list_widget, 1)
+        main_layout.addWidget(right_widget, 6)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        self.setCentralWidget(QWidget(self))
+        self.centralWidget().setLayout(main_layout)
+        
+        #设置遮挡条
+        middle_widget = QWidget(self)
+        middle_widget.setGeometry(self.main_list_widget.width()+5,right_widget.y(),20,self.height())
+        
+        # 初始化菜单
+        self.init_menu()
+
+        
+
+    def init_function_ui(self):
+        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
+        #初始化所有组
+        self.screenshot_groupBox = FuncBox(self)
         self.tra_groupBox = FuncBox(self)
         self.Transforma_groupBox = FuncBox(self)
         self.ocr_groupBox = FuncBox(self)
@@ -1048,27 +1170,65 @@ class JamToolsWindow(QMainWindow):
         self.chat_groupBox = FuncBox(self)
         self.controll_groupBox = FuncBox(self)
         self.transmitter_groupBox = FuncBox(self)
+        
+        # 帮助页面
         self.about_groupBox = QGroupBox("About", self)
         self.about_groupBox.setGeometry(QRect(176, 30, 580, 500))
         self.about_groupBox.setFont(groupfont)
-        self.show_items = [self.view_groupBox, self.tra_groupBox, self.Transforma_groupBox, self.ocr_groupBox,
-                           self.cla_groupBox, self.rec_groupBox, self.chat_groupBox,
-                           self.controll_groupBox, self.about_groupBox, self.transmitter_groupBox]
-        self.chatthread = None
         self.help_text = QTextBrowser(self.about_groupBox)
         self.help_text.setGeometry(35, 35, 500, 444)
         self.payimg = QLabel(self.help_text)
         self.payimg.hide()
+        self.help_text.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
+        self.help_text.setReadOnly(True)
 
-        self.counter = QLCDNumber(self.rec_groupBox)
-
-        self.on_top = self.settings.value('win_ontop', False, type=bool)
-        self.initUI()
-        self.init_other()
+        self.show_items = [self.screenshot_groupBox, self.tra_groupBox, self.Transforma_groupBox, self.ocr_groupBox,
+                           self.cla_groupBox, self.rec_groupBox, self.chat_groupBox,
+                           self.controll_groupBox, self.about_groupBox, self.transmitter_groupBox]
+        #切换到帮助页面显示
         self.help()
         self.setWindowFlag(Qt.WindowStaysOnTopHint, self.on_top)
         self.activateWindow()
         self.show()
+
+        
+        
+        self.chatthread = None
+        self.ocr_textEdit = QTextEdit(self.ocr_groupBox)
+        self.delay = 0
+        self.stop_wait = self.waiting = self.alt_push = False
+        self.samplingingid = -1
+        self.mulocr = self.OCR = self.ssview = self.recview = False
+
+        self.flag = self.bdocr = self.setingarea = self.transfor_view = self.controlling = self.init_transmitter = False
+        # self.can_controll = self.settings.value('can_controll', False, type=bool)
+        self.freeze_imgs = []
+        self.audio_divice = []
+        self.video_divice = []
+
+        self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
+        self.ocr_textEdit.move(40, 35)
+        self.ocr_textEdit.resize(480, 350)
+
+
+        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
+        self.screenshot_groupBox.setTitle("view")
+        self.tra_groupBox.setTitle("Translate")
+        self.Transforma_groupBox.setTitle("Transformation")
+        self.ocr_groupBox.setTitle("OCR")
+        self.cla_groupBox.setTitle("Distinguish")
+        self.rec_groupBox.setTitle("Record")
+        self.chat_groupBox.setTitle("Chat bot")
+        self.controll_groupBox.setTitle("Control")
+        self.transmitter_groupBox.setTitle("Transmitter")
+
+        
+        self.keyboard = QApplication.clipboard()
+        self.keyboard.dataChanged.connect(self.keyboardchanged)  # 剪切板翻译/智能shift
+        self.keboardchange_fucsignal.connect(self.keboardchange_fuc)
+        
+        
+        
         self.simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True)
         self.actioncontroller = ActionController()
         try:
@@ -1087,209 +1247,14 @@ class JamToolsWindow(QMainWindow):
 
         if self.settings.value('right_ocr', True, bool):
             self.openlistenmouse()
-
-    def init_other(self):  # 后台初始化
-
-        self.main_scroll.setStyleSheet('''QScrollBar:vertical { 
-                    border: none; 
-                    background-color: rgba(255,255,255,0); 
-                    width: 10px; 
-                    margin: 1px 1px 1px 1px; 
-                } ''')
-        self.help_text.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.help_text.setReadOnly(True)
-
-        self.delay = 0
-        self.stop_wait = self.waiting = self.alt_push = False
-        self.samplingingid = -1
-        # self.control_initcount = 1
-        # self.recordcount = 1
-        self.mulocr = self.OCR = self.ssview = self.recview = False
-        self.x0 = 0
-        self.y0 = 0
-        self.x1 = 0
-        self.y1 = 0
-        self.flag = self.bdocr = self.setingarea = self.transfor_view = self.controlling = self.init_transmitter = False
-        # self.can_controll = self.settings.value('can_controll', False, type=bool)
-        self.freeze_imgs = []
-        self.audio_divice = []
-        self.video_divice = []
-
-        first_distance = 25
-        s_distance = 30
-        d_distance = 58
-        btn_font = QFont('黑体' if PLATFORM_SYS == "win32" else "", 10)
-        QToolTip.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 8))
-        self.ss_btn.setToolTip('截图功能Alt+Z')
-        self.ss_btn.setStatusTip('截图功能Alt+Z')
-        self.ss_btn.resize(110, 35)
-        self.ss_btn.setFont(btn_font)
-        self.ss_btn.move(first_distance, s_distance)
-        self.ss_btn.clicked.connect(self.screenshot)
-        self.ss_btn.setIcon(QIcon(":/screenshot.png"))
-
-        self.ocr_btn.setToolTip('文字识别')
-        self.ocr_btn.setStatusTip('文字识别')
-        self.ocr_btn.setFont(btn_font)
-        self.ocr_btn.move(first_distance, s_distance + 1 * d_distance)
-        self.ocr_btn.resize(110, 35)
-        self.ocr_btn.clicked.connect(self.ocr)
-        self.ocr_btn.setIcon(QIcon(":/OCR.png"))
-
-        self.translate_btn.setToolTip('翻译功能')
-        self.translate_btn.setStatusTip('翻译功能')
-        self.translate_btn.setFont(btn_font)
-        self.translate_btn.move(first_distance, s_distance + 2 * d_distance)
-        self.translate_btn.resize(110, 35)
-        self.translate_btn.clicked.connect(self.translate_ui_show)
-        self.translate_btn.setIcon(QIcon(":/tra.png"))
-
-        self.screenrecord_btn.setToolTip('选定范围后按Alt+C开始/结束录制')
-        self.screenrecord_btn.setStatusTip('选定范围后按Alt+C开始/结束录制')
-        self.screenrecord_btn.setFont(btn_font)
-        self.screenrecord_btn.setIcon(QIcon(":/record.png"))
-        self.screenrecord_btn.move(first_distance, s_distance + 3 * d_distance)
-        self.screenrecord_btn.resize(110, 35)
-        self.screenrecord_btn.clicked.connect(self.record_screen)
-
-        self.transform_btn.setToolTip('多媒体格式转换')
-        self.transform_btn.setStatusTip('多媒体格式转换')
-        self.transform_btn.setFont(btn_font)
-        self.transform_btn.move(first_distance, s_distance + 4 * d_distance)
-        self.transform_btn.resize(110, 35)
-        self.transform_btn.clicked.connect(self.transforma)
-        self.transform_btn.setIcon(QIcon(":/switch.png"))
-
-        self.control_btn.setToolTip('按键动作录制功能!')
-        self.control_btn.setStatusTip('录制并播放你的动作!')
-        self.control_btn.setFont(btn_font)
-        self.control_btn.move(first_distance, s_distance + 5 * d_distance)
-        self.control_btn.resize(110, 35)
-        self.control_btn.clicked.connect(self.control)
-        self.control_btn.setIcon(QIcon(":/Control.png"))
-
-        self.transmitter_btn.setToolTip('局域网传输功能')
-        self.transmitter_btn.setStatusTip('局域网传输功能')
-        self.transmitter_btn.setFont(btn_font)
-        self.transmitter_btn.move(first_distance, s_distance + 6 * d_distance)
-        self.transmitter_btn.resize(110, 35)
-        self.transmitter_btn.clicked.connect(self.Filestransmitter)
-        self.transmitter_btn.setIcon(QIcon(":/filestransmitter.png"))
-
-        self.chatbot_btn.setToolTip('小酱酱机器人在等你哦！')
-        self.chatbot_btn.setStatusTip('小酱酱机器人在等你哦！')
-        self.chatbot_btn.setFont(btn_font)
-        self.chatbot_btn.move(first_distance, s_distance + 7 * d_distance)
-        self.chatbot_btn.resize(110, 35)
-        self.chatbot_btn.clicked.connect(self.Tulinchat)
-        self.chatbot_btn.setIcon(QIcon(":/chat.png"))
-
-        self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.ocr_textEdit.move(40, 35)
-        self.ocr_textEdit.resize(480, 350)
-        self.cla_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.cla_textEdit.move(170, 50)
-        self.cla_textEdit.resize(211, 300)
-
-        groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
-        self.view_groupBox.setTitle("view")
-        self.tra_groupBox.setTitle("Translate")
-        self.Transforma_groupBox.setTitle("Transformation")
-        self.ocr_groupBox.setTitle("OCR")
-        self.cla_groupBox.setTitle("Distinguish")
-        self.rec_groupBox.setTitle("Record")
-        self.chat_groupBox.setTitle("Chat bot")
-        self.controll_groupBox.setTitle("Control")
-        self.transmitter_groupBox.setTitle("Transmitter")
-
-        self.counter.setGeometry(QRect(30, 100, 120, 35))
-        self.counter.display('00:00')
-        self.keyboard = QApplication.clipboard()
-        self.keyboard.dataChanged.connect(self.keyboardchanged)  # 剪切板翻译/智能shift
-        self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:0px 0px;}"
-                           "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
-                           "QScrollBar{border:none;width:10px; background-color:rgb(200,200,200);border-radius: 8px;}"
-                           """QTextEdit{
-                            border:1px solid gray;
-                            width:300px;
-                            border-radius:10px;
-                            padding:2px 4px;
-                            background-color:rgb(250,250,250);}"""
-                           """QComboBox{combobox-popup: 0;padding:2px 4px;background-color:rgb(250,250,250);}"""
-
-                           """QSpinBox{padding:2px 4px;background-color:rgb(250,250,250);
-                                           border:2px solid rgb(140, 140, 140);}"""
-                           """QDoubleSpinBox{padding:2px 6px;background-color:rgb(250,250,250);
-                            border:2px solid rgb(140, 140, 140);}"""
-                           """QTimeEdit{padding:2px 6px;background-color:rgb(250,250,250);
-                           border:2px solid rgb(140, 140, 140);}
-                           border-radius:10px"""
-                           )
-
-        self.ocr_groupBox.setStyleSheet(
-            "QScrollBar{width:10px}")
-        self.tra_groupBox.setStyleSheet(
-            "QScrollBar{width:10px}"
-            """QComboBox{padding:2px 4px;background-color:rgb(250,250,250);}"""
-        )
-        self.about_groupBox.setStyleSheet("QScrollBar{border:none; background-color:rgb(200,200,200); width:5px  }")
-        self.keboardchange_fucsignal.connect(self.keboardchange_fuc)
-        print('initothers')
-
-    def initUI(self):
-        x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
-        if x < 50 or x > QApplication.primaryScreen().size().width():
-            print(QApplication.primaryScreen().size(), 'fafe')
-            self.settings.setValue("windowx", 50)
-            x = (QApplication.primaryScreen().size().width() - self.width()) // 2
-        if y < 50 or y > QApplication.primaryScreen().size().height():
-            self.settings.setValue("windowy", 50)
-            y = (QApplication.primaryScreen().size().height() - self.height()) // 2
-
-        self.setGeometry(x, y, 800, 550)
-        self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
-        self.setWindowIcon(QIcon(":/ico.png"))
-        self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
-
-        self.setAcceptDrops(True)
-        self.setFixedSize(self.width(), self.height())
-        self.ss_btn = QPushButton("酱截屏", self.main_groupBox)
-        self.ocr_btn = QPushButton("酱识字", self.main_groupBox)
-        self.translate_btn = QPushButton("酱翻译", self.main_groupBox)
-        # self.plan_btn = QPushButton("酱计划", self.main_groupBox)
-        self.screenrecord_btn = QPushButton("酱录屏", self.main_groupBox)
-        self.transform_btn = QPushButton("酱转换", self.main_groupBox)
-        self.control_btn = QPushButton("酱控制", self.main_groupBox)
-        self.transmitter_btn = QPushButton("酱传输", self.main_groupBox)
-        self.chatbot_btn = QPushButton("酱聊天", self.main_groupBox)
-        self.ocr_textEdit = QTextEdit(self.ocr_groupBox)
-        self.cla_textEdit = QTextEdit(self.cla_groupBox)
-
+        
+        
+    def init_others(self):
+        pass
+    def init_menu(self):
         # 菜单栏
         menubar = self.menuBar()
         option = menubar.addMenu("选项")
-        other_act = QAction('其他功能', self)
-        other_act.triggered.connect(self.others)
-        simplemode = QAction('小窗模式', self)
-        simplemode.triggered.connect(lambda x: self.changesimple(show=True))
-        simplemode.setStatusTip('小窗模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
-        if PLATFORM_SYS == "darwin":
-            othermenu = menubar.addMenu("其他")
-            othermenu.addActions([other_act, simplemode])
-        else:
-            menubar.addAction(other_act)
-            menubar.addAction(simplemode)
-
-        help_act = QAction('帮助', self)
-        help_act.triggered.connect(self.help)
-        about = QAction('关于作品', self)
-        about.setStatusTip("Edit by 机械酱Fandes ")
-        about.triggered.connect(self.about)
-        loge = QAction('更新日志', self)
-        loge.triggered.connect(self.logeshow)
-        update = QAction('检查更新', self)
-        update.triggered.connect(self.checkforupdate)
-
         change_top = QAction('窗口置顶', self)
         change_top.setCheckable(True)
         change_top.setChecked(self.on_top)
@@ -1320,17 +1285,56 @@ class JamToolsWindow(QMainWindow):
         clear_all_setting.triggered.connect(self.settings.clear)
         clear_all_setting.setStatusTip('重置所有设置为默认值，重启生效！')
         option.addAction(clear_all_setting)
+        
+        #其他功能和模式
+        other_act = QAction('其他功能', self)
+        other_act.triggered.connect(self.others)
+        simplemode = QAction('小窗模式', self)
+        simplemode.triggered.connect(lambda x: self.changesimple(show=True))
+        simplemode.setStatusTip('小窗模式下不显示主窗口，可以从系统托盘退出(双击图标也可以退出！)')
+        # if PLATFORM_SYS == "darwin":
+        #     othermenu = menubar.addMenu("其他")
+        #     othermenu.addActions([other_act, simplemode])
+        # else:
+        menubar.addActions([other_act,simplemode])
+        
+        # 主题
+        stylemenu = menubar.addMenu("主题")
+        styleactions = []
+        styles = list_themes()
+        print(styles)
+        for style in styles:
+            if "500" not in style:
+                action = QAction(style.replace(".xml",""),self)
+                styleactions.append(action)
+        stylemenu.addActions(styleactions)
+        stylemenu.triggered.connect(self.style_changle)
+        apply_stylesheet(self, theme='dark_blue.xml')
+        # 关于栏
+        help_act = QAction('帮助', self)
+        help_act.triggered.connect(self.help)
+        about = QAction('关于作品', self)
+        about.setStatusTip("Edit by 机械酱Fandes ")
+        about.triggered.connect(self.about)
+        loge = QAction('更新日志', self)
+        loge.triggered.connect(self.logeshow)
+        update = QAction('检查更新', self)
+        update.triggered.connect(self.checkforupdate)
 
         fileMenu = menubar.addMenu('关于')
         fileMenu.setToolTip("Edit by Fandes&机械酱 \n联系作者：2861114322@qq.com")
         fileMenu.addActions([help_act, about, loge, update])
-        self.statusBar().setStyleSheet("color:blue;")
+        # self.statusBar().setStyleSheet("color:blue;")
         # self.settings.clear()
-
+    @pyqtSlot(QAction)
+    def style_changle(self,action):
+        style = action.text() + ".xml"
+        print('style: ', style)
+        apply_stylesheet(self,theme=style)
     def connect_all(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
-        self.hotkey.ss_signal.connect(self.screensh)
+        self.hotkey.ss_signal.connect(self.screenshot_slot)
         # self.hotkey.ocr_signal.connect(self.BaiduOCR)
         self.hotkey.ocr_signal.connect(self.trayicon.add_simple_window)
         self.hotkey.showm_signal.connect(self.trayicon.showM)
@@ -1467,8 +1471,8 @@ class JamToolsWindow(QMainWindow):
 
     def set_area(self):
         self.setingarea = True
-        self.getandshow()
-
+        self.screen_shot("set_area")
+        
     def simple_show(self, text):
         self.simplemodebox.clear()
         self.simplemodebox.insertPlainText(text)
@@ -1501,7 +1505,7 @@ class JamToolsWindow(QMainWindow):
         self.set_saver.start()
         print('save')
 
-    def control(self):
+    def setup_ui_controller(self):
         if not self.controlling:
             def opendi():
                 try:
@@ -1516,14 +1520,14 @@ class JamToolsWindow(QMainWindow):
             reccontrol_tap = QTabWidget(self.controll_groupBox)
             reccontrol_tap.setGeometry(20, 20, 545, 300)
             reccontrol_tap.setTabShape(QTabWidget.Triangular)
-            reccontrol_tap.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;
-                        background-color:rgb(250, 250, 250);}""")
+            # reccontrol_tap.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;
+            #             background-color:rgb(250, 250, 250);}""")
             recordbox = QWidget(self.controll_groupBox)
-            recordbox.setStyleSheet('background-color:rgb(250, 250, 250);')
+            # recordbox.setStyleSheet('background-color:rgb(250, 250, 250);')
             recordbox.setGeometry(40, 90, 510, 300)
             controlbox = QWidget(self.controll_groupBox)
             controlbox.setGeometry(40, 180, 510, recordbox.height())
-            controlbox.setStyleSheet('background-color:rgb(250, 250, 250);')
+            # controlbox.setStyleSheet('background-color:rgb(250, 250, 250);')
             reccontrol_tap.addTab(recordbox, '录制动作')
             reccontrol_tap.addTab(controlbox, '播放动作')
             self.controlrecord = QPushButton("录制/结束\n(Alt+1)", recordbox)
@@ -1543,7 +1547,7 @@ class JamToolsWindow(QMainWindow):
             open_pathbtn.clicked.connect(opendi)
             open_pathbtn.setToolTip('打开存放动作文件的文件夹，复制/替换以分享/读取')
             open_pathbtn.setStatusTip('打开存放动作文件的文件夹，复制/替换以分享/读取')
-            open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
+            # open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
 
             def current_itemchange(item):
                 self.controller_path_shower.setText(":/文档/jam_control/{}".format(item))
@@ -1555,21 +1559,21 @@ class JamToolsWindow(QMainWindow):
             self.control_list_widget.setToolTip("在:/文档/jam_control/目录下的脚本文件,双击播放")
             self.control_list_widget.currentTextChanged.connect(current_itemchange)
             self.control_list_widget.doubleClicked.connect(self.start_action_run)
-            self.control_list_widget.setStyleSheet('''
-                QListWidget::item{
-                    color:rgb(100,100,100);
-                    border-bottom:1px solid rgb(52,52,52);
-                    border-width:1px;}
-                QListWidget::item:hover{
-                    background-color:rgb(230,230,250);
-                    border-width:1px;}
-                QListWidget::item:selected
-                {   background-color:rgb(200,200,255);
-                    border-bottom:1px solid rgb(121,112,52);
-                    color:black;
-                    border-width:1px;
-                }
-               ''')
+            # self.control_list_widget.setStyleSheet('''
+            #     QListWidget::item{
+            #         color:rgb(100,100,100);
+            #         border-bottom:1px solid rgb(52,52,52);
+            #         border-width:1px;}
+            #     QListWidget::item:hover{
+            #         background-color:rgb(230,230,250);
+            #         border-width:1px;}
+            #     QListWidget::item:selected
+            #     {   background-color:rgb(200,200,255);
+            #         border-bottom:1px solid rgb(121,112,52);
+            #         color:black;
+            #         border-width:1px;
+            #     }
+            #    ''')
 
             self.controll_roller = QSpinBox(recordbox)
             self.controll_roller.setGeometry(150, 15, 150, 25)
@@ -1631,9 +1635,11 @@ class JamToolsWindow(QMainWindow):
             self.controll_speed.setMaximum(100)
 
             def setarea(id):
+                """取样"""
                 self.samplingingid = id
-                self.set_area()
-
+                self.screen_shot("getpix")
+                
+                
             def showpix():
                 try:
                     p = "j_temp/triggerpix.png"
@@ -1840,7 +1846,7 @@ class JamToolsWindow(QMainWindow):
                     self.showm_signal.emit("没有脚本!请先录制")
         print("exit action")
 
-    def ocr(self):
+    def setup_ui_ocr(self):
         if not self.OCR:
             btn2 = QPushButton("截屏提取", self.ocr_groupBox)
             btn2.setToolTip('文字识别')
@@ -1889,8 +1895,7 @@ class JamToolsWindow(QMainWindow):
         def ocr_png():
             if os.path.exists("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])):
                 try:
-                    self.bdocr = True
-                    self.BaiduOCR()
+                    self.ocr_image_callback("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]))
                 except:
                     print(sys.exc_info())
                     self.statusBar().showMessage('找不到文件，请先截图！')
@@ -1910,7 +1915,7 @@ class JamToolsWindow(QMainWindow):
                 os.mkdir(p)
             QDesktopServices.openUrl(QUrl.fromLocalFile(p))
 
-        self.open_png = QCheckBox(self.view_groupBox)
+        self.open_png = QCheckBox(self.screenshot_groupBox)
         self.open_png.setChecked(self.settings.value('screenshot/open_png', False, type=bool))
         self.open_png.setText('截屏后打开')
         self.open_png.setToolTip('截屏后用默认软件打开/编辑')
@@ -1918,7 +1923,7 @@ class JamToolsWindow(QMainWindow):
         self.open_png.setGeometry(150, 440, 125, 25)
         self.open_png.stateChanged.connect(self.setting_save)
 
-        self.ss_timer = QDoubleSpinBox(self.view_groupBox)
+        self.ss_timer = QDoubleSpinBox(self.screenshot_groupBox)
         self.ss_timer.setToolTip('截屏倒计时')
         self.ss_timer.setPrefix('倒计时')
         self.ss_timer.setSuffix('s')
@@ -1926,7 +1931,7 @@ class JamToolsWindow(QMainWindow):
         self.ss_timer.setStatusTip('截屏倒计时')
         self.ss_timer.setGeometry(150, 340, 125, 25)
 
-        self.ss_areathreshold = QSpinBox(self.view_groupBox)
+        self.ss_areathreshold = QSpinBox(self.screenshot_groupBox)
         self.ss_areathreshold.setToolTip('自动识别面积阈值,自动选择大于该值的内容')
         self.ss_areathreshold.setPrefix('识别阈值:')
         self.ss_areathreshold.setSuffix('px^2')
@@ -1935,7 +1940,7 @@ class JamToolsWindow(QMainWindow):
         self.ss_areathreshold.setStatusTip('自动识别面积阈值,自动选择大于该值的内容')
         self.ss_areathreshold.setGeometry(150, 380, 125, 25)
 
-        self.save_png = QCheckBox(self.view_groupBox)
+        self.save_png = QCheckBox(self.screenshot_groupBox)
         self.save_png.setChecked(self.settings.value('screenshot/save_png', False, type=bool))
         self.save_png.setText('自动保存文件')
         self.save_png.setToolTip('截屏后将自动保存文件')
@@ -1943,7 +1948,7 @@ class JamToolsWindow(QMainWindow):
         self.save_png.setGeometry(150, 460, 125, 25)
         self.save_png.stateChanged.connect(self.setting_save)
 
-        self.hide_ss = QCheckBox(self.view_groupBox)
+        self.hide_ss = QCheckBox(self.screenshot_groupBox)
         # print(self.settings.value('screenshot/hide_ss', True, type=bool))
         self.hide_ss.setChecked(self.settings.value('screenshot/hide_ss', True, type=bool))
         self.hide_ss.setText('隐藏该窗口')
@@ -1952,7 +1957,7 @@ class JamToolsWindow(QMainWindow):
         self.hide_ss.setGeometry(150, 420, 125, 25)
         self.hide_ss.stateChanged.connect(self.setting_save)
 
-        copy_groupbox = QGroupBox(self.view_groupBox)
+        copy_groupbox = QGroupBox(self.screenshot_groupBox)
         copy_groupbox.setGeometry(30, 320, 100, 50)
         copy_groupbox.setTitle('截屏后复制:')
         self.copy_type_ss = QComboBox(copy_groupbox)
@@ -1963,36 +1968,36 @@ class JamToolsWindow(QMainWindow):
         self.copy_type_ss.setToolTip('设置截屏后剪切板可以直接粘贴的格式')
         self.copy_type_ss.setStatusTip('"图像数据"只能在聊天窗口/画板粘贴，"图像文件"则作为文件复制/移动/粘贴使用')
 
-        open_pathbtn = QPushButton('', self.view_groupBox)
-        open_pathbtn.setGeometry(self.view_groupBox.width() - 30, 10, 30, 30)
+        open_pathbtn = QPushButton('', self.screenshot_groupBox)
+        open_pathbtn.setGeometry(self.screenshot_groupBox.width() - 30, 10, 30, 30)
         open_pathbtn.setIcon(QIcon(":/wjj.png"))
-        open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
+        # open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
         open_pathbtn.clicked.connect(open_path)
         open_pathbtn.setToolTip('打开截图文件夹')
         open_pathbtn.setStatusTip('打开截图文件夹')
 
-        # self.ss_scrollarea=QScrollArea(self.view_groupBox)
+        # self.ss_scrollarea=QScrollArea(self.screenshot_groupBox)
         # self.ss_scrollarea.setGeometry(30, 30, 420, 280)
         # self.ss_scrollarea.setAlignment(Qt.AlignCenter)
-        self.ss_imgshower = ImgShower(self.view_groupBox)
+        self.ss_imgshower = ImgShower(self.screenshot_groupBox)
         # self.ss_imgshower = QLabel(self.ss_scrollarea)
         # self.ss_scrollarea.setWidget(self.ss_scrollarea)
         self.ss_imgshower.setGeometry(30, 30, 430, 280)
 
-        btn1 = QPushButton(" 截  屏\n(Alt+z)", self.view_groupBox)
+        btn1 = QPushButton(" 截  屏\n(Alt+z)", self.screenshot_groupBox)
         btn1.setToolTip('截图功能Alt+Z')
         btn1.setStatusTip('截图功能Alt+Z，滚动截屏下按左键或移走鼠标自动停止')
         btn1.setGeometry(30, 380, 100, 100)
-        btn1.clicked.connect(self.screensh)
+        btn1.clicked.connect(self.screenshot_slot)
         # btn1.setShortcut('Alt+Z')
         btn1.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         btn1.setIcon(QIcon(":/screenshot.png"))
-        btn1.setStyleSheet(
-            "QPushButton:hover{background-color:rgb(200,200,50)}"
-            "QPushButton:!hover{background-color:rgb(100,200,100)}"
-        )
+        # btn1.setStyleSheet(
+        #     "QPushButton:hover{background-color:rgb(200,200,50)}"
+        #     "QPushButton:!hover{background-color:rgb(100,200,100)}"
+        # )
 
-        roll_ss_box = QGroupBox(self.view_groupBox)
+        roll_ss_box = QGroupBox(self.screenshot_groupBox)
         roll_ss_box.setGeometry(300, 320, 250, 160)
         roll_ss_box.setTitle('滚动截屏参数')
         text = QLabel(roll_ss_box)
@@ -2018,31 +2023,31 @@ class JamToolsWindow(QMainWindow):
         text.move(10, self.roll_speed.y())
         text.setText('滚动速度')
 
-        btn2 = QPushButton("另存为", self.view_groupBox)
+        btn2 = QPushButton("另存为", self.screenshot_groupBox)
         btn2.setToolTip('保存图片另存为文件')
         btn2.setStatusTip('另存为图片文件')
         btn2.setGeometry(475, 50, 80, 30)
         btn2.clicked.connect(save_png)
-        btn2 = QPushButton("打开", self.view_groupBox)
+        btn2 = QPushButton("打开", self.screenshot_groupBox)
         btn2.setToolTip('用默认软件打开')
         btn2.setStatusTip('打开以编辑图片')
         btn2.setGeometry(475, 80, 80, 30)
         btn2.clicked.connect(open_png)
-        btn2 = QPushButton("OCR", self.view_groupBox)
+        btn2 = QPushButton("OCR", self.screenshot_groupBox)
         btn2.setToolTip('跳转文字识别功能')
         btn2.setStatusTip('提取图片中的文字')
         btn2.setGeometry(475, 110, 80, 30)
         btn2.clicked.connect(ocr_png)
 
-    def screenshot(self, a=0):
+    def setup_ui_screenshot(self, a=0):
 
         if not self.ssview:
             self.init_ssview()
             self.ssview = True
 
-        self.change_show_item([self.view_groupBox])
+        self.change_show_item([self.screenshot_groupBox])
 
-    def transforma(self):
+    def setup_ui_transforma(self):
 
         if not self.transfor_view:
 
@@ -2165,15 +2170,15 @@ class JamToolsWindow(QMainWindow):
             self.traforma_tab = QTabWidget(self.Transforma_groupBox)
             # self.traforma_tab.setTabShape(QTabWidget.Triangular)
             self.traforma_tab.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-            self.traforma_tab.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;}""")
+            # self.traforma_tab.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;}""")
             self.tab1 = QWidget()
-            self.tab1.setStyleSheet("background-color:rgb(240,240,240)")
+            # self.tab1.setStyleSheet("background-color:rgb(240,240,240)")
             # self.tab1.setGeometry(QRect(30, 290, 120, 120))
             self.tab2 = QWidget()
-            self.tab2.setStyleSheet("background-color:rgb(240,240,240)")
+            # self.tab2.setStyleSheet("background-color:rgb(240,240,240)")
             # self.tab3 = QWidget()
             self.tab3 = QWidget()
-            self.tab3.setStyleSheet("background-color:rgb(240,240,240)")
+            # self.tab3.setStyleSheet("background-color:rgb(240,240,240)")
 
             self.traforma_tab.setGeometry(QRect(0, 25, 580, 475))
             self.traforma_tab.addTab(self.tab1, '裁剪/拼接')
@@ -2181,7 +2186,7 @@ class JamToolsWindow(QMainWindow):
             # self.traforma_tab.addTab(self.tab3, '转码')
             self.traforma_tab.addTab(self.tab3, '提取/混合')
             toolbox = QToolBox(self.tab1)
-            toolbox.setStyleSheet('background-color:rgb(240,240,240);')
+            # toolbox.setStyleSheet('background-color:rgb(240,240,240);')
             toolbox.setGeometry(10, 10, 550, 410)
             # layout.addWidget(toolbox, 0, 0)
             cut_pic = QWidget()
@@ -2275,7 +2280,7 @@ class JamToolsWindow(QMainWindow):
             self.audio_Splicing_pushButton.clicked.connect(choice_ads)
 
             toolbox = QToolBox(self.tab2)
-            toolbox.setStyleSheet('background-color:rgb(240,240,240);')
+            # toolbox.setStyleSheet('background-color:rgb(240,240,240);')
             toolbox.setGeometry(10, 10, 550, 420)
             # layout.addWidget(toolbox, 0, 0)
             self.t_pic = QWidget()
@@ -2708,7 +2713,7 @@ class JamToolsWindow(QMainWindow):
             # toolbox = QWidget(self.tab3)
             # toolbox.setGeometry(20, 20, 540, 400)
             extractvd = QWidget(self.tab3)
-            extractvd.setStyleSheet("background-color:rgb(240,240,240)")
+            # extractvd.setStyleSheet("background-color:rgb(240,240,240)")
             extractvd.setGeometry(20, 20, 540, 400)
             # toolbox.addItem(extractvd, "")
             ex_box = QGroupBox(extractvd)
@@ -2883,7 +2888,7 @@ class JamToolsWindow(QMainWindow):
             self.transforma_stop.setText('X')
             self.transforma_stop.setToolTip('停止所有处理！')
             self.transforma_stop.setStatusTip('停止所有处理！')
-            self.transforma_stop.setStyleSheet('QPushButton{background-color:rgb(239,10,10)}')
+            # self.transforma_stop.setStyleSheet('QPushButton{background-color:rgb(239,10,10)}')
             self.transforma_stop.clicked.connect(transformater.stop_transform)
 
             self.transfor_view = True
@@ -2947,7 +2952,7 @@ class JamToolsWindow(QMainWindow):
         self.video_divice = video_divice
         print('audiolist', audio_divice, '\nvideolist', video_divice)
 
-    def record_screen(self):
+    def setup_ui_record_screen(self):
         self.record_screen_deviceinit()
         if not self.recview:
             self.pushButton = QPushButton(self.rec_groupBox)
@@ -2956,14 +2961,19 @@ class JamToolsWindow(QMainWindow):
             self.pushButton.setToolTip('开始/结束,也可以用快捷键Alt+c')
             self.pushButton.setStatusTip('开始/结束,也可以用快捷键Alt+c')
             self.pushButton.clicked.connect(self.recorder.recordchange)
-            self.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-                                          # "QPushButton:hover{color:green}"
-                                          "QPushButton:hover{background-color:rgb(200,10,10)}"
-                                          "QPushButton:!hover{background-color:rgb(200,200,200)}"
-                                          "QPushButton{background-color:rgb(239,239,239)}"
-                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
-                                          "QPushButton{border-radius:60px}"
-                                          )
+            
+            self.counter = QLCDNumber(self.rec_groupBox)
+            self.counter.setGeometry(QRect(30, 100, 120, 35))
+            self.counter.display('00:00')
+            self.recorder.counter_display_signal.connect(self.counter.display)
+            # self.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+            #                               # "QPushButton:hover{color:green}"
+            #                               "QPushButton:hover{background-color:rgb(200,10,10)}"
+            #                               "QPushButton:!hover{background-color:rgb(200,200,200)}"
+            #                               "QPushButton{background-color:rgb(239,239,239)}"
+            #                               "QPushButton{border:6px solid rgb(50, 50, 50)}"
+            #                               "QPushButton{border-radius:60px}"
+            #                               )
             self.mouse_rec = QCheckBox(self.rec_groupBox)
             self.mouse_rec.setGeometry(QRect(390, 320, 91, 19))
             if PLATFORM_SYS == "darwin":
@@ -3015,12 +3025,12 @@ class JamToolsWindow(QMainWindow):
                 self.hardware_rec.hide()
 
             self.pushButton_2 = QPushButton(self.rec_groupBox)
-            self.pushButton_2.setStyleSheet(
-                "QPushButton:hover{background-color:rgb(120,50,10)}"
-                "QPushButton:!hover{background-color:rgb(200,200,200)}"
-                "QPushButton{background-color:rgb(239,239,239)}"
-                "QPushButton{border:1px solid rgb(100, 100, 100)}"
-                "QPushButton{border-radius:6px}")
+            # self.pushButton_2.setStyleSheet(
+            #     "QPushButton:hover{background-color:rgb(120,50,10)}"
+            #     "QPushButton:!hover{background-color:rgb(200,200,200)}"
+            #     "QPushButton{background-color:rgb(239,239,239)}"
+            #     "QPushButton{border:1px solid rgb(100, 100, 100)}"
+            #     "QPushButton{border-radius:6px}")
             self.pushButton_2.setGeometry(QRect(30, 240, 120, 30))
             self.pushButton_2.setText("选区")
             self.pushButton_2.setToolTip('选定视频/gif录制区域')
@@ -3035,7 +3045,7 @@ class JamToolsWindow(QMainWindow):
             open_pathbtn = QPushButton('', self.rec_groupBox)
             open_pathbtn.setGeometry(self.rec_groupBox.width() - 35, 10, 35, 35)
             open_pathbtn.setIcon(QIcon(":/videowjj.png"))
-            open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
+            # open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
             open_pathbtn.clicked.connect(open_record_path)
             open_pathbtn.setToolTip('打开存放录屏文件的文件夹')
             open_pathbtn.setStatusTip('打开存放录屏文件的文件夹')
@@ -3214,7 +3224,7 @@ class JamToolsWindow(QMainWindow):
             print(files)
             self.ocr_textEdit.clear()
             if not self.OCR:
-                self.ocr()
+                self.setup_ui_ocr()
             if QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                 #     S_SIMPLE_MODE=False
                 self.show()
@@ -3365,14 +3375,7 @@ hhh(o゜▽゜)o☆）
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
             self.close()
-        # if e.key() == Qt.Key_Alt + Qt.Key_Z:
-        #     self.getandshow()
-        # if e.key() == Qt.Key_Alt + Qt.Key_X:
-        #     self.BaiduOCR()
-        # if e.key() == Qt.Key_Alt + Qt.Key_C:
-        #     self.BDimgcla()
 
-        # if e.key()==Qt.K
 
     def chat(self):
         sendtime = str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
@@ -3411,7 +3414,7 @@ hhh(o゜▽゜)o☆）
             file.write(jj + mess + '\n')
             file.flush()
 
-    def Filestransmitter(self, a=0):
+    def setup_ui_Filestransmitter(self, a=0):
         if not self.init_transmitter:
             self.apptransmitterbox = ClientFilesTransmitterGroupbox("通过客户端传输", self.transmitter_groupBox)
             self.apptransmitterbox.showm_signal.connect(self.trayicon.showM)
@@ -3429,7 +3432,7 @@ hhh(o゜▽゜)o☆）
 
         self.change_show_item([self.transmitter_groupBox])
 
-    def Tulinchat(self):
+    def setup_ui_Tulinchat(self):
         # self.charing = True
         self.botappid = "d1139cde1c88a8ecf5af1337fbebace8"
         self.userid = self.settings.value('chat_userid', 'USER', type=str)
@@ -3480,7 +3483,7 @@ hhh(o゜▽゜)o☆）
         self.chat_send_textEdit.setGeometry(100, 390, 350, 90)
         self.chatbt = QPushButton("发送>>", self.chat_groupBox)
         self.chatbt.setToolTip('发送消息(回车Enter)')
-        self.chatbt.setStyleSheet('background-color:rgb(50,150,200)')
+        # self.chatbt.setStyleSheet('background-color:rgb(50,150,200)')
         self.chatbt.setGeometry(393, 452, 55, 26)
         self.chatbt.clicked.connect(self.chat)
         voicebtn = QPushButton("", self.chat_groupBox)
@@ -3521,7 +3524,7 @@ hhh(o゜▽゜)o☆）
 
         self.change_show_item([self.chat_groupBox])
 
-    def translate_ui_show(self):
+    def setup_ui_translater(self):
         items = ['自动检测', '中文', '英语', '文言文', '粤语', '日语', '德语', '韩语', '法语', '俄语', '泰语', '意大利语', '葡萄牙语', '西班牙语']
         available_langs = translator.get_available_langs(engine=QSettings('Fandes', 'jamtools').value("Translator_Engine", "YouDao", str))
         items = [i for i in items if i in available_langs]
@@ -3578,8 +3581,11 @@ hhh(o゜▽゜)o☆）
         
     def BaiduOCR(self):
         """利用百度api识别文本"""
-        if self.bdocr == True:
-            picfile = "j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])
+        self.bdocr = True
+        self.screen_shot(screen_shot_mode="ocr")
+            
+    def ocr_image_callback(self,picfile):
+        if os.path.exists(picfile):
             filename = os.path.basename(picfile)
 
             with open(picfile, 'rb') as i:
@@ -3589,7 +3595,7 @@ hhh(o゜▽゜)o☆）
                 self.statusBar().showMessage('正在识别: ' + filename)
                 self.ocr_textEdit.clear()
                 if not self.OCR:
-                    self.ocr()
+                    self.setup_ui_ocr()
                 self.change_show_item([self.ocr_groupBox])
                 self.ocrthread.result_show_signal.connect(self.ocr_textEdit.insertPlainText)
             else:
@@ -3598,17 +3604,17 @@ hhh(o゜▽゜)o☆）
             QApplication.processEvents()
             self.bdocr = False
         else:
-            self.bdocr = True
-            self.getandshow()
-
-    def screensh(self):
+            print("ocr file not found!!!")
+            
+    def screenshot_slot(self):
+        # 触发截屏按钮信号
         # s=time.process_time()
         if self.waiting:
             self.stop_wait = True
             return
 
         # time.sleep(0.2)
-        self.getandshow(ss=True)
+        self.screen_shot(screen_shot_mode="screenshot")
 
     def wait_(self):
         self.waiting = True
@@ -3621,13 +3627,16 @@ hhh(o゜▽゜)o☆）
             # QApplication.processEvents()
         self.waiting = False
 
-    def getandshow(self, ss=False):
-        if ss:
-            try:
-                if self.hide_ss.isChecked():
-                    self.sshide()
-            except:
+    def screen_shot(self, screen_shot_mode="screenshot"):
+        """截屏调用,screen_shot_mode: screenshot 、orc、set_area、getpix"""
+        # 判断是否需要隐藏窗口
+        try:
+            if self.hide_ss.isChecked():
                 self.sshide()
+        except:
+            self.sshide()
+        # ss 截屏模式
+        if screen_shot_mode == "screenshot": 
             try:
                 self.delay = self.ss_timer.value()
                 if self.delay > 0:
@@ -3637,30 +3646,60 @@ hhh(o゜▽゜)o☆）
                         return
             except:
                 print(sys.exc_info(), 3970)
+            self.screenshoter.screen_shot()
         else:
-            self.sshide()
-        # self.screenshoter = Slabel(self)
-        # self.connectss()
-        self.screenshoter.screen_shot()
-        # self.setWindowOpacity(1)
+            self.screenshoter.screen_shot(mode = screen_shot_mode)
         print("截屏")
 
     def sshide(self):
-        # def reshow():
-        #     self.setWindowOpacity(1)
-        #     self.ssreshowtimer.stop()
+        # 隐藏窗口
         self.setWindowOpacity(0)
         self.settings.setValue("windowx", self.x())
         self.settings.setValue("windowy", self.y())
-        self.move(QApplication.desktop().width(), QApplication.desktop().height())
+        self.move(QApplication.desktop().width()*2, QApplication.desktop().height()*2)
         self.setWindowOpacity(1)
-        # self.setWindowOpacity(0)
-        # self.hide()
 
     def connectss(self):
         self.screenshoter.showm_signal.connect(self.trayicon.showM)
         self.screenshoter.recorder_recordchange_signal.connect(self.recorder.recordchange)
         self.screenshoter.close_signal.connect(self.screenshoterinit)
+        self.screenshoter.ocr_image_signal.connect(self.ocr_image_callback)
+        self.screenshoter.screen_shot_result_signal.connect(self.screen_shot_endsave_callback)
+        self.screenshoter.screen_shot_end_show_sinal.connect(self.screen_shot_end_callback)
+        self.screenshoter.set_area_result_signal.connect(self.set_area_callback)
+        self.screenshoter.getpix_result_signal.connect(self.getpix_result_callback)
+    
+    def getpix_result_callback(self,area,pix):
+        if self.samplingingid != -1:
+            self.controller_conditions[self.samplingingid].sampling_update(area,"j_temp/triggerpix0{}.png".format(
+                                                                                                self.samplingingid))
+            pix.save("j_temp/triggerpix0{}.png".format(self.samplingingid))
+            self.samplingingid = -1
+            print('savetriggerpix')
+    def set_area_callback(self,area):
+        print('setting recarea')
+        self.recorder.x , self.recorder.y, self.recorder.w,self.recorder.h = area
+        
+    def screen_shot_end_callback(self,pic):
+        self.setup_ui_screenshot()
+        self.ss_imgshower.setpic(pic)
+
+    def screen_shot_endsave_callback(self,filepath):
+        try:
+            if self.settings.value('screenshot/open_png', False, type=bool):
+                os.startfile(filepath)
+        except:
+            print("can't open", sys.exc_info())
+        try:
+            if self.settings.value('screenshot/save_png', False, type=bool):
+                name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))+ '.png'
+                p = QStandardPaths.writableLocation(
+                    QStandardPaths.PicturesLocation) + '/JamPicture/screenshot/{}'.format(
+                    str(time.strftime("%Y_%m_%d")))
+                if not os.path.exists(p): os.makedirs(p)
+                shutil.copy2(filepath,name)
+        except:
+            print("can't save", sys.exc_info())
 
     def screenshoterinit(self):
         print("重置slabel")
@@ -3783,32 +3822,32 @@ class SettingPage(QScrollArea):
         self.settings_widget.setGeometry(0, 0, 500, 1100)
         self.setWidget(self.settings_widget)
         self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
-        self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
-                           "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
+        # self.setStyleSheet("QPushButton{color:black;background-color:rgb(239,239,239);padding:1px 4px;}"
+        #                    "QPushButton:hover{color:green;background-color:rgb(200,200,100);}"
 
-                           "QGroupBox{border:1px solid gray;background-color:rgb(250,250,250);}"
-                           """QLineEdit{
-                            border:1px solid gray;
-                            width:300px;
-                            border-radius:10px;
-                            padding:2px 4px;
-                            background-color:rgb(250,250,250);}"""
-                           """QComboBox{padding:2px 4px;}"""
-                           """QComboBox QAbstractItemView::item{
-                            height:36px;
-                            color:#666666;
-                            padding-left:9px;
-                            background-color:#FFFFFF;
-                            }
-                            QComboBox QAbstractItemView::item:hover{ //悬浮
-                              background-color:#409CE1;
-                              color:#ffffff;
-                            }
-                            QComboBox QAbstractItemView::item:selected{//选中
-                              background-color:#409CE1;
-                              color:#ffffff;
-                            }"""
-                           "QScrollBar{background-color:rgb(200,200,200);width: 8px;}")
+        #                    "QGroupBox{border:1px solid gray;background-color:rgb(250,250,250);}"
+        #                    """QLineEdit{
+        #                     border:1px solid gray;
+        #                     width:300px;
+        #                     border-radius:10px;
+        #                     padding:2px 4px;
+        #                     background-color:rgb(250,250,250);}"""
+        #                    """QComboBox{padding:2px 4px;}"""
+        #                    """QComboBox QAbstractItemView::item{
+        #                     height:36px;
+        #                     color:#666666;
+        #                     padding-left:9px;
+        #                     background-color:#FFFFFF;
+        #                     }
+        #                     QComboBox QAbstractItemView::item:hover{ //悬浮
+        #                       background-color:#409CE1;
+        #                       color:#ffffff;
+        #                     }
+        #                     QComboBox QAbstractItemView::item:selected{//选中
+        #                       background-color:#409CE1;
+        #                       color:#ffffff;
+        #                     }"""
+        #                    "QScrollBar{background-color:rgb(200,200,200);width: 8px;}")
 
         self.close_dict = {0: 'hide', 1: 'yes', 2: 'default'}
         groub = QGroupBox(self.settings_widget)
@@ -5131,11 +5170,11 @@ class Transforma(QObject):
 
     def reset_style(self, pushbutton):
 
-        pushbutton.setStyleSheet("QPushButton{color:black}"
-                                 "QPushButton:hover{color:green}"
-                                 "QPushButton:hover{background-color:rgb(200,200,100)}"
-                                 "QPushButton{background-color:rgb(239,239,239)}"
-                                 "QPushButton{padding:1px 4px }")
+        # pushbutton.setStyleSheet("QPushButton{color:black}"
+        #                          "QPushButton:hover{color:green}"
+        #                          "QPushButton:hover{background-color:rgb(200,200,100)}"
+        #                          "QPushButton{background-color:rgb(239,239,239)}"
+        #                          "QPushButton{padding:1px 4px }")
         if pushbutton == self.parent.t_pic_pushButton or pushbutton == self.parent.piccut_pushButton \
                 or pushbutton == self.parent.picSplicing_pushButton or pushbutton == self.parent.rename_pushButton:
             pass
@@ -5162,11 +5201,11 @@ class Transforma(QObject):
             else:
                 self.ffmpeg_running = True
 
-            pushbutton.setStyleSheet("QPushButton{color:green}"
-                                     "QPushButton:hover{color:lightgreen}"
-                                     "QPushButton:hover{background-color:lightred}"
-                                     "QPushButton{background-color:red}"
-                                     "QPushButton{padding:1px 4px }")
+            # pushbutton.setStyleSheet("QPushButton{color:green}"
+            #                          "QPushButton:hover{color:lightgreen}"
+            #                          "QPushButton:hover{background-color:lightred}"
+            #                          "QPushButton{background-color:red}"
+            #                          "QPushButton{padding:1px 4px }")
 
     def stop_transform(self):
         try:
@@ -5445,7 +5484,7 @@ class InitThread(QThread):
     def run(self):
         # time.sleep()
         jamtools.record_screen_deviceinit()
-        # jamtools.record_screen()
+        # jamtools.setup_ui_record_screen()
         # jamtools.control()
         if sys.argv.__len__() >= 2:
             if os.path.splitext(sys.argv[1].lower())[-1] == '.jam':
@@ -5521,6 +5560,8 @@ def main():
         if os.path.exists("j_temp/triggerpix.png"):
             os.remove("j_temp/triggerpix.png")
     jamtools = JamToolsWindow()
+    # apply_stylesheet(jamtools, theme='dark_teal.xml')
+
     translator = Translator(jamtools)  # 翻译
     transformater = Transforma(jamtools)  # 格式转换
 
