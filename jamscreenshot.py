@@ -862,7 +862,7 @@ class Slabel(QLabel):  # 区域截图功能
             os.mkdir("j_temp")
         # self.pixmap()=QPixmap()
 
-    def setup(self):  # 初始化界面
+    def setup(self,mode = "screenshot"):  # 初始化界面
         self.on_init = True
         self.paintlayer = PaintLayer(self)  # 绘图层
         self.mask = MaskLayer(self)  # 遮罩层
@@ -924,7 +924,15 @@ class Slabel(QLabel):  # 区域截图功能
             print("init slabel ui")
             # self.init_slabel_thread = Commen_Thread(self.init_slabel_ui)
             # self.init_slabel_thread.start()
-
+        if mode != "screenshot":#非截屏模式(jamtools中也会调用截屏工具进行选取录屏或者文字识别)
+            self.painter_box.hide()
+            self.save_botton.hide()
+            self.freeze_img_botton.hide()
+            self.btn2.hide()
+            self.ocr_botton.hide()
+            self.cla_botton.hide()
+            self.ssrec_botton.hide()
+            
         # self.setVisible(False)
         # self.setWindowOpacity(0)
         # self.showFullScreen()
@@ -1507,7 +1515,8 @@ class Slabel(QLabel):  # 区域截图功能
         print("t", self.x(), QApplication.desktop().width(),QApplication.primaryScreen().geometry(),secondscreen.geometry(),mousepos)
         return secondscreen
 
-    def screen_shot(self, pix=None):
+    def screen_shot(self, pix=None,mode = "screenshot"):
+        """mode: screenshot普通截屏;set_area 非截屏模式,用于设置区域、提取区域"""
         # 截屏函数,功能有二:当有传入pix时直接显示pix中的图片作为截屏背景,否则截取当前屏幕作为背景;前者用于重置所有修改
         # if PLATFORM_SYS=="darwin":
         self.sshoting = True
@@ -1517,7 +1526,7 @@ class Slabel(QLabel):  # 区域截图功能
             get_pix = pix
             self.init_parameters()
         else:
-            self.setup()  # 初始化截屏
+            self.setup(mode)  # 初始化截屏
             if QApplication.desktop().screenCount()>1:
                 sscreen=self.search_in_which_screen()
             else:
