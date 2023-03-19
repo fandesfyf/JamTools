@@ -1145,8 +1145,6 @@ class JamToolsWindow(QMainWindow):
         # 初始化菜单
         self.init_menu()
 
-        
-
     def init_function_ui(self):
         self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else ""))
         groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
@@ -1164,7 +1162,7 @@ class JamToolsWindow(QMainWindow):
         self.about_groupBox = FuncBox(self)
         self.about_groupBox.setFont(groupfont)
         self.help_text = QTextBrowser(self.about_groupBox)
-        self.help_text.setGeometry(35, 35, 500, 444)
+        self.help_text.setGeometry(35, 25, self.about_groupBox.width()-70, 450)
         self.payimg = QLabel(self.help_text)
         self.payimg.hide()
         self.help_text.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
@@ -1844,19 +1842,19 @@ class JamToolsWindow(QMainWindow):
             self.ocr_textEdit = QTextEdit(self.ocr_groupBox)
 
             self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-            self.ocr_textEdit.move(40, 35)
-            self.ocr_textEdit.resize(480, 350)
+            self.ocr_textEdit.move(35, 25)
+            self.ocr_textEdit.resize(self.ocr_groupBox.width() - 80, 350)
             btn2 = QPushButton("截屏提取", self.ocr_groupBox)
             btn2.setToolTip('文字识别')
             btn2.setStatusTip('文字识别')
-            btn2.setGeometry(50, 420, 100, 50)
+            btn2.setGeometry(35, 420, 120, 50)
             btn2.clicked.connect(self.BaiduOCR)
             btn2.setIcon(QIcon(":/OCR.png"))
 
             btn6 = QPushButton("批量识别", self.ocr_groupBox)
             btn6.setToolTip('本地上传多个图像提取文字')
             btn6.setStatusTip('本地上传多个图像提取文字')
-            btn6.setGeometry(180, 420, 100, 50)
+            btn6.setGeometry(180, 420, 120, 50)
             btn6.clicked.connect(self.multiocr)
             btn6.setIcon(QIcon(":/MOCR.png"))
             self.OCR = True
@@ -1952,7 +1950,7 @@ class JamToolsWindow(QMainWindow):
         copy_groupbox.setGeometry(30, 320, 100, 50)
         copy_groupbox.setTitle('截屏后复制:')
         self.copy_type_ss = QComboBox(copy_groupbox)
-        self.copy_type_ss.move(10, 20)
+        self.copy_type_ss.setGeometry(5, 18,90,25)
         self.copy_type_ss.setAutoFillBackground(True)
         # 设置文本颜色为白色
         
@@ -2960,14 +2958,14 @@ class JamToolsWindow(QMainWindow):
             self.counter.setGeometry(QRect(30, 100, 120, 35))
             self.counter.display('00:00')
             self.recorder.counter_display_signal.connect(self.counter.display)
-            # self.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-            #                               # "QPushButton:hover{color:green}"
-            #                               "QPushButton:hover{background-color:rgb(200,10,10)}"
-            #                               "QPushButton:!hover{background-color:rgb(200,200,200)}"
-            #                               "QPushButton{background-color:rgb(239,239,239)}"
-            #                               "QPushButton{border:6px solid rgb(50, 50, 50)}"
-            #                               "QPushButton{border-radius:60px}"
-            #                               )
+            self.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+                                          "QPushButton:hover{color:green}"
+                                          "QPushButton:hover{background-color:rgb(200,10,10)}"
+                                          "QPushButton:!hover{background-color:rgb(200,200,200)}"
+                                          "QPushButton{background-color:rgb(239,239,239)}"
+                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
+                                          "QPushButton{border-radius:60px}"
+                                          )
             self.mouse_rec = QCheckBox(self.rec_groupBox)
             self.mouse_rec.setGeometry(QRect(390, 320, 91, 19))
             if PLATFORM_SYS == "darwin":
@@ -3519,6 +3517,7 @@ hhh(o゜▽゜)o☆）
         self.change_show_item([self.chat_groupBox])
 
     def setup_ui_translater(self):
+        btn_x = self.tra_groupBox.width()-120
         items = ['自动检测', '中文', '英语', '文言文', '粤语', '日语', '德语', '韩语', '法语', '俄语', '泰语', '意大利语', '葡萄牙语', '西班牙语']
         available_langs = translator.get_available_langs(engine=QSettings('Fandes', 'jamtools').value("Translator_Engine", "YouDao", str))
         items = [i for i in items if i in available_langs]
@@ -3528,27 +3527,27 @@ hhh(o゜▽゜)o☆）
         self.tra_to = QComboBox(self.tra_groupBox)
         self.tra_to.addItems(items[1:])
         self.tra_to.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.tra_from.move(465, 48)
-        self.tra_to.move(465, 282)
+        self.tra_from.move(btn_x, 48)
+        self.tra_to.move(btn_x, 282)
 
         self.tra_to_edit = QTextEdit(self.tra_groupBox)
         # self.tra_to_edit.hide()
         self.tra_to_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.tra_to_edit.setGeometry(30, 274, 420, 210)
+        self.tra_to_edit.setGeometry(35, 274, btn_x-50, 210)
         self.tra_from_edit = EnterSendQTextEdit(self.tra_groupBox)
         self.tra_from_edit.keyenter_connect(self.translate)
         self.tra_from_edit.setPlaceholderText('在此输入文字')
 
         self.tra_from_edit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.tra_from_edit.setGeometry(30, 40, 420, 210)
+        self.tra_from_edit.setGeometry(35, 25, btn_x-50, 225)
 
         self.tra_detal = QPushButton("详细释义", self.tra_groupBox)
-        self.tra_detal.setGeometry(465, 230, 86, 20)
+        self.tra_detal.setGeometry(btn_x, 230, 86, 20)
         self.tra_detal.setStatusTip('跳转百度翻译网页版查看详细解析...')
         self.tra_detal.clicked.connect(translator.show_detal)
         self.trabot = QPushButton("翻译", self.tra_groupBox)
         self.trabot.setStatusTip('开始翻译')
-        self.trabot.setGeometry(465, 180, 86, 40)
+        self.trabot.setGeometry(btn_x, 180, 86, 40)
         self.trabot.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         self.trabot.clicked.connect(self.translate)
         

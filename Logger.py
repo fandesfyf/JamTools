@@ -20,9 +20,11 @@ class Logger(QThread):
         self.log_path = log_path
         self.logtime = time.time() - 2
         self.loglist = []
+        self.running = True
         self.start()
 
     def run(self) -> None:
+        
         if os.path.exists(self.log_path):
             try:
                 ls = os.path.getsize(self.log_path)
@@ -42,14 +44,19 @@ class Logger(QThread):
         self.log = open(self.log_path, "a", encoding='utf8')
         self.log.write("\n\nOPEN@" + time.strftime("%Y-%m-%d %H:%M:%S:\n", time.localtime(time.time())))
         try:
-            while True:
+            while self.running:
                 if len(self.loglist):
                     self.process(self.loglist.pop(0))
                 else:
                     time.sleep(0.05)
         except:
+            sys.stdout = self.terminal
             print(sys.exc_info(), "log47")
-
+    def stop(self):
+        self.running = False
+        self.quit()
+        self.wait(2)
+        
     def write(self, message):
         self.loglist.append(message)
 
