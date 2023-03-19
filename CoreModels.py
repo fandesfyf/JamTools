@@ -10,6 +10,10 @@ import gc
 import sys
 import os, re
 from Logger import Logger
+
+Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
+sys.stdout = Jamtools_logger
+
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT
 from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
@@ -32,7 +36,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCurs
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
-    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget
+    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from qt_material import apply_stylesheet,list_themes
 
@@ -47,7 +51,6 @@ from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 from jam_transtalater import Translator
 import jamresourse
 
-sys.stdout = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
 if PLATFORM_SYS == "win32":
     import win32con
     import ctypes, ctypes.wintypes
@@ -668,25 +671,8 @@ class TrayIcon(QSystemTrayIcon):  # 系统托盘
 
     def jquit(self):
         "保险起见，为了完整的退出"
-        self.setVisible(False)
-        try:
-            if self.parent.recorder.recording:
-                self.parent.recorder.stop_record()
-            if transformater.transforma is not None:
-                transformater.stop_transform()
-        except:
-            print('kill ffmpeg errer')
-        try:
-            if os.path.exists('video_mergelist.txt'):
-                os.remove('video_mergelist.txt')
-            shutil.rmtree("j_temp")
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-        self.parent.settings.setValue("windowy", self.parent.y())
-        self.parent.settings.setValue("windowx", self.parent.x())
+        self.parent.close_clean()
 
-        os._exit(0)
-        sys.exit()  # 关闭窗口
 
 
 class StraThread(QThread):  # 右键画屏翻译线程
@@ -932,7 +918,9 @@ class Small_Ocr(QLabel):
 class FuncBox(QGroupBox):
     def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
-        self.setGeometry(QRect(176, 30, 580, 500))
+        self.setGeometry(QRect(103, 32, 697, 494))
+        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;}")
+
         self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 7))
         self.hide()
 
@@ -1038,7 +1026,8 @@ class JamToolsWindow(QMainWindow):
     def load_config(self):
         self.settings = QSettings('Fandes', 'jamtools')
         self.on_top = self.settings.value('win_ontop', False, type=bool)
-        
+        self.settings.setValue("S_SIMPLE_MODE", False)
+
     def init_main_window(self):
         x, y = self.settings.value("windowx", 300, type=int), self.settings.value("windowy", 300, type=int)
         if x < 50 or x > QApplication.primaryScreen().size().width():
@@ -1139,11 +1128,11 @@ class JamToolsWindow(QMainWindow):
         ''')
         
         # 右侧页面
-        right_widget = QStackedWidget()
-        
+        self.right_stackedWidget = QStackedWidget()
+        self.right_stackedWidget.setSizePolicy(QSizePolicy.Expanding,QSizePolicy.Expanding)
         main_layout = QHBoxLayout()
         main_layout.addWidget(self.main_list_widget, 1)
-        main_layout.addWidget(right_widget, 6)
+        main_layout.addWidget(self.right_stackedWidget, 6)
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(0, 0, 0, 0)
         self.setCentralWidget(QWidget(self))
@@ -1151,7 +1140,7 @@ class JamToolsWindow(QMainWindow):
         
         #设置遮挡条
         middle_widget = QWidget(self)
-        middle_widget.setGeometry(self.main_list_widget.width()+5,right_widget.y(),20,self.height())
+        middle_widget.setGeometry(self.main_list_widget.width()+5,self.right_stackedWidget.y(),20,self.height())
         
         # 初始化菜单
         self.init_menu()
@@ -1159,21 +1148,20 @@ class JamToolsWindow(QMainWindow):
         
 
     def init_function_ui(self):
+        self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else ""))
         groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
         #初始化所有组
         self.screenshot_groupBox = FuncBox(self)
         self.tra_groupBox = FuncBox(self)
         self.Transforma_groupBox = FuncBox(self)
         self.ocr_groupBox = FuncBox(self)
-        self.cla_groupBox = FuncBox(self)
         self.rec_groupBox = FuncBox(self)
         self.chat_groupBox = FuncBox(self)
         self.controll_groupBox = FuncBox(self)
         self.transmitter_groupBox = FuncBox(self)
         
         # 帮助页面
-        self.about_groupBox = QGroupBox("About", self)
-        self.about_groupBox.setGeometry(QRect(176, 30, 580, 500))
+        self.about_groupBox = FuncBox(self)
         self.about_groupBox.setFont(groupfont)
         self.help_text = QTextBrowser(self.about_groupBox)
         self.help_text.setGeometry(35, 35, 500, 444)
@@ -1183,7 +1171,7 @@ class JamToolsWindow(QMainWindow):
         self.help_text.setReadOnly(True)
 
         self.show_items = [self.screenshot_groupBox, self.tra_groupBox, self.Transforma_groupBox, self.ocr_groupBox,
-                           self.cla_groupBox, self.rec_groupBox, self.chat_groupBox,
+                        self.rec_groupBox, self.chat_groupBox,
                            self.controll_groupBox, self.about_groupBox, self.transmitter_groupBox]
         #切换到帮助页面显示
         self.help()
@@ -1194,7 +1182,6 @@ class JamToolsWindow(QMainWindow):
         
         
         self.chatthread = None
-        self.ocr_textEdit = QTextEdit(self.ocr_groupBox)
         self.delay = 0
         self.stop_wait = self.waiting = self.alt_push = False
         self.samplingingid = -1
@@ -1206,27 +1193,21 @@ class JamToolsWindow(QMainWindow):
         self.audio_divice = []
         self.video_divice = []
 
-        self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
-        self.ocr_textEdit.move(40, 35)
-        self.ocr_textEdit.resize(480, 350)
-
-
         groupfont = QFont('黑体' if PLATFORM_SYS == "win32" else "", 7)
-        self.screenshot_groupBox.setTitle("view")
+        self.screenshot_groupBox.setTitle("Screenshot")
         self.tra_groupBox.setTitle("Translate")
         self.Transforma_groupBox.setTitle("Transformation")
         self.ocr_groupBox.setTitle("OCR")
-        self.cla_groupBox.setTitle("Distinguish")
-        self.rec_groupBox.setTitle("Record")
-        self.chat_groupBox.setTitle("Chat bot")
+        self.rec_groupBox.setTitle("ScreenRecord")
+        self.chat_groupBox.setTitle("Chatbot")
         self.controll_groupBox.setTitle("Control")
         self.transmitter_groupBox.setTitle("Transmitter")
+        self.about_groupBox.setTitle("About")
 
         
         self.keyboard = QApplication.clipboard()
         self.keyboard.dataChanged.connect(self.keyboardchanged)  # 剪切板翻译/智能shift
         self.keboardchange_fucsignal.connect(self.keboardchange_fuc)
-        
         
         
         self.simplemodebox = FramelessEnterSendQTextEdit(enter_tra=True)
@@ -1243,8 +1224,6 @@ class JamToolsWindow(QMainWindow):
         self.recorder = Recordingthescreen(self)  # 录屏
         self.connect_all()
 
-        self.settings.setValue("S_SIMPLE_MODE", False)
-
         if self.settings.value('right_ocr', True, bool):
             self.openlistenmouse()
         
@@ -1254,6 +1233,8 @@ class JamToolsWindow(QMainWindow):
     def init_menu(self):
         # 菜单栏
         menubar = self.menuBar()
+        menubar.setStyleSheet("QMenuBar {font-size: 16px;}")
+
         option = menubar.addMenu("选项")
         change_top = QAction('窗口置顶', self)
         change_top.setCheckable(True)
@@ -1309,7 +1290,8 @@ class JamToolsWindow(QMainWindow):
                 styleactions.append(action)
         stylemenu.addActions(styleactions)
         stylemenu.triggered.connect(self.style_changle)
-        apply_stylesheet(self, theme='dark_blue.xml')
+        init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
+        apply_stylesheet(self, theme=init_theme)
         # 关于栏
         help_act = QAction('帮助', self)
         help_act.triggered.connect(self.help)
@@ -1324,13 +1306,23 @@ class JamToolsWindow(QMainWindow):
         fileMenu = menubar.addMenu('关于')
         fileMenu.setToolTip("Edit by Fandes&机械酱 \n联系作者：2861114322@qq.com")
         fileMenu.addActions([help_act, about, loge, update])
-        # self.statusBar().setStyleSheet("color:blue;")
-        # self.settings.clear()
+
     @pyqtSlot(QAction)
     def style_changle(self,action):
         style = action.text() + ".xml"
         print('style: ', style)
         apply_stylesheet(self,theme=style)
+        self.settings.setValue('qt_material_theme', style)
+        self.update_editbox_color()
+            
+    def update_editbox_color(self):
+        init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
+        edit_box_color = "black" if "light" == init_theme[:5] else "white"
+        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton)):
+            widget.setStyleSheet("color: {};".format(edit_box_color))
+        print("update")
+        QApplication.processEvents()
+            
     def connect_all(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
@@ -1355,6 +1347,7 @@ class JamToolsWindow(QMainWindow):
                 i.show()
             else:
                 i.hide()
+        self.update_editbox_color()
 
     def is_alphabet(self, uchar):
         """判断一个unicode是否是英文字母"""
@@ -1848,6 +1841,11 @@ class JamToolsWindow(QMainWindow):
 
     def setup_ui_ocr(self):
         if not self.OCR:
+            self.ocr_textEdit = QTextEdit(self.ocr_groupBox)
+
+            self.ocr_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
+            self.ocr_textEdit.move(40, 35)
+            self.ocr_textEdit.resize(480, 350)
             btn2 = QPushButton("截屏提取", self.ocr_groupBox)
             btn2.setToolTip('文字识别')
             btn2.setStatusTip('文字识别')
@@ -1870,6 +1868,7 @@ class JamToolsWindow(QMainWindow):
             try:
                 p = temp_path + "/j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"])
                 QDesktopServices.openUrl(QUrl.fromLocalFile(p))
+                
                 # if PLATFORM_SYS == "darwin":
                 #     subprocess.call(["open", p])
                 # elif PLATFORM_SYS == "win32":
@@ -1899,14 +1898,6 @@ class JamToolsWindow(QMainWindow):
                 except:
                     print(sys.exc_info())
                     self.statusBar().showMessage('找不到文件，请先截图！')
-
-        # def cla_png():
-        #     if os.path.exists('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"])):
-        #         try:
-        #             self.bdcla = True
-        #             self.BDimgcla()
-        #         except:
-        #             self.statusBar().showMessage('找不到文件，请先截图！')
 
         def open_path():
             p = QStandardPaths.writableLocation(
@@ -1962,6 +1953,9 @@ class JamToolsWindow(QMainWindow):
         copy_groupbox.setTitle('截屏后复制:')
         self.copy_type_ss = QComboBox(copy_groupbox)
         self.copy_type_ss.move(10, 20)
+        self.copy_type_ss.setAutoFillBackground(True)
+        # 设置文本颜色为白色
+        
         self.copy_type_ss.addItems(['图像数据', '图像文件', '无'])
         self.copy_type_ss.setCurrentText(self.settings.value('screenshot/copy_type_ss', '图像数据', type=str))
         self.copy_type_ss.currentTextChanged.connect(self.setting_save)
@@ -1971,7 +1965,7 @@ class JamToolsWindow(QMainWindow):
         open_pathbtn = QPushButton('', self.screenshot_groupBox)
         open_pathbtn.setGeometry(self.screenshot_groupBox.width() - 30, 10, 30, 30)
         open_pathbtn.setIcon(QIcon(":/wjj.png"))
-        # open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
+        open_pathbtn.setStyleSheet("border:none;border-radius:6px;")
         open_pathbtn.clicked.connect(open_path)
         open_pathbtn.setToolTip('打开截图文件夹')
         open_pathbtn.setStatusTip('打开截图文件夹')
@@ -1992,10 +1986,10 @@ class JamToolsWindow(QMainWindow):
         # btn1.setShortcut('Alt+Z')
         btn1.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 10))
         btn1.setIcon(QIcon(":/screenshot.png"))
-        # btn1.setStyleSheet(
-        #     "QPushButton:hover{background-color:rgb(200,200,50)}"
-        #     "QPushButton:!hover{background-color:rgb(100,200,100)}"
-        # )
+        btn1.setStyleSheet(
+            "QPushButton:hover{background-color:rgb(200,200,50)}"
+            "QPushButton:!hover{background-color:rgb(100,200,100)}"
+        )
 
         roll_ss_box = QGroupBox(self.screenshot_groupBox)
         roll_ss_box.setGeometry(300, 320, 250, 160)
@@ -3593,9 +3587,9 @@ hhh(o゜▽゜)o☆）
             self.ocrthread = OcrimgThread(filename, img, 1)
             if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                 self.statusBar().showMessage('正在识别: ' + filename)
-                self.ocr_textEdit.clear()
                 if not self.OCR:
                     self.setup_ui_ocr()
+                self.ocr_textEdit.clear()
                 self.change_show_item([self.ocr_groupBox])
                 self.ocrthread.result_show_signal.connect(self.ocr_textEdit.insertPlainText)
             else:
@@ -3677,7 +3671,7 @@ hhh(o゜▽゜)o☆）
             self.samplingingid = -1
             print('savetriggerpix')
     def set_area_callback(self,area):
-        print('setting recarea')
+        print('setting recarea',area)
         self.recorder.x , self.recorder.y, self.recorder.w,self.recorder.h = area
         
     def screen_shot_end_callback(self,pic):
@@ -3732,23 +3726,7 @@ hhh(o゜▽゜)o☆）
         self.settings.setValue("windowy", self.y())
         neverask = self.settings.value('neverask', 'default', type=str)
         if neverask == 'yes':
-            self.trayicon.setVisible(False)
-            # import shutil
-            try:
-                if self.recorder.recording:
-                    self.recorder.stop_record()
-                if transformater.transforma is not None:
-                    transformater.stop_transform()
-            except:
-                print('kill ffmpeg errer')
-            try:
-                if os.path.exists('video_mergelist.txt'):
-                    os.remove('video_mergelist.txt')
-                shutil.rmtree("j_temp")
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-            os._exit(0)
-            sys.exit()  # 关闭窗口
+            self.close_clean()
         elif neverask == 'hide':
             print("隐藏()")
             self.changesimple()
@@ -3770,24 +3748,9 @@ hhh(o゜▽゜)o☆）
 
         reply = box.exec()
         if reply == QMessageBox.AcceptRole:
-            try:
-                if self.recorder.recording:
-                    self.recorder.stop_record()
-                if transformater.transforma is not None:
-                    transformater.stop_transform()
-            except:
-                print('kill ffmpeg errer')
-            try:
-                if os.path.exists('video_mergelist.txt'):
-                    os.remove('video_mergelist.txt')
-                shutil.rmtree("j_temp")
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
             if checkbox1.isChecked():
                 neveraskchange('yes')
-
-            os._exit(0)
-            sys.exit()  # 关闭窗口
+            self.close_clean()
         else:
             print("隐藏()")
             self.changesimple()
@@ -3795,7 +3758,29 @@ hhh(o゜▽゜)o☆）
                 neveraskchange('hide')
             event.ignore()
         # self.hide()
-
+        
+    def close_clean(self):
+        self.settings.setValue("windowy", self.y())
+        self.settings.setValue("windowx", self.x())
+        self.hide()
+        self.trayicon.setVisible(False)
+        try:
+            if self.recorder.recording:
+                self.recorder.stop_record()
+            if transformater.transforma is not None:
+                transformater.stop_transform()
+        except:
+            print('kill ffmpeg errer')
+        try:
+            if os.path.exists('video_mergelist.txt'):
+                os.remove('video_mergelist.txt')
+            shutil.rmtree("j_temp")
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+        Jamtools_logger.stop()
+        os._exit(0)
+        sys.exit()  # 关闭窗口
+        
     def hide(self):
         self.setWindowOpacity(0)
         super().hide()

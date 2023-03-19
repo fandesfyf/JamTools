@@ -1820,8 +1820,7 @@ class Slabel(QLabel):  # 区域截图功能
             return
         # 以下为作者软件的保存操作,懒得删了...
         if self.mode == "set_area":
-
-            area = [x0,y0,(x1 - self.parent.recorder.x + 1) // 2 * 2,(y1 - self.parent.recorder.y + 1) // 2 * 2]
+            area = [x0,y0,(x1 - x0 + 1) // 2 * 2,(y1 - y0 + 1) // 2 * 2]
             if area[2] == 0 or area[3] == 0:
                 self.showm_signal.emit('选择范围过小，请重新选择！')
             else:
