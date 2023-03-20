@@ -64,12 +64,13 @@ def gethtml(url, times=3):  # 下载一个链接
             return response.text
 
     except Exception as e:
-        print(sys.exc_info(), '重试中')
+        error_msg = "{}".format(sys.exc_info())
+        print(error_msg, '重试中')
         time.sleep(1)
         if times > 0:
-            gethtml(url, times=times - 1)
+            return gethtml(url, times=times - 1)
         else:
-            return "网络连接失败!"
+            return error_msg
 class TipsShower(QLabel):
     def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=35, timeout=1000):
         super().__init__(parent)
