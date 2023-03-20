@@ -919,8 +919,7 @@ class FuncBox(QGroupBox):
     def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
         self.setGeometry(QRect(103, 32, 697, 494))
-        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;}")
-
+        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;} QSpinBox,QDoubleSpinBox { padding: 0px; }")
         self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 7))
         self.hide()
 
@@ -1509,7 +1508,7 @@ class JamToolsWindow(QMainWindow):
             #     self.actioncontroller.listening_change(self.controll_delayrecord.value(),self.controll_roller.value())
             self.controller_conditions = []
             reccontrol_tap = QTabWidget(self.controll_groupBox)
-            reccontrol_tap.setGeometry(20, 20, 545, 300)
+            reccontrol_tap.setGeometry(20, 20, self.controll_groupBox.width()-40, 300)
             reccontrol_tap.setTabShape(QTabWidget.Triangular)
             # reccontrol_tap.setStyleSheet("""QTabBar::tab{min-height: 30px; min-width: 100px;
             #             background-color:rgb(250, 250, 250);}""")
@@ -1524,12 +1523,12 @@ class JamToolsWindow(QMainWindow):
             self.controlrecord = QPushButton("录制/结束\n(Alt+1)", recordbox)
             self.controlrecord.setToolTip('快捷键Alt+1;开始/结束记录你的所有动作')
             self.controlrecord.setStatusTip('快捷键Alt+1;开始/结束记录你的所有动作')
-            self.controlrecord.setGeometry(10, 15, 100, 50)
+            self.controlrecord.setGeometry(10, 15, 110, 50)
             self.controlrecord.clicked.connect(self.start_action_listen)
             self.controlrun = QPushButton("播放/结束\n(Alt+2)(F4)", controlbox)
             self.controlrun.setToolTip('快捷键Alt+2;播放已录制的动作,F4强制中断播放')
             self.controlrun.setStatusTip('快捷键Alt+2;播放已录制的动作,F4强制中断播放')
-            self.controlrun.setGeometry(10, 15, 100, 50)
+            self.controlrun.setGeometry(10, 150, 110, 50)
             self.controlrun.clicked.connect(self.start_action_run)
 
             open_pathbtn = QPushButton('', self.controll_groupBox)
@@ -1606,7 +1605,7 @@ class JamToolsWindow(QMainWindow):
             choice_controller_path_bot.clicked.connect(choice_jamfile_path)
 
             self.controll_count = QSpinBox(controlbox)
-            self.controll_count.setGeometry(10, 75, 120, 25)
+            self.controll_count.setGeometry(10, 15, 120, 25)
             self.controll_count.setPrefix('播放次数 ')
             self.controll_count.setMinimum(1)
             self.controll_count.setMaximum(999)
@@ -1645,16 +1644,16 @@ class JamToolsWindow(QMainWindow):
             conditions_groupbox = QGroupBox("触发条件", controlbox)
             conditions_groupbox.setGeometry(pathgroupbox.x(), pathgroupbox.y() + pathgroupbox.height() + 10,
                                             pathgroupbox.width(), 195)
-            self.sampling_btn = QPushButton('取样', conditions_groupbox)
-            self.sampling_btn.setToolTip('从截屏中取样,区域应尽量具有特征性')
-            self.sampling_btn.move(350, 75)
-            # self.sampling_btn.hide()
-            self.sampling_btn.clicked.connect(setarea)
-            self.showsampling_btn = QPushButton('查看', conditions_groupbox)
-            self.showsampling_btn.setToolTip('查看取样文件')
-            self.showsampling_btn.move(400, 75)
-            # self.showsampling_btn.hide()
-            self.showsampling_btn.clicked.connect(showpix)
+            # self.sampling_btn = QPushButton('取样', conditions_groupbox)
+            # self.sampling_btn.setToolTip('从截屏中取样,区域应尽量具有特征性')
+            # self.sampling_btn.setGeometry(350, 75,100,30)
+            # # self.sampling_btn.hide()
+            # self.sampling_btn.clicked.connect(setarea)
+            # self.showsampling_btn = QPushButton('查看', conditions_groupbox)
+            # self.showsampling_btn.setToolTip('查看取样文件')
+            # self.showsampling_btn.setGeometry(450, 75,100,30)
+            # # self.showsampling_btn.hide()
+            # self.showsampling_btn.clicked.connect(showpix)
             self.sampling_label = QLabel('无取样', conditions_groupbox)
             self.sampling_label.setGeometry(350, 90, 130, 80)
             self.sampling_label.setScaledContents(True)
@@ -1712,7 +1711,7 @@ class JamToolsWindow(QMainWindow):
             self.sampling_interval.setValue(500)
             self.sampling_interval.setSingleStep(50)
             showsamplingrect = QCheckBox("显示识别框", conditions_groupbox)
-            showsamplingrect.move(self.sampling_same.x() + self.sampling_same.width() + 50, self.sampling_same.y())
+            showsamplingrect.move(self.sampling_same.x() + self.sampling_same.width() + 20, self.sampling_same.y()-5)
             showsamplingrect.stateChanged.connect(showsamplingrectchange)
             showsamplingrect.setChecked(self.settings.value("controller/canshowrect", True, type=bool))
 
@@ -1758,7 +1757,6 @@ class JamToolsWindow(QMainWindow):
             self.actioncontroller.controlrecord_bot_stylesheet_signal.connect(self.controlrecord.setStyleSheet)
             self.actioncontroller.controlrun_bot_stylesheet_signal.connect(self.controlrun.setStyleSheet)
             self.actioncontroller.updata_control_list_signal.connect(self.updata_control_list)
-
             print("control/-init")
         # if self.control_initcount:
         #     self.control_initcount -= 1

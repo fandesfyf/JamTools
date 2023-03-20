@@ -149,11 +149,13 @@ class ClientFilesTransmitterGroupbox(QGroupBox):
         self.connectionstrupdate.clicked.connect(self.Transmitter.update_connectionstr)
         self.connectionstrupdate.setToolTip("更新连接码")
         self.connectionstrupdate.setStatusTip("更新连接码")
+        self.connectionstrupdate.setStyleSheet("{ padding: 2px; }")
         copyconnectionstrbtn = QPushButton("", self)
         copyconnectionstrbtn.setGeometry(self.connectionstrupdate.x() + self.connectionstrupdate.width() + 3,
                                          self.connectionstrupdate.y(), 22, 22)
         copyconnectionstrbtn.setIcon(QIcon(":/copy.png"))
         copyconnectionstrbtn.setToolTip("复制连接码")
+        copyconnectionstrbtn.setStyleSheet("{ padding: 2px; }")
         copyconnectionstrbtn.clicked.connect(self.copyconnectionstr)
 
         self.targetconnectionedit = QLineEdit(self)

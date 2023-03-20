@@ -693,19 +693,20 @@ class ActionCondition(QGroupBox):
 
         self.sampling_bot = QPushButton("取样", self)
         self.sampling_bot.setToolTip('从截屏中取样,区域应尽量具有特征性')
-        self.sampling_bot.setGeometry(5, 18, 40, 20)
+        self.sampling_bot.setGeometry(5, 18, 80, 30)
         self.sampling_bot.clicked.connect(self.sampling_click)
         # self.sampling_bot.clicked.emit(self.)
         self.see_samps_bot = QPushButton("查看", self)
         self.see_samps_bot.setToolTip('查看取样文件')
         self.see_samps_bot.clicked.connect(showpix)
-        self.see_samps_bot.setGeometry(self.sampling_bot.x() + self.sampling_bot.width() + 5, 18, 40, 20)
+        self.see_samps_bot.setGeometry(self.sampling_bot.x() + self.sampling_bot.width() + 5, 18, 80, 30)
         self.detal_label = QLabel(self)
         self.detal_label.setText("无条件")
         self.detal_label.setGeometry(5, self.see_samps_bot.height() + self.see_samps_bot.y() + 2, self.width() - 40,
                                      self.height() - (self.see_samps_bot.height() + self.see_samps_bot.y() + 5))
         self.area = (0, 0, 0, 0)
         self.pix = None
+        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;}")
         self.show()
 
     def sampling_update(self, area, pixpath):
