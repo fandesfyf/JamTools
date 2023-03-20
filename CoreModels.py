@@ -2955,7 +2955,7 @@ class JamToolsWindow(QMainWindow):
             self.pushButton.clicked.connect(self.recorder.recordchange)
             
             self.counter = QLCDNumber(self.rec_groupBox)
-            self.counter.setGeometry(QRect(30, 100, 120, 35))
+            self.counter.setGeometry(QRect(30, 80, 120, 35))
             self.counter.display('00:00')
             self.recorder.counter_display_signal.connect(self.counter.display)
             self.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
@@ -2967,7 +2967,7 @@ class JamToolsWindow(QMainWindow):
                                           "QPushButton{border-radius:60px}"
                                           )
             self.mouse_rec = QCheckBox(self.rec_groupBox)
-            self.mouse_rec.setGeometry(QRect(390, 320, 91, 19))
+            self.mouse_rec.setGeometry(QRect(400, 320, 91, 19))
             if PLATFORM_SYS == "darwin":
                 self.mouse_rec.hide()
             else:
@@ -2978,13 +2978,13 @@ class JamToolsWindow(QMainWindow):
                 self.mouse_rec.stateChanged.connect(self.setting_save)
 
             self.sp_rec = QCheckBox(self.rec_groupBox)
-            self.sp_rec.setGeometry(QRect(390, 260, 91, 19))
+            self.sp_rec.setGeometry(QRect(400, 260, 91, 19))
             self.sp_rec.setText("画质适配")
             self.sp_rec.setToolTip('由于默认采用的是H.264的high级别画质以增加压缩比，某些设备可能无法播放，勾选以使用Baseline画质以适配所有设备！')
             self.sp_rec.setStatusTip('由于默认采用的是H.264的high级别画质以增加压缩比，勾选以使用Baseline画质以适配所有设备！')
 
             self.hide_rec = QCheckBox(self.rec_groupBox)
-            self.hide_rec.setGeometry(QRect(390, 290, 91, 19))
+            self.hide_rec.setGeometry(QRect(400, 290, 91, 19))
             self.hide_rec.setText("隐藏窗口")
             self.hide_rec.setToolTip('开始录屏后隐藏本窗口,可用快捷键或系统托盘结束')
             self.hide_rec.setStatusTip('开始录屏后隐藏本窗口,可用快捷键或系统托盘结束')
@@ -3005,7 +3005,7 @@ class JamToolsWindow(QMainWindow):
                 self.setting_save()
 
             self.hardware_rec = QCheckBox(self.rec_groupBox)
-            self.hardware_rec.setGeometry(QRect(390, 350, 91, 19))
+            self.hardware_rec.setGeometry(QRect(400, 350, 91, 19))
             if PLATFORM_SYS == "win32":
                 self.hardware_rec.setText("硬件编码")
                 self.hardware_rec.setToolTip(
@@ -3041,9 +3041,20 @@ class JamToolsWindow(QMainWindow):
             open_pathbtn.clicked.connect(open_record_path)
             open_pathbtn.setToolTip('打开存放录屏文件的文件夹')
             open_pathbtn.setStatusTip('打开存放录屏文件的文件夹')
-
+            self.scale_box = QGroupBox(self.rec_groupBox)
+            self.scale_box.setGeometry(QRect(225, 80, 120, 51))
+            self.scale_box.setTitle("缩放比例")
+            self.scale_box.setToolTip('设置分辨率的缩放比例(多用于gif录制)')
+            self.scale_box.setStatusTip('设置分辨率的缩放比例(多用于gif录制)')
+            self.scale = QDoubleSpinBox(self.scale_box)
+            self.scale.setGeometry(QRect(10, 20, 100, 22))
+            self.scale.setValue(1)
+            self.scale.setSingleStep(0.1)
+            self.scale.setMaximum(2)
+            self.scale.setMinimum(0.10)
+            
             self.groupBox_2 = QGroupBox(self.rec_groupBox)
-            self.groupBox_2.setGeometry(QRect(200, 150, 120, 51))
+            self.groupBox_2.setGeometry(QRect(225, 150, 120, 51))
             self.groupBox_2.setTitle("文件格式")
             self.groupBox_2.setToolTip('设定输出文件格式(视频/gif等),选择mp3格式则只录音频')
             self.groupBox_2.setStatusTip('设定输出文件格式(视频/gif等),选择mp3格式则只录音频')
@@ -3057,7 +3068,7 @@ class JamToolsWindow(QMainWindow):
             self.file_format.setStatusTip('选择gif格式则只录视频;选择mp3格式则只录音频')
             # self.comboBox.setObjectName("comboBox")
             self.groupBox_3 = QGroupBox(self.rec_groupBox)
-            self.groupBox_3.setGeometry(QRect(200, 290, 120, 51))
+            self.groupBox_3.setGeometry(QRect(225, 290, 120, 51))
             self.groupBox_3.setTitle("帧率")
             self.comboBox_2 = QDoubleSpinBox(self.groupBox_3)
             self.comboBox_2.setGeometry(QRect(10, 20, 100, 22))
@@ -3071,7 +3082,7 @@ class JamToolsWindow(QMainWindow):
             self.delay_t.setValue(0)
             self.delay_t.setMaximum(99999)
             self.groupBox_4 = QGroupBox(self.rec_groupBox)
-            self.groupBox_4.setGeometry(QRect(200, 360, 120, 51))
+            self.groupBox_4.setGeometry(QRect(225, 360, 120, 51))
             self.groupBox_4.setTitle("视频质量")
             self.groupBox_4.setToolTip('强制控制视频帧质量,-1为自动,0为近无损,99为全损...')
             self.groupBox_4.setStatusTip('强制控制视频帧质量,-1为自动,0为无损,99为全损...设置该值会导致编码速率等不可用!')
@@ -3081,7 +3092,7 @@ class JamToolsWindow(QMainWindow):
             self.qp_rec.setMinimum(-1)
             # self.comboBox_3.setObjectName("comboBox_3")
             self.groupBox_6 = QGroupBox(self.rec_groupBox)
-            self.groupBox_6.setGeometry(QRect(200, 220, 120, 51))
+            self.groupBox_6.setGeometry(QRect(225, 220, 120, 51))
             self.groupBox_6.setTitle("编码速率")
             self.groupBox_6.setToolTip('设置码率,编码速率越快占用越小,文件体积越大')
             self.groupBox_6.setStatusTip('设置码率,编码速率越快占用越小,文件体积越大')
@@ -3098,13 +3109,13 @@ class JamToolsWindow(QMainWindow):
                 # self.preset.clear()
                 self.preset.addItems(items_rate)
             self.groupBox_5 = QGroupBox("声音来源", self.rec_groupBox)
-            self.groupBox_5.setGeometry(QRect(350, 150, 220, 50))
+            self.groupBox_5.setGeometry(QRect(400, 150, 220, 50))
             self.groupBox_5.setToolTip('设置录制的声音来源')
             self.groupBox_5.setStatusTip('设置录制的声音来源')
             self.soundsourse = QComboBox(self.groupBox_5)
             self.soundsourse.setGeometry(10, 20, 200, 25)
             videosoursegroub = QGroupBox('图像来源', self.rec_groupBox)
-            videosoursegroub.setGeometry(350, 90, 220, 50)
+            videosoursegroub.setGeometry(400, 90, 220, 50)
             videosoursegroub.setToolTip('设置图像来源,可以为屏幕(抓屏或者串流方式),也可以是相机!')
             videosoursegroub.setStatusTip('设置图像来源,可以为屏幕(抓屏或者串流方式),也可以是相机!')
             self.videosourse = QComboBox(videosoursegroub)
@@ -3121,17 +3132,7 @@ class JamToolsWindow(QMainWindow):
 
             self.videosourse.currentTextChanged.connect(change_videosourse)
 
-            self.scale_box = QGroupBox(self.rec_groupBox)
-            self.scale_box.setGeometry(QRect(200, 80, 120, 51))
-            self.scale_box.setTitle("缩放比例")
-            self.scale_box.setToolTip('设置分辨率的缩放比例(多用于gif录制)')
-            self.scale_box.setStatusTip('设置分辨率的缩放比例(多用于gif录制)')
-            self.scale = QDoubleSpinBox(self.scale_box)
-            self.scale.setGeometry(QRect(10, 20, 100, 22))
-            self.scale.setValue(1)
-            self.scale.setSingleStep(0.1)
-            self.scale.setMaximum(2)
-            self.scale.setMinimum(0.10)
+
 
             # time.sleep(2)
             print('rec_init')
