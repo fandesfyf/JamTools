@@ -5372,9 +5372,13 @@ class CheckForUpdateThread(QThread):
             else:
                 self.checkresult_signal.emit("JamTools{}已是最新版本".format(VERSON),False)
                 return
-        except:
-            print(sys.exc_info(), 7383)
-            self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..",False)
+        except Exception as e:
+            error = "{}".format(e)
+            print(error, 7383)
+            if "ProxyError" in error:
+                self.checkresult_signal.emit("连接Github失败,代理服务器错误, 请检查你的代理设置...",False)
+            else:
+                self.checkresult_signal.emit("连接Github服务器失败!请稍后再试..",False)
             return
         try:
             self.haveupdate_signal.emit(str(V))
@@ -5423,9 +5427,12 @@ class CheckForUpdateThread(QThread):
             p = "deb" if platform == "linux" else "dmg"
         url = "https://raw.githubusercontent.com/fandesfyf/JamTools/main/ci_scripts/versions.json"
         data = gethtml(url)
-        self.checkresult_signal.emit("连接Github成功,正在分析版本情况...",True)
-        time.sleep(1)#just for fun
         print(data)
+        if "ProxyError" in data:
+            raise Exception("ProxyError")
+        else:
+            self.checkresult_signal.emit("连接Github成功,正在分析版本情况...",True)
+        time.sleep(1)#just for fun
         jsondata = json.loads(data)
         platform_dict = {"win32":"windows","linux":"linux","darwin":"darwin"}
         versiondict = jsondata[platform_dict[platform]]
