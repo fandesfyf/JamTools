@@ -501,8 +501,14 @@ class WebFilesTransmitter_infolabel(QLabel):
         self.port = ""
         self.url = ""
         self.setWordWrap(True)
+        self.open_url_btn = QPushButton("打开链接", self)
+        self.open_url_btn.setGeometry(170, 90,95,25)
+        self.open_url_btn.clicked.connect(self.open_url)
+        self.copy_url_btn = QPushButton("复制链接", self)
+        self.copy_url_btn.setGeometry(self.open_url_btn.x(), self.open_url_btn.y()+self.open_url_btn.height(),self.open_url_btn.width(),25)
+        self.copy_url_btn.clicked.connect(self.copy_url)
         self.qrcode_label = QLabel(self)
-        self.qrcode_label.setGeometry(270, 0, 180, 180)
+        self.qrcode_label.setGeometry( self.copy_url_btn.x()+ self.copy_url_btn.width()+25, 0, 180, 180)
         pix = QPixmap(200, 200)
         pix.fill(QColor(255, 255, 255))
         self.qrcode_label.setPixmap(pix)
@@ -513,15 +519,12 @@ class WebFilesTransmitter_infolabel(QLabel):
                                 "如:A设备共享了一个文件,通过打开电脑的热点让手机连接上了,\n则可以通过选择网络适配器为本地连接xxx字样(对应电脑热点适配器)生成链接,\n即可通过访问该链接或扫描二维码从网页端访问共享文件了\n"
                                 "注意:共享文件为全网段共享,即使没有选择对应的网络适配器,该网段仍然可以通过ip+端口的方式访问!\n"
                                 "所以不选择网络适配器生成链接而直接用ip+端口形式访问也是可的\n选择网络适配器只是为了方便输入(复制粘贴/扫码)而已...")
+        
+        
+
         self.copy_qrcode_btn = QPushButton("复制二维码", self)
-        self.copy_qrcode_btn.move(320, 180)
+        self.copy_qrcode_btn.setGeometry(self.qrcode_label.x()+self.qrcode_label.width()//2-50,self.qrcode_label.y()+self.qrcode_label.height()-5,110,25)
         self.copy_qrcode_btn.clicked.connect(self.copy_qrcode)
-        self.copy_url_btn = QPushButton("复制链接", self)
-        self.copy_url_btn.move(180, 100)
-        self.copy_url_btn.clicked.connect(self.copy_url)
-        self.open_url_btn = QPushButton("打开链接", self)
-        self.open_url_btn.move(110, 100)
-        self.open_url_btn.clicked.connect(self.open_url)
         self.update()
 
         # self.setOpenExternalLinks(True)
@@ -772,7 +775,7 @@ class WebFilesTransmitterBox(QGroupBox):
         super(WebFilesTransmitterBox, self).__init__(text, parent)
         self.WebFilesTransmitter = WebFilesTransmitter
         self.transmitter_web_start_btn = QPushButton("开始共享", self)
-        self.transmitter_web_start_btn.setGeometry(5, 22, 80, 28)
+        self.transmitter_web_start_btn.setGeometry(5, 22, 100, 28)
         self.transmitter_web_start_btn.clicked.connect(self.changeshare)
         # self.WebFilesTransmitter.start_btn_ss_signal.connect(self.transmitter_web_start_btn.setStyleSheet)
         self.transmitter_reset_web_port_btn = QPushButton("重置端口", self)
@@ -823,7 +826,7 @@ class WebFilesTransmitterBox(QGroupBox):
         self.transmitter_web_need_login.stateChanged.connect(need_loginchange)
         self.transmitter_web_need_login_label = QLineEdit(self)
         self.transmitter_web_need_login_label.setGeometry(self.transmitter_web_need_login.x(),
-                                                          self.transmitter_web_need_login.y() + self.transmitter_web_need_login.height() - 10,
+                                                          self.transmitter_web_need_login.y() + self.transmitter_web_need_login.height(),
                                                           self.transmitter_web_need_login.width() - 10, 25)
         self.transmitter_web_need_login_label.setPlaceholderText("1234")
         self.transmitter_web_need_login_label.textChanged.connect(
@@ -870,13 +873,13 @@ class WebFilesTransmitterBox(QGroupBox):
         self.transmitter_web_choice_dir.clicked.connect(choicedir)
         self.transmitter_web_choice_dir.setToolTip("选择一个文件夹,共享整个文件夹包括其子文件夹")
         self.transmitter_web_choice_dir.setStatusTip("选择一个文件夹,共享整个文件夹包括其子文件夹")
-        self.transmitter_web_choice_files.setGeometry(280, 20, 80, 23)
+        self.transmitter_web_choice_files.setGeometry(280, 20, 102, 23)
         self.transmitter_web_choice_dir.setGeometry(self.transmitter_web_choice_files.x(),
                                                     self.transmitter_web_choice_files.y() + self.transmitter_web_choice_files.height(),
                                                     self.transmitter_web_choice_files.width(),
                                                     self.transmitter_web_choice_files.height())
         self.transmitter_web_devices = QComboBox(self)
-        self.transmitter_web_devices.setGeometry(190, 80, 140, 23)
+        self.transmitter_web_devices.setGeometry(190, 80, 180, 23)
         self.transmitter_web_devices.setToolTip("请选择要生成链接的网卡,设备需要连入共同网段才可访问共享文件,\n"
                                                 "例如:本机已通过以太网连入校园网时,可选择以太网适配器生成链接和二维码,\n"
                                                 "另一台已经连入该校园网的设备就可以通过链接或扫描二维码访问共享文件")

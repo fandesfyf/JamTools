@@ -1316,7 +1316,7 @@ class JamToolsWindow(QMainWindow):
     def update_editbox_color(self):
         init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
         edit_box_color = "black" if "light" == init_theme[:5] else "white"
-        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton)):
+        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit)):
             widget.setStyleSheet("color: {};".format(edit_box_color))
         print("update")
         QApplication.processEvents()
@@ -3430,11 +3430,11 @@ hhh(o゜▽゜)o☆）
         self.botappid = "d1139cde1c88a8ecf5af1337fbebace8"
         self.userid = self.settings.value('chat_userid', 'USER', type=str)
         self.chat_userid_edit = QTextEdit(self.chat_groupBox)
-        self.chat_userid_edit.setGeometry(460, 30, 100, 32)
+        self.chat_userid_edit.setGeometry(460, 30, 120, 32)
         self.chat_userid_edit.setText(self.userid)
         self.chat_userid_edit.setStatusTip('设置你的昵称')
         clearchatrecordbtn = QPushButton("清除聊天记录", self.chat_groupBox)
-        clearchatrecordbtn.setGeometry(460, 70, 100, 30)
+        clearchatrecordbtn.setGeometry(460, 70, 120, 30)
 
         def clearchat():
             if os.path.exists(documents_path + '/chat_record.txt'):
@@ -3477,7 +3477,7 @@ hhh(o゜▽゜)o☆）
         self.chatbt = QPushButton("发送>>", self.chat_groupBox)
         self.chatbt.setToolTip('发送消息(回车Enter)')
         # self.chatbt.setStyleSheet('background-color:rgb(50,150,200)')
-        self.chatbt.setGeometry(393, 452, 55, 26)
+        self.chatbt.setGeometry(self.chat_send_textEdit.x()+self.chat_send_textEdit.width()-78, 438, 74, 38)
         self.chatbt.clicked.connect(self.chat)
         voicebtn = QPushButton("", self.chat_groupBox)
         if self.settings.value("chater/playvoice", False, type=bool):

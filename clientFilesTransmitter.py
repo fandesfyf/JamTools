@@ -121,7 +121,7 @@ class ClientFilesTransmitterGroupbox(QGroupBox):
         self.resize(560, 220)
         self.allowCheckBox = QCheckBox("允许连接", self)
         self.allowCheckBox.setToolTip("只有当该框勾选时才允许新的连接")
-        self.allowCheckBox.setGeometry(10, 18, 80, 25)
+        self.allowCheckBox.setGeometry(10, 18, 90, 25)
         self.allowCheckBox.stateChanged.connect(self.allowconnectchange)
         self.allowCheckBox.setChecked(
             QSettings('Fandes', 'jamtools').value("clientfilestransmittertest/allowconnect", True, type=bool))
@@ -136,42 +136,45 @@ class ClientFilesTransmitterGroupbox(QGroupBox):
         self.disconnectallbtn = QPushButton("关闭所有连接", self)
         self.disconnectallbtn.setToolTip("关闭所有连接,并禁止新的连接,需重新勾选允许连接才可用")
         self.disconnectallbtn.move(self.allowCheckBox.x(),
-                                   self.allowCheckBox.height() + self.allowCheckBox.y() + 5)
+                                   self.allowCheckBox.height() + self.allowCheckBox.y() + 10)
         self.disconnectallbtn.clicked.connect(self.killallconnection)
         self.connectionstredit = QLineEdit(self.Transmitter.connectstr, self)
         self.connectionstredit.setReadOnly(True)
         self.connectionstredit.setToolTip("连接码")
         self.connectionstredit.setGeometry(self.disconnectallbtn.x(),
-                                           self.disconnectallbtn.height() + self.disconnectallbtn.y() + 10, 70, 22)
+                                           self.disconnectallbtn.height() + self.disconnectallbtn.y() + 10, 120, 22)
         self.connectionstrupdate = QPushButton(QIcon(":/update.png"), "", self)
         self.connectionstrupdate.setGeometry(self.connectionstredit.x() + self.connectionstredit.width() + 3,
                                              self.connectionstredit.y(), 22, 22)
         self.connectionstrupdate.clicked.connect(self.Transmitter.update_connectionstr)
         self.connectionstrupdate.setToolTip("更新连接码")
         self.connectionstrupdate.setStatusTip("更新连接码")
-        copyconnectionstrbtn = QPushButton("复制连接码", self)
+        copyconnectionstrbtn = QPushButton("", self)
         copyconnectionstrbtn.setGeometry(self.connectionstrupdate.x() + self.connectionstrupdate.width() + 3,
-                                         self.connectionstrupdate.y(), 90, 22)
+                                         self.connectionstrupdate.y(), 22, 22)
+        copyconnectionstrbtn.setIcon(QIcon(":/copy.png"))
+        copyconnectionstrbtn.setToolTip("复制连接码")
         copyconnectionstrbtn.clicked.connect(self.copyconnectionstr)
 
         self.targetconnectionedit = QLineEdit(self)
         self.targetconnectionedit.setPlaceholderText("连接码")
-        self.targetconnectionedit.setGeometry(self.connectionstredit.x(), copyconnectionstrbtn.y() + 28,
+        self.targetconnectionedit.setGeometry(self.connectionstredit.x(), copyconnectionstrbtn.y() + 35,
                                               self.connectionstredit.width(), self.connectionstredit.height())
         findserverbtn = QPushButton("连接", self)
         findserverbtn.setGeometry(self.targetconnectionedit.x() + self.targetconnectionedit.width() + 5,
-                                  self.targetconnectionedit.y(), 50, 22)
+                                  self.targetconnectionedit.y(), 65, 22)
         findserverbtn.clicked.connect(lambda: self.Transmitter.findandconnectserver(self.targetconnectionedit.text()))
         findserverbtn.setToolTip("输入连接码以连接")
 
         connection_ScrollArea = QScrollArea(self)
-        connection_ScrollArea.setGeometry(200, 8, self.width() - 210, self.height() - 10)
+        connection_ScrollArea.setGeometry(250, 8, self.width() - 150, self.height() - 10)
         self.connection_ScrollArea_widget = QWidget()
         self.connection_ScrollArea_widget.setGeometry(connection_ScrollArea.geometry())
         connection_ScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         connection_ScrollArea.setWidget(self.connection_ScrollArea_widget)
         self.labeltest = QLabel("当前无连接,\n请输入连接码创建连接", self.connection_ScrollArea_widget)
-        self.labeltest.setGeometry(10, 30, 120, 50)
+        self.labeltest.setGeometry(10, 30, 150, 50)
+        connection_ScrollArea.setStyleSheet("border: 1px solid black;")
         self.setStyleSheet("QScrollBar{width: 5px;}")
         self.connectionwidgetslist = []
         self.autoallow = not self.needallowconnection.isChecked()
