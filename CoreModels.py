@@ -11,7 +11,7 @@ import sys
 import os, re
 from Logger import Logger
 
-Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), "jamtools.log"))
+Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), ".jamtools.log"))
 sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
@@ -289,7 +289,7 @@ class Recordingthescreen(QObject):
             self.showrect.show()
         if self.delay != 0:
             print('delay')
-            # self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,180,10)}")
+            self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,180,10)}")
             self.waiting = True
             self.wait_()
             self.waiting = False
@@ -297,25 +297,25 @@ class Recordingthescreen(QObject):
                 self.stop_wait = False
                 print('stopwait')
                 self.recording = False
-                # try:
-                    # self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-                    #                                      "QPushButton:hover{background-color:rgb(200,10,10)}"
-                    #                                      "QPushButton:!hover{background-color:rgb(200,200,200)}"
-                    #                                      "QPushButton{background-color:rgb(239,239,239)}"
-                    #                                      "QPushButton{border:6px solid rgb(50, 50, 50)}"
-                    #                                      "QPushButton{border-radius:60px}")
-                # except:
-                #     print(sys.exc_info())
+                try:
+                    self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+                                                         "QPushButton:hover{background-color:rgb(200,10,10)}"
+                                                         "QPushButton:!hover{background-color:rgb(200,200,200)}"
+                                                         "QPushButton{background-color:rgb(239,239,239)}"
+                                                         "QPushButton{border:6px solid rgb(50, 50, 50)}"
+                                                         "QPushButton{border-radius:60px}")
+                except:
+                    print(sys.exc_info())
                 self.showm_signal.emit('录屏等待中止！')
                 self.showrect.hide()
                 return
-        # try:
-        #     self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,10,10)}"
-        #                                          "QPushButton{color:rgb(200,100,100)}"
-        #                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
-        #                                          )
-        # except:
-        #     print(sys.exc_info(), 308)
+        try:
+            self.parent.pushButton.setStyleSheet("QPushButton{background-color:rgb(200,10,10)}"
+                                                 "QPushButton{color:rgb(200,100,100)}"
+                                                 "QPushButton{border:6px solid rgb(50, 50, 50)}"
+                                                 )
+        except:
+            print(sys.exc_info(), 308)
         self.c = 0
         self.counter_display_signal.emit('00:00')
         self.timer.start(1000)
@@ -479,15 +479,15 @@ class Recordingthescreen(QObject):
         self.timer.stop()
         self.recording = False
         self.stop_record()
-        # try:
-        #     self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
-        #                                          "QPushButton:hover{background-color:rgb(200,10,10)}"
-        #                                          "QPushButton:!hover{background-color:rgb(200,200,200)}"
-        #                                          "QPushButton{background-color:rgb(239,239,239)}"
-        #                                          "QPushButton{border:6px solid rgb(50, 50, 50)}"
-        #                                          "QPushButton{border-radius:60px}")
-        # except:
-        #     pass
+        try:
+            self.parent.pushButton.setStyleSheet("QPushButton{color:rgb(200,100,100)}"
+                                                 "QPushButton:hover{background-color:rgb(200,10,10)}"
+                                                 "QPushButton:!hover{background-color:rgb(200,200,200)}"
+                                                 "QPushButton{background-color:rgb(239,239,239)}"
+                                                 "QPushButton{border:6px solid rgb(50, 50, 50)}"
+                                                 "QPushButton{border-radius:60px}")
+        except:
+            pass
         if self.file_format != 'gif':
             self.showm_signal.emit("录屏结束，文件保存于：视频/Jam_screenrecord/" + self.name + '文件夹中\n点击此处可打开')
             self.parent.trayicon.recorded_open = True
@@ -919,7 +919,7 @@ class FuncBox(QGroupBox):
     def __init__(self, parent):
         super(FuncBox, self).__init__(parent)
         self.setGeometry(QRect(103, 32, 697, 494))
-        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;} QSpinBox,QDoubleSpinBox { padding: 0px; }")
+        self.setStyleSheet("QGroupBox::title {subcontrol-origin: margin; position: relative; left: -12 px; top: -14 px;} QTimeEdit,QSpinBox,QDoubleSpinBox { padding: 0px; }")
         self.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 7))
         self.hide()
 
@@ -1315,8 +1315,9 @@ class JamToolsWindow(QMainWindow):
     def update_editbox_color(self):
         init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
         edit_box_color = "black" if "light" == init_theme[:5] else "white"
-        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit)):
-            widget.setStyleSheet("color: {};".format(edit_box_color))
+        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit,QTimeEdit)):
+            if widget.objectName() != 'record_screen_btn':
+                widget.setStyleSheet("color: {};".format(edit_box_color))
         print("update")
         QApplication.processEvents()
             
@@ -2170,14 +2171,15 @@ class JamToolsWindow(QMainWindow):
             self.tab3 = QWidget()
             # self.tab3.setStyleSheet("background-color:rgb(240,240,240)")
 
-            self.traforma_tab.setGeometry(QRect(0, 25, 580, 475))
+            self.traforma_tab.setGeometry(QRect(15, 20, self.Transforma_groupBox.width()-30, 475))
             self.traforma_tab.addTab(self.tab1, '裁剪/拼接')
             self.traforma_tab.addTab(self.tab2, '压缩/转码')
             # self.traforma_tab.addTab(self.tab3, '转码')
             self.traforma_tab.addTab(self.tab3, '提取/混合')
             toolbox = QToolBox(self.tab1)
+            
             # toolbox.setStyleSheet('background-color:rgb(240,240,240);')
-            toolbox.setGeometry(10, 10, 550, 410)
+            toolbox.setGeometry(QRect(0, 10, self.tab2.width(), 420))
             # layout.addWidget(toolbox, 0, 0)
             cut_pic = QWidget()
 
@@ -2232,10 +2234,10 @@ class JamToolsWindow(QMainWindow):
             self.video_cut_pushButton.setStatusTip('根据右侧参数裁剪视频')
             self.video_cut_pushButton.clicked.connect(choice_vd)
             self.vd_cutform = QTimeEdit(cut_vd)
-            self.vd_cutform.move(150, 20)
+            self.vd_cutform.setGeometry(150, 20,115,30)
             self.vd_cutform.setDisplayFormat("从HH:mm:ss")
             self.vd_cutto = QTimeEdit(cut_vd)
-            self.vd_cutto.move(300, 20)
+            self.vd_cutto.setGeometry(300, 20,115,30)
             self.vd_cutto.setDisplayFormat("到HH:mm:ss")
             self.vd_cutto.setStatusTip('设置为00:00:00时取原长')
             # self.vd_cutto.setMinimumTime(QTime(00, 00, 1))
@@ -2255,10 +2257,10 @@ class JamToolsWindow(QMainWindow):
             self.audio_cut_pushButton.setStatusTip('裁剪音频')
             self.audio_cut_pushButton.clicked.connect(choice_ad)
             self.ad_cutform = QTimeEdit(cut_au)
-            self.ad_cutform.move(150, 20)
+            self.ad_cutform.setGeometry(150, 20,115,30)
             self.ad_cutform.setDisplayFormat("从HH:mm:ss")
             self.ad_cutto = QTimeEdit(cut_au)
-            self.ad_cutto.move(300, 20)
+            self.ad_cutto.setGeometry(300, 20,115,30)
             self.ad_cutto.setDisplayFormat("到HH:mm:ss")
             self.ad_cutto.setStatusTip('设置为00:00:00时取原长')
             # self.ad_cutto.setMinimumTime(QTime(00, 00, 1))
@@ -2271,7 +2273,7 @@ class JamToolsWindow(QMainWindow):
 
             toolbox = QToolBox(self.tab2)
             # toolbox.setStyleSheet('background-color:rgb(240,240,240);')
-            toolbox.setGeometry(10, 10, 550, 420)
+            toolbox.setGeometry(QRect(0, 10, self.tab2.width(), 420))
             # layout.addWidget(toolbox, 0, 0)
             self.t_pic = QWidget()
             toolbox.addItem(self.t_pic, "图片")
@@ -2704,7 +2706,7 @@ class JamToolsWindow(QMainWindow):
             # toolbox.setGeometry(20, 20, 540, 400)
             extractvd = QWidget(self.tab3)
             # extractvd.setStyleSheet("background-color:rgb(240,240,240)")
-            extractvd.setGeometry(20, 20, 540, 400)
+            extractvd.setGeometry(QRect(0, 10, self.tab2.width(), 420))
             # toolbox.addItem(extractvd, "")
             ex_box = QGroupBox(extractvd)
             ex_box.setGeometry(15, 15, 300, 300)
@@ -2757,7 +2759,7 @@ class JamToolsWindow(QMainWindow):
             rename_groupbox = QGroupBox("重命名", extractvd)
             rename_groupbox.setGeometry(320, 10, 220, 300)
             self.rename_pushButton = QPushButton("开始/选择文件", rename_groupbox)
-            self.rename_pushButton.setGeometry(15, 18, 110, 50)
+            self.rename_pushButton.setGeometry(10, 18, 120, 50)
             self.rename_pushButton.setStatusTip('选择多个文件')
             self.rename_pushButton.clicked.connect(t_rename)
             self.rename_backup_check_bot = QCheckBox("备份快照", rename_groupbox)
@@ -2769,7 +2771,7 @@ class JamToolsWindow(QMainWindow):
             self.rerename_btn = QPushButton("恢复", rename_groupbox)
             self.rerename_btn.setGeometry(self.rename_backup_check_bot.x(),
                                           self.rename_backup_check_bot.y() + self.rename_backup_check_bot.height(),
-                                          50, 25)
+                                          75, 25)
             self.rerename_btn.setToolTip("根据备份文件恢复重命名,可能需要恢复多次才能恢复到原来的文件列表")
             self.rerename_btn.setStatusTip("根据备份文件恢复重命名")
             self.rerename_btn.clicked.connect(t_rerename)
@@ -2801,7 +2803,7 @@ class JamToolsWindow(QMainWindow):
                     self.renameform.setStatusTip('以文件的创建日期命名文件')
 
             rename_detailbox = QGroupBox("命名内容", rename_groupbox)
-            rename_detailbox.setGeometry(self.rename_pushButton.x() - 10,
+            rename_detailbox.setGeometry(self.rename_pushButton.x() - 5,
                                          self.rename_pushButton.y() + self.rename_pushButton.height() + 10, 180, 80)
             self.rename_style = QComboBox(rename_detailbox)
             self.rename_style.setGeometry(10, 20, 88, 25)
@@ -2948,6 +2950,7 @@ class JamToolsWindow(QMainWindow):
             self.pushButton = QPushButton(self.rec_groupBox)
             self.pushButton.setGeometry(QRect(30, 290, 120, 120))
             self.pushButton.setText("开始/结束\n(Alt+c)")
+            self.pushButton.setObjectName("record_screen_btn")
             self.pushButton.setToolTip('开始/结束,也可以用快捷键Alt+c')
             self.pushButton.setStatusTip('开始/结束,也可以用快捷键Alt+c')
             self.pushButton.clicked.connect(self.recorder.recordchange)
@@ -5153,11 +5156,11 @@ class Transforma(QObject):
 
     def reset_style(self, pushbutton):
 
-        # pushbutton.setStyleSheet("QPushButton{color:black}"
-        #                          "QPushButton:hover{color:green}"
-        #                          "QPushButton:hover{background-color:rgb(200,200,100)}"
-        #                          "QPushButton{background-color:rgb(239,239,239)}"
-        #                          "QPushButton{padding:1px 4px }")
+        pushbutton.setStyleSheet("QPushButton{color:black}"
+                                 "QPushButton:hover{color:green}"
+                                 "QPushButton:hover{background-color:rgb(200,200,100)}"
+                                 "QPushButton{background-color:rgb(239,239,239)}"
+                                 "QPushButton{padding:1px 4px }")
         if pushbutton == self.parent.t_pic_pushButton or pushbutton == self.parent.piccut_pushButton \
                 or pushbutton == self.parent.picSplicing_pushButton or pushbutton == self.parent.rename_pushButton:
             pass
@@ -5184,11 +5187,11 @@ class Transforma(QObject):
             else:
                 self.ffmpeg_running = True
 
-            # pushbutton.setStyleSheet("QPushButton{color:green}"
-            #                          "QPushButton:hover{color:lightgreen}"
-            #                          "QPushButton:hover{background-color:lightred}"
-            #                          "QPushButton{background-color:red}"
-            #                          "QPushButton{padding:1px 4px }")
+            pushbutton.setStyleSheet("QPushButton{color:green}"
+                                     "QPushButton:hover{color:lightgreen}"
+                                     "QPushButton:hover{background-color:lightred}"
+                                     "QPushButton{background-color:red}"
+                                     "QPushButton{padding:1px 4px }")
 
     def stop_transform(self):
         try:

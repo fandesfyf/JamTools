@@ -62,6 +62,7 @@ class Logger(QThread):
 
     def process(self, message):
         self.terminal.write(message)
+        self.terminal.flush()
         now = time.time()
         timestr = ""
         if now - self.logtime > 1:
@@ -72,7 +73,7 @@ class Logger(QThread):
         if now - self.logtime > 1:
             self.logtime = now
             self.log.flush()
-        self.terminal.flush()
+        
 
     def flush(self):
         pass

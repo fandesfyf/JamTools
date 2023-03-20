@@ -868,6 +868,7 @@ class Slabel(QLabel):  # 区域截图功能
 
     def setup(self,mode = "screenshot"):  # 初始化界面
         self.on_init = True
+        self.mode = mode
         self.paintlayer = PaintLayer(self)  # 绘图层
         self.mask = MaskLayer(self)  # 遮罩层
         self.text_box = AutotextEdit(self)  # 文字工具类
@@ -942,7 +943,7 @@ class Slabel(QLabel):  # 区域截图功能
         # self.showFullScreen()
         # self.hide()
         # self.setWindowOpacity(1)
-        self.mode = mode
+        
         self.init_parameters()
         self.backup_ssid = 0  # 当前备份数组的id,用于确定回退了几步
         self.backup_pic_list = []  # 备份页面的数组,用于前进/后退
@@ -1016,10 +1017,16 @@ class Slabel(QLabel):  # 区域截图功能
 
         self.sure_btn.clicked.connect(self.cutpic)
         a = self.roll_ss_btn.width() if PLATFORM_SYS != "darwin" else 0
-        self.botton_box.resize(
-            self.sure_btn.width() + self.cla_botton.width() + self.ocr_botton.width() + self.ssrec_botton.width()
-            + a + self.save_botton.width() + self.freeze_img_botton.width(),
-            self.sure_btn.height())
+        if self.mode == "screenshot":
+            self.botton_box.resize(
+                self.sure_btn.width() + self.cla_botton.width() + self.ocr_botton.width() + self.ssrec_botton.width()
+                + a + self.save_botton.width() + self.freeze_img_botton.width(),
+                self.sure_btn.height())
+        else:
+            self.sure_btn.setGeometry(0, 0, 60, 35)
+            self.botton_box.resize(
+                self.sure_btn.width(),
+                self.sure_btn.height())
         self.botton_box.hide()
 
         self.painter_box.setGeometry(0, QApplication.desktop().height() // 2 - 200, 100, 400)
