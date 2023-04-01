@@ -17,7 +17,7 @@ from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer,
     QUrl, QObject, QSize
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices
+from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices,QPixmap
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from aip import AipOcr, AipImageClassify

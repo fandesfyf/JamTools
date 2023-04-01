@@ -28,6 +28,7 @@ import PyQt5.QtGui
 import PyQt5.QtWidgets
 import PyQt5.QtNetwork
 from qt_material import apply_stylesheet,list_themes
+import qt_material
 from jamscreenshot import Slabel
 from aip import AipOcr
 import fbs_runtime.application_context.PyQt5

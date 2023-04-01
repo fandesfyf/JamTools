@@ -32,14 +32,15 @@ import qrcode
 import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer, QSettings, QFileInfo, \
     QUrl, QObject, QSize,pyqtSlot
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCursor, QColor, QDesktopServices, QMovie
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCursor, QColor, QDesktopServices, QMovie,\
+    QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
     QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from qt_material import apply_stylesheet,list_themes
-
+import qt_material
 from jamscreenshot import Slabel
 from aip import AipOcr
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
@@ -1315,12 +1316,31 @@ class JamToolsWindow(QMainWindow):
     def update_editbox_color(self):
         init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
         edit_box_color = "black" if "light" == init_theme[:5] else "white"
-        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit,QTimeEdit)):
+        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit,QTimeEdit,QListWidgetItem)):
             if widget.objectName() != 'record_screen_btn':
                 widget.setStyleSheet("color: {};".format(edit_box_color))
-        print("update")
+            if isinstance(widget, (QPushButton)):# 更改按钮图标色系
+                self.set_icon_color(widget,Qt.white if edit_box_color =="white" else Qt.black )
+        for widget in self.findChildren(QListWidget):#单独查找QListWidget
+            if isinstance(widget, (QListWidget)):# 更改QListWidget图标色系
+                for i in range(widget.count()):
+                    item = widget.item(i)
+                    if isinstance(item, QListWidgetItem):
+                        self.set_icon_color(item,Qt.white if edit_box_color =="white" else Qt.black)
+        print("update_editbox_color ")
         QApplication.processEvents()
-            
+    def set_icon_color(self,widget,color):
+        icon = widget.icon()
+        if len(icon.availableSizes()):
+            pixmap = icon.pixmap(48,48)
+            brush = QBrush(color)
+            painter = QPainter(pixmap)
+            painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+            painter.setBrush(brush)
+            painter.drawRect(pixmap.rect())
+            painter.end()
+            widget.setIcon(QIcon(pixmap))
+
     def connect_all(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
@@ -3482,18 +3502,18 @@ hhh(o゜▽゜)o☆）
         self.chatbt.clicked.connect(self.chat)
         voicebtn = QPushButton("", self.chat_groupBox)
         if self.settings.value("chater/playvoice", False, type=bool):
-            voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+            voicebtn.setIcon(QIcon(":/sound3.png"))
         else:
-            voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+            voicebtn.setIcon(QIcon(":/sound0.png"))
         voicebtn.setGeometry(self.chat_send_textEdit.x() + self.chat_send_textEdit.width() + 5,
                              self.chat_send_textEdit.y() - 25,
                              25, 25)
         
         def viocebtnclick():
             if self.settings.value("chater/playvoice", False, type=bool):
-                voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+                voicebtn.setIcon(QIcon(":/sound0.png"))
             else:
-                voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+                voicebtn.setIcon(QIcon(":/sound3.png"))
             self.settings.setValue("chater/playvoice", not self.settings.value("chater/playvoice", False, type=bool))
         
         voicebtn.clicked.connect(viocebtnclick)
@@ -3651,8 +3671,9 @@ hhh(o゜▽゜)o☆）
         self.setWindowOpacity(0)
         self.settings.setValue("windowx", self.x())
         self.settings.setValue("windowy", self.y())
-        self.move(QApplication.desktop().width()*2, QApplication.desktop().height()*2)
-        self.setWindowOpacity(1)
+        self.hide()
+        # self.move(QApplication.desktop().width()*2, QApplication.desktop().height()*2)
+        # self.setWindowOpacity(1)
 
     def connectss(self):
         self.screenshoter.showm_signal.connect(self.trayicon.showM)
@@ -3882,7 +3903,7 @@ class SettingPage(QScrollArea):
 
         self.timeoutshift = QSpinBox(shiftbox)
         self.timeoutshift.setSuffix("s内触发")
-        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift键才触发")
+        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift+ctrl键才触发")
         self.timeoutshift.move(self.smartShift.x() + self.smartShift.width() + 20, self.smartShift.y())
         self.timeoutshift.valueChanged.connect(lambda a: self.settings.setValue("timeoutshift", a))
         self.timeoutshift.setValue(self.settings.value("timeoutshift", 7, type=int))
@@ -3890,16 +3911,16 @@ class SettingPage(QScrollArea):
         self.shiftFY = QCheckBox("翻译", shiftbox)
         self.shiftFY.move(self.smartShift.x(), self.smartShift.y() + self.smartShift.height())
         self.shiftFY.stateChanged.connect(lambda a: self.settings.setValue("shiftFY", bool(a)))
-        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift键为则翻译")
+        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift+ctrl键为则翻译")
         self.shiftFY.setChecked(self.settings.value("shiftFY", True, bool))
         self.shiftFYzh = QCheckBox("翻译中文", shiftbox)
         self.shiftFYzh.move(self.timeoutshift.x(), self.shiftFY.y())
         self.shiftFYzh.stateChanged.connect(lambda a: self.settings.setValue("shiftFYzh", bool(a)))
-        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift键翻译为英文")
+        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift+ctrl键翻译为英文")
         self.shiftFYzh.setChecked(self.settings.value("shiftFYzh", True, bool))
 
         self.openhtmlbtn = QCheckBox('识别网址', shiftbox)
-        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift直接在浏览器打开网址")
+        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift+ctrl直接在浏览器打开网址")
         self.openhtmlbtn.stateChanged.connect(lambda a: self.settings.setValue("openhttp", bool(a)))
         self.openhtmlbtn.setChecked(self.settings.value("openhttp", True, bool))
         self.openhtmlbtn.move(self.shiftFY.x(), self.shiftFY.y() + self.shiftFY.height())
@@ -3913,7 +3934,7 @@ class SettingPage(QScrollArea):
         self.shiftopendir.move(self.openhtmlbtn.x(), self.openhtmlbtn.y() + self.openhtmlbtn.height())
         self.shiftopendir.stateChanged.connect(lambda a: self.settings.setValue("shiftopendir", bool(a)))
         self.shiftopendir.setChecked(self.settings.value("shiftopendir", True, bool))
-        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
+        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift+ctrl键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
         self.smartShift.stateChanged.connect(self.smartShiftsetting_save)
         self.smartShiftsetting_save(self.smartShift.isChecked())
         # 快捷键
