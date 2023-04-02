@@ -979,7 +979,7 @@ class Slabel(QLabel):  # 区域截图功能
     def init_slabel_ui(self):  # 初始化界面的参数
 
         self.shower.hide()
-        self.shower.setWindowOpacity(0.8)
+        # self.shower.setWindowOpacity(0.8)
         # if PLATFORM_SYS == "darwin":
         #     self.move(-QApplication.desktop().width(), -QApplication.desktop().height())
 
@@ -1679,14 +1679,14 @@ class Slabel(QLabel):  # 区域截图功能
     def ocr_res_signalhandle(self, text):
         self.shower.setPlaceholderText("")
         self.shower.insertPlainText(text)
-        jt = re.sub(r'[^\w]', '', text).replace('_', '')
-        n = 0
-        for i in text:
-            if self.is_alphabet(i):
-                n += 1
-        if n / len(jt) > 0.4:
-            print("is en")
-            self.shower.tra()
+        # jt = re.sub(r'[^\w]', '', text).replace('_', '')
+        # n = 0
+        # for i in text:
+        #     if self.is_alphabet(i):
+        #         n += 1
+        # if n / len(jt) > 0.4:
+        #     print("is en")
+        #     self.shower.tra()
 
     def is_alphabet(self, uchar):
         """判断一个unicode是否是英文字母"""

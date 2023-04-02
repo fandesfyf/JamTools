@@ -204,13 +204,16 @@ class OcrimgThread(QThread):
             ocr_sys.draw_boxes(dt_boxes[0],self.image)
             dettime = time.time()
             print(len(dt_boxes[0]))
-            # 识别 results: 单纯的识别结果，results_info: 识别结果+置信度    原图
-            # 识别模型固定尺寸只能100长度，需要处理可以根据自己场景导出模型 1000
-            # onnx可以支持动态，不受限
-            results, results_info = ocr_sys.recognition_img(dt_boxes)
-            # print(f'results :{str(results)}')
-            print(time.time()-dettime,dettime - stime)
-            text = ocr_sys.get_format_text(dt_boxes[0],results)
+            if len(dt_boxes[0])==0:
+                text="<没有识别到文字>"
+            else:
+                # 识别 results: 单纯的识别结果，results_info: 识别结果+置信度    原图
+                # 识别模型固定尺寸只能100长度，需要处理可以根据自己场景导出模型 1000
+                # onnx可以支持动态，不受限
+                results, results_info = ocr_sys.recognition_img(dt_boxes)
+                # print(f'results :{str(results)}')
+                print("识别时间:",time.time()-dettime,dettime - stime)
+                text = ocr_sys.get_format_text(dt_boxes[0],results)
             print(text)
         except Exception as e:
             print("Unexpected error:",e, "jampublic l326")

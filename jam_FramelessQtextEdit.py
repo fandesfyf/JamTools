@@ -216,12 +216,14 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
     def mouseMoveEvent(self, e):
         super().mouseMoveEvent(e)
         if self.isVisible():
+            if self.moving:
+                self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
+                self.viewport().update()
             if e.x() > self.width() - 25 or e.y() < 10 or e.y() > self.height() - 20:
                 self.viewport().setCursor(Qt.SizeAllCursor)
-                if self.moving:
-                    self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
             else:
                 self.viewport().setCursor(Qt.ArrowCursor)
+            
 
     def keyPressEvent(self, e):
         super(FramelessEnterSendQTextEdit, self).keyPressEvent(e)

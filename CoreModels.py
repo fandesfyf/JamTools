@@ -1480,7 +1480,7 @@ class JamToolsWindow(QMainWindow):
     def simple_mode(self):
         self.simplemodebox.setToolTip('Ctrl+回车可快速翻译!')
         self.simplemodebox.resize(250, 250)
-        self.simplemodebox.setWindowOpacity(0.8)
+        # self.simplemodebox.setWindowOpacity(0.8)
         self.hide()
 
     def changesimple(self, show=False):
