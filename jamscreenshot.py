@@ -771,16 +771,21 @@ class Freezer(QLabel):
                     self.setWindowOpacity(self.windowOpacity() - 0.1)
             else:
                 if 2 * QApplication.desktop().width() >= self.width() >= 50:
+                    # 获取鼠标所在位置相对于窗口的坐标
+                    old_pos = e.pos()
+                    old_width = self.width()
+                    old_height = self.height()
                     w = self.width() + dy * 5
                     if w < 50: w = 50
                     if w > 2 * QApplication.desktop().width(): w = 2 * QApplication.desktop().width()
                     scale = self.imgpix.height() / self.imgpix.width()
                     h = w * scale
                     s = self.width() / w  # 缩放比例
-                    mdx = e.x() * s - e.x()
-                    mdy = e.y() * s - e.y()
                     self.setPixmap(self.imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                    self.setGeometry(self.x() + mdx, self.y() + mdy, w, h)
+                    self.resize( w, h)
+                    delta_x = -(w - old_width)*old_pos.x()/old_width
+                    delta_y = -(h - old_height)*old_pos.y()/old_height
+                    self.move(self.x() + delta_x, self.y() + delta_y)
                     QApplication.processEvents()
 
             self.update()
