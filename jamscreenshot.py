@@ -1661,20 +1661,23 @@ class Slabel(QLabel):  # 区域截图功能
 
     def ocr(self):
         self.Tipsshower.setText("正在识别...")
+        self.shower.setPlaceholderText("正在识别,请耐心等待...")
         self.shower.move(self.x1, self.y1)
         self.shower.show()
         self.shower.clear()
         self.cutpic(save_as=2)
         ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
         self.final_get_img.save(ocrimg_temp_path)
-        with open(ocrimg_temp_path, 'rb') as i:
-            img = i.read()
+        # with open(ocrimg_temp_path, 'rb') as i:
+        #     img = i.read()
+        img = cv2.imread(ocrimg_temp_path)
         self.ocrthread = OcrimgThread(img)
         self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
         self.ocrthread.start()
         QApplication.processEvents()
 
     def ocr_res_signalhandle(self, text):
+        self.shower.setPlaceholderText("")
         self.shower.insertPlainText(text)
         jt = re.sub(r'[^\w]', '', text).replace('_', '')
         n = 0

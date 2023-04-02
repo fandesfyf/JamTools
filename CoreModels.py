@@ -8,6 +8,7 @@ import json
 import socket
 import gc
 import sys
+import cv2
 import os, re
 from Logger import Logger
 
@@ -3245,12 +3246,11 @@ class JamToolsWindow(QMainWindow):
                 self.hide()  # 删除闪退
             QApplication.processEvents()
 
-            def mutil_cla_signalhandle(filename, text):
+            def mutil_cla_signalhandle(filename,text):
                 print("mutil_cla_signalhandle active")
-                if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
-                    self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
-                    self.ocr_textEdit.insertPlainText(text + '\n' * 2)
-                    self.statusBar().showMessage('识别{}完成！'.format(filename))
+                # if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
+                self.ocr_textEdit.insertPlainText(text)
+                # self.statusBar().showMessage('识别{}完成！'.format(filename))
 
             self.mutiocrthread = mutilocr(files)
             self.mutiocrthread.ocr_signal.connect(mutil_cla_signalhandle)
@@ -3603,8 +3603,7 @@ hhh(o゜▽゜)o☆）
         if os.path.exists(picfile):
             filename = os.path.basename(picfile)
 
-            with open(picfile, 'rb') as i:
-                img = i.read()
+            img = cv2.imread(picfile)
             self.ocrthread = OcrimgThread(img)
             if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                 self.statusBar().showMessage('正在识别: ' + filename)
