@@ -38,7 +38,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCurs
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
-    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy
+    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy,QAbstractItemView
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from qt_material import apply_stylesheet,list_themes
 import qt_material
@@ -1034,7 +1034,8 @@ class JamToolsWindow(QMainWindow):
         # 左侧功能区
         self.main_list_widget = QListWidget(self)
         # 设置选择模式为单选
-        self.main_list_widget.setSelectionMode(QListWidget.SingleSelection)
+        self.main_list_widget.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.main_list_widget.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.main_list_widget.setGeometry(QRect(10, 30, 160, 490))
         self.main_list_widget.setFont(groupfont) 
         main_list_map = [{"name": "酱截屏",
@@ -1083,11 +1084,14 @@ class JamToolsWindow(QMainWindow):
             self.main_list_widget.addItem(item)
         self.main_list_widget.setMouseTracking(True)
         # 定义槽函数处理单击事件
-        def handle_item_clicked(item):
+        def handle_item_clicked():
+            QApplication.processEvents()
+            item = self.main_list_widget.selectedItems()[0]
             print(f"Item {item.text()} clicked!")  # 打印出点击的项的文本
             item.func()
+            QApplication.processEvents()
         # 将 itemClicked 信号连接到槽函数
-        self.main_list_widget.itemClicked.connect(handle_item_clicked)
+        self.main_list_widget.itemSelectionChanged.connect(handle_item_clicked)
         self.main_list_widget.setStyleSheet('''
             QListWidget {
                 border: none;
