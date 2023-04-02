@@ -884,7 +884,6 @@ class Slabel(QLabel):  # 区域截图功能
         self.save_botton = QPushButton(QIcon(":/saveicon.png"), '', self.botton_box)
         self.save_botton.clicked.connect(lambda: self.cutpic(1))
         self.ssrec_botton = QPushButton(QIcon(":/ssrecord.png"), '', self.botton_box)
-        self.cla_botton = QPushButton(self.botton_box)
         self.ocr_botton = QPushButton(self.botton_box)
         self.roll_ss_btn = QPushButton(self.botton_box)
         self.sure_btn = QPushButton("确定", self.botton_box)
@@ -935,7 +934,6 @@ class Slabel(QLabel):  # 区域截图功能
             self.freeze_img_botton.hide()
             self.roll_ss_btn.hide()
             self.ocr_botton.hide()
-            self.cla_botton.hide()
             self.ssrec_botton.hide()
             
         # self.setVisible(False)
@@ -996,11 +994,8 @@ class Slabel(QLabel):  # 区域截图功能
         self.freeze_img_botton.setIcon(QIcon(":/freeze.png"))
         self.freeze_img_botton.setToolTip('固定图片于屏幕上')
         self.freeze_img_botton.clicked.connect(self.freeze_img)
-        self.cla_botton.setGeometry(self.freeze_img_botton.x() + self.freeze_img_botton.width(), 0, 40, 35)
-        self.cla_botton.setIcon(QIcon(":/CLA.png"))
-        self.cla_botton.setToolTip('图像主体识别')
-        self.cla_botton.clicked.connect(self.cla)
-        self.ocr_botton.setGeometry(self.cla_botton.x() + self.cla_botton.width(), 0, 40, 35)
+
+        self.ocr_botton.setGeometry(self.freeze_img_botton.x() + self.freeze_img_botton.width(), 0, 40, 35)
         self.ocr_botton.setIcon(QIcon(":/OCR.png"))
         self.ocr_botton.setToolTip('文字识别')
         self.ocr_botton.clicked.connect(self.ocr)
@@ -1019,7 +1014,7 @@ class Slabel(QLabel):  # 区域截图功能
         a = self.roll_ss_btn.width() if PLATFORM_SYS != "darwin" else 0
         if self.mode == "screenshot":
             self.botton_box.resize(
-                self.sure_btn.width() + self.cla_botton.width() + self.ocr_botton.width() + self.ssrec_botton.width()
+                self.sure_btn.width() + self.ocr_botton.width() + self.ssrec_botton.width()
                 + a + self.save_botton.width() + self.freeze_img_botton.width(),
                 self.sure_btn.height())
         else:
@@ -1674,7 +1669,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.final_get_img.save(ocrimg_temp_path)
         with open(ocrimg_temp_path, 'rb') as i:
             img = i.read()
-        self.ocrthread = OcrimgThread('ocrtemp', img, 1)
+        self.ocrthread = OcrimgThread(img)
         self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
         self.ocrthread.start()
         QApplication.processEvents()
@@ -1697,21 +1692,6 @@ class Slabel(QLabel):  # 区域截图功能
         else:
             return False
 
-    def cla(self):
-        self.Tipsshower.setText("正在识别...")
-        self.shower.move(self.x1, self.y1)
-        self.shower.show()
-        self.shower.clear()
-        self.cutpic(save_as=2)
-        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
-        self.final_get_img.save(ocrimg_temp_path)
-        with open(ocrimg_temp_path, 'rb') as i:
-            img = i.read()
-        options = {"top_num": 5}
-        self.ocrthread = OcrimgThread(img, options, 2)
-        self.ocrthread.result_show_signal.connect(self.shower.insertPlainText)
-        self.ocrthread.start()
-        QApplication.processEvents()
 
     def choice(self):  # 选区完毕后显示选择按钮的函数
         self.choicing = True

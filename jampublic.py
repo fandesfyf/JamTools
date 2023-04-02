@@ -166,7 +166,7 @@ class mutilocr(QThread):
             print("正在识别图片：\t" + filename)
             self.statusbarsignal.emit('正在识别: ' + filename)
 
-            th = OcrimgThread(filename, img, 1)
+            th = OcrimgThread(img)
             th.result_show_signal.connect(self.mutil_cla_signalhandle)
             th.start()
             th.wait()
@@ -183,57 +183,34 @@ class OcrimgThread(QThread):
     result_show_signal = pyqtSignal(str)
     statusbar_signal = pyqtSignal(str)
 
-    def __init__(self, args0, args1, ocrorimg=0):
+    def __init__(self, args1):
         super(QThread, self).__init__()
-        self.args0 = args0
-        self.ocr = ocrorimg
         self.args = args1  # img
         # self.simple_show_signal.connect(jamtools.simple_show)
 
     def run(self):
         self.statusbar_signal.emit('正在识别文字...')
-        if self.ocr == 1:
-            try:
-                client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-                # message = client.basicGeneral(self.args)  # 通用文字识别，每天 50 000 次免费
-                message = client.basicAccurate(self.args)  # 通用文字高精度识别，每天 800 次免费
-                text = ''
-                # 输出文本内容
-                # print("xxx", message.values())
-                for res in message.get('words_result'):
-                    text += res.get('words') + '\n'
-
-            except:
-                print("Unexpected error:", sys.exc_info(), "jampublic l326")
-                self.statusbar_signal.emit('识别出错！请确保网络畅通')
-                text = str(sys.exc_info()[0])
-            # print(text)
-            if text == '':
-                text = '空'
-
-            self.result_show_signal.emit(text)
-            self.statusbar_signal.emit('识别完成！')
-
-        elif self.ocr == 2:
+        try:
+            client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
+            # message = client.basicGeneral(self.args)  # 通用文字识别，每天 50 000 次免费
+            message = client.basicAccurate(self.args)  # 通用文字高精度识别，每天 800 次免费
             text = ''
-            try:
-                client = AipImageClassify(APP_ID, API_KEY, SECRECT_KEY)
-                result = client.advancedGeneral(self.args0, self.args)['result']
-                for i in result:
-                    # print(i['keyword'],i['score'])
-                    temp = str(i['keyword']) + str(i['score'])
-                    text += temp + '\n'
-            except KeyError:
-                self.statusbar_signal.emit('识别出错！图像大小不正确！')
-                text = '识别出错！图像大小不正确！'
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-                text = "Unexpected error:" + str(sys.exc_info()[0])
-                self.statusbar_signal.emit('识别出错！请确保网络畅通')
-                # print(result)
-                # jamtools.tra_from_edit.clear()
-            self.result_show_signal.emit(text)
-            self.statusbar_signal.emit("识图完成！")
+            # 输出文本内容
+            # print("xxx", message.values())
+            for res in message.get('words_result'):
+                text += res.get('words') + '\n'
+
+        except:
+            print("Unexpected error:", sys.exc_info(), "jampublic l326")
+            self.statusbar_signal.emit('识别出错！请确保网络畅通')
+            text = str(sys.exc_info()[0])
+        # print(text)
+        if text == '':
+            text = '没有识别到文字'
+
+        self.result_show_signal.emit(text)
+        self.statusbar_signal.emit('识别完成！')
+
         print("识别完成")
 
 

@@ -3605,7 +3605,7 @@ hhh(o゜▽゜)o☆）
 
             with open(picfile, 'rb') as i:
                 img = i.read()
-            self.ocrthread = OcrimgThread(filename, img, 1)
+            self.ocrthread = OcrimgThread(img)
             if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                 self.statusBar().showMessage('正在识别: ' + filename)
                 if not self.OCR:
