@@ -20,7 +20,6 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices,QPixmap
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
-from aip import AipOcr, AipImageClassify
 from urllib.parse import quote
 import numpy as np
 from fake_useragent import UserAgent
@@ -192,6 +191,7 @@ class OcrimgThread(QThread):
     def __init__(self, image):
         super(QThread, self).__init__()
         self.image = image  # img
+        self.ocr_result = None
         # self.simple_show_signal.connect(jamtools.simple_show)
 
     def run(self):
@@ -208,19 +208,10 @@ class OcrimgThread(QThread):
             # 识别模型固定尺寸只能100长度，需要处理可以根据自己场景导出模型 1000
             # onnx可以支持动态，不受限
             results, results_info = ocr_sys.recognition_img(dt_boxes)
-            print(f'results :{str(results)}')
+            # print(f'results :{str(results)}')
             print(time.time()-dettime,dettime - stime)
             text = ocr_sys.get_format_text(dt_boxes[0],results)
             print(text)
-            # client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-            # # message = client.basicGeneral(self.args)  # 通用文字识别，每天 50 000 次免费
-            # message = client.basicAccurate(self.args)  # 通用文字高精度识别，每天 800 次免费
-            # text = ''
-            # # 输出文本内容
-            # # print("xxx", message.values())
-            # for res in message.get('words_result'):
-            #     text += res.get('words') + '\n'
-
         except Exception as e:
             print("Unexpected error:",e, "jampublic l326")
             text = str(sys.exc_info()[0])
@@ -228,7 +219,7 @@ class OcrimgThread(QThread):
         # print(text)
         if text == '':
             text = '没有识别到文字'
-
+        self.ocr_result = text
         self.result_show_signal.emit(text)
         self.statusbar_signal.emit('识别完成！')
 

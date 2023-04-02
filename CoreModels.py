@@ -11,7 +11,7 @@ import sys
 import cv2
 import os, re
 from Logger import Logger
-
+import numpy as np
 Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), ".jamtools.log"))
 sys.stdout = Jamtools_logger
 
@@ -43,7 +43,7 @@ from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from qt_material import apply_stylesheet,list_themes
 import qt_material
 from jamscreenshot import Slabel
-from aip import AipOcr
+# from aip import AipOcr
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from pynput import keyboard, mouse
 from jamcontroller import ActionController, ActionCondition
@@ -684,84 +684,66 @@ class StraThread(QThread):  # 右键画屏翻译线程
         super(QThread, self).__init__()
         self.w = w
         self.signal.connect(jamtools.word_extraction)
+        self.textresult = ""
+        self.traresult = ""
 
     def run(self):
         self.signal.emit(self.w, '正在识别...', '正在翻译...')
         with open("j_temp/sdf.png", 'rb') as i:
-            img = i.read()
+            img_bytes = i.read()
+            np_array = np.frombuffer(img_bytes, np.uint8)
+            img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
         text0 = ''
+        self.textresult = ""
         try:
-            client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-            message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
-            print(message)
-        # message = client.basicAccurate(img)   # 通用文字高精度识别，每天 800 次免费
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-            self.signal.emit(self.w, 'Unexpected error...', str(sys.exc_info()[0]))
+            self.ocrthread = OcrimgThread(img)
+            self.ocrthread.start()
+            self.ocrthread.wait()
+            self.textresult = self.ocrthread.ocr_result
+            if len(self.textresult):
+                text0 = self.textresult
+            else:
+                raise Exception("识别出错!")
+        except Exception as e:
+            print("Unexpected error:", sys.exc_info()[0],e)
+            self.signal.emit(self.w, 'Unexpected error...', str(e))
             return
         else:
-            if message is None:
-                text0 = "没有文字!"
-            else:
-                for res in message.get('words_result'):
-                    text0 += res.get('words')
             self.signal.emit(self.w, text0, '正在翻译...')
-        # appid = '20190928000337891'
-        # secretKey = 'SiNITAufl_JCVpk7fAUS'
-        salt = str(random.randint(32768, 65536))
-        sign = QSettings('Fandes', 'jamtools').value('tran_appid', '20190928000337891', str) + text0 + salt + QSettings(
-            'Fandes', 'jamtools').value('tran_secretKey', 'SiNITAufl_JCVpk7fAUS', str)
-        m1 = hashlib.md5()
-        m1.update(sign.encode(encoding='utf-8'))
-        sign = m1.hexdigest()
-        # print(text0)
-        if text0 != '':
-            text1 = None
-            myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value('tran_appid',
-                                                                                                   '20190928000337891',
-                                                                                                   str) + '&q=' + quote(
-                text0) + '&from=' + 'auto' + '&to=' + 'zh' + '&salt=' + str(
-                salt) + '&sign=' + sign
             try:
-                httpClient0 = http.client.HTTPConnection('api.fanyi.baidu.com')
-                httpClient0.request('GET', myurl)
-                response = httpClient0.getresponse()
-                s = response.read().decode('utf-8')
-                s = eval(s)
-                print(s)
-                if s['from'] == s['to'] or s['trans_result'][0]['dst'] == s['trans_result'][0]['src']:
-                    print('redo')
-                    salt = str(random.randint(32768, 65536))
-                    sign = QSettings('Fandes', 'jamtools').value('tran_appid', '20190928000337891',
-                                                                 str) + text0 + salt + QSettings('Fandes',
-                                                                                                 'jamtools').value(
-                        'tran_secretKey', 'SiNITAufl_JCVpk7fAUS', str)
-                    m1 = hashlib.md5()
-                    m1.update(sign.encode(encoding='utf-8'))
-                    sign = m1.hexdigest()
-                    if s['from'] == 'zh':
-                        myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value(
-                            'tran_appid', '20190928000337891', str) + '&q=' + quote(
-                            text0) + '&from=' + 'zh' + '&to=' + 'en' + '&salt=' + str(
-                            salt) + '&sign=' + sign
-                    else:
-                        myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value(
-                            'tran_appid', '20190928000337891', str) + '&q=' + quote(
-                            text0) + '&from=' + 'en' + '&to=' + 'zh' + '&salt=' + str(
-                            salt) + '&sign=' + sign
-                    httpClient0.request('GET', myurl)
-                    response = httpClient0.getresponse()
-                    s = response.read().decode('utf-8')
-                    s = eval(s)
-                    print(s)
-                text1 = s['trans_result'][0]['dst']
-                # text1 = line['dst']
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
+                text1 = ''
+                self.traresult = ""
+                n = 0
+                for i in text0:
+                    if self.is_alphabet(i):
+                        n += 1
+                if n / len(text0) > 0.4:
+                    print("is en")
+                    fr = "英语"
+                    to = "中文"
+                else:
+                    fr = "中文"
+                    to = "英语"
+                self.translator = Translator()
+                self.translator.translate(text0, fr, to)
+                self.translator.wait()
+                if self.translator.tra_result:
+                    self.traresult = self.translator.tra_result
+                else:
+                    raise Exception("翻译出错")
+            except Exception as e:
+                print(e)
+                text1 = str(e)
+            else:
+                text1 = self.traresult
             self.signal.emit(self.w, text0, text1)
-        else:
-            self.signal.emit(self.w, '没有检测到文字...', '请重新操作...')
 
+    def is_alphabet(self, uchar):
+        """判断一个unicode是否是英文字母"""
+        if (u'\u0041' <= uchar <= u'\u005a') or (u'\u0061' <= uchar <= u'\u007a'):
+            return True
+        else:
+            return False
 
 class Draw_grab_width(QLabel):
     # 划屏提字设置界面
@@ -3976,7 +3958,7 @@ class SettingPage(QScrollArea):
 
         ok_button = QPushButton('验证', fyapi_groub)
         ok_button.move(self.fyapikey.x(), self.fyapikey.y() + self.fyapikey.height())
-        ok_button.clicked.connect(self.fyapichange)
+        # ok_button.clicked.connect(self.fyapichange)
 
         self.grab_widthbox = QGroupBox('划屏提字', self.settings_widget)
         self.grab_widthbox.setGeometry(fyapi_groub.x(), fyapi_groub.y() + fyapi_groub.height() + 20, 200, 150)
@@ -4047,39 +4029,39 @@ class SettingPage(QScrollArea):
         self.shiftFY.setEnabled(a)
         self.timeoutshift.setEnabled(a)
 
-    def apichange(self):
-        global API_KEY, APP_ID, SECRECT_KEY
-        try:
-            if len(self.appid.text()) > 5 and len(self.apikey.text()) > 5 and len(self.secrectkey.text()) > 5:
-                tAPP_ID = self.appid.text()
-                tAPI_KEY = self.apikey.text()
-                tSECRECT_KEY = self.secrectkey.text()
-                QPixmap(':/OCR.png').save('ocr.png')
-                with open('ocr.png', 'rb') as file:
-                    img = file.read()
-                client = AipOcr(tAPP_ID, tAPI_KEY, tSECRECT_KEY)
-                message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
-                print(message)
-                if 'error_code' in message.keys():
-                    print('appid错误!')
-                    raise ConnectionError
-                else:
-                    print('appid 正确')
-                    APP_ID = self.appid.text()
-                    API_KEY = self.apikey.text()
-                    SECRECT_KEY = self.secrectkey.text()
-                    self.settings.setValue('BaiduAI_APPID', APP_ID)
-                    self.settings.setValue('BaiduAI_APPKEY', API_KEY)
-                    self.settings.setValue('BaiduAI_SECRECT_KEY', SECRECT_KEY)
-            else:
-                raise ConnectionError
-        except:
-            QMessageBox.warning(self, "设置失败", "验证失败!", QMessageBox.Yes)
-            self.showm_signal.emit('无效账号!')
-        else:
-            QMessageBox.information(self, "设置成功",
-                                    "设置成功\n请自行留意api的调用量!感谢你的支持!\n(可通过重置设置重置api为作者的测试api)", QMessageBox.Yes)
-            self.appid.setPlaceholderText(self.appid.text())
+    # def apichange(self):
+    #     global API_KEY, APP_ID, SECRECT_KEY
+    #     try:
+    #         if len(self.appid.text()) > 5 and len(self.apikey.text()) > 5 and len(self.secrectkey.text()) > 5:
+    #             tAPP_ID = self.appid.text()
+    #             tAPI_KEY = self.apikey.text()
+    #             tSECRECT_KEY = self.secrectkey.text()
+    #             QPixmap(':/OCR.png').save('ocr.png')
+    #             with open('ocr.png', 'rb') as file:
+    #                 img = file.read()
+    #             client = AipOcr(tAPP_ID, tAPI_KEY, tSECRECT_KEY)
+    #             message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
+    #             print(message)
+    #             if 'error_code' in message.keys():
+    #                 print('appid错误!')
+    #                 raise ConnectionError
+    #             else:
+    #                 print('appid 正确')
+    #                 APP_ID = self.appid.text()
+    #                 API_KEY = self.apikey.text()
+    #                 SECRECT_KEY = self.secrectkey.text()
+    #                 self.settings.setValue('BaiduAI_APPID', APP_ID)
+    #                 self.settings.setValue('BaiduAI_APPKEY', API_KEY)
+    #                 self.settings.setValue('BaiduAI_SECRECT_KEY', SECRECT_KEY)
+    #         else:
+    #             raise ConnectionError
+    #     except:
+    #         QMessageBox.warning(self, "设置失败", "验证失败!", QMessageBox.Yes)
+    #         self.showm_signal.emit('无效账号!')
+    #     else:
+    #         QMessageBox.information(self, "设置成功",
+    #                                 "设置成功\n请自行留意api的调用量!感谢你的支持!\n(可通过重置设置重置api为作者的测试api)", QMessageBox.Yes)
+    #         self.appid.setPlaceholderText(self.appid.text())
 
     def fyapichange(self):
         try:
