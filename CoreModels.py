@@ -17,7 +17,7 @@ sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT
-from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit
 import http.client
 
 import random

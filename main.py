@@ -15,7 +15,7 @@ import os, re
 from Logger import Logger
 import numpy as np
 import jampublic
-from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit
 import http.client
 import random
 import shutil
