@@ -2,14 +2,19 @@ import os
 import re
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl
 from PyQt5.QtGui import QTextCursor, QDesktopServices
-from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
+from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit
+from PyQt5.QtGui import QPainter, QColor, QLinearGradient,QMovie
+from PyQt5.QtCore import Qt, QTimer,QSize
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl,QTimer
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu
+import numpy as np
+import cv2
 import jamresourse
-from jampublic import linelabel
+from jampublic import linelabel,TipsShower,OcrimgThread
 from jam_transtalater import Translator
 from jamspeak import Speaker
 class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语音
@@ -310,13 +315,13 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         self.history_pos = len(self.history)
         super(FramelessEnterSendQTextEdit, self).clear()
 class Hung_widget(QLabel):
-    button_signal = pyqtSignal(int)
+    button_signal = pyqtSignal(str)
     def __init__(self,parent=None,funcs = []):
         super().__init__()
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setMouseTracking(True)
         size = 30
-        self.size = size
+        self.buttonsize = size
         self.buttons = []
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.setStyleSheet("background-color: rgba(255, 255, 255, 0); border-radius: 6px;")  # 设置背景色和边框
@@ -325,8 +330,7 @@ class Hung_widget(QLabel):
                 botton = QPushButton(QIcon(func), '', self)
             else:
                 botton = QPushButton(str(func), self)
-            botton.emit_id = i
-            botton.clicked.connect(lambda checked, index=i: self.button_signal.emit(index))
+            botton.clicked.connect(lambda checked, index=func: self.button_signal.emit(index))
             botton.setGeometry(0,i*size,size,size)
             botton.setStyleSheet("""QPushButton {
             border: 2px solid #8f8f91;
@@ -370,10 +374,39 @@ class Hung_widget(QLabel):
     def closeEvent(self, e):
         self.clear()
         super().closeEvent(e)
+        
+class Loading_label(QLabel):
+    def __init__(self, parent=None,size = 100,text=None):
+        super().__init__(parent)
+        self.giflabel = QLabel(parent = self,text=text if text is not None else "")
+        self.giflabel.resize(size, size)
+        self.giflabel.setAlignment(Qt.AlignCenter)
+        self.gif = QMovie(':./load.gif')
+        self.gif.setScaledSize(QSize(size, size))
+        self.giflabel.setMovie(self.gif)
+    def resizeEvent(self, a0) -> None:
+        
+        size = min(self.width(),self.height())//3 
+        if size < 50:
+            size = min(self.width(),self.height())-5
+            
+        self.gif.setScaledSize(QSize(size, size))
+        self.giflabel.resize(size, size)
+        self.giflabel.move(self.width()//2-self.giflabel.width()//2,self.height()//2-self.giflabel.height()//2)
+        return super().resizeEvent(a0)
+    
+    def start(self):
+        self.gif.start()
+        self.show()
+    def stop(self):
+        self.gif.stop()
+        self.hide()
 class Freezer(QLabel):
     def __init__(self, parent=None, img=None, x=0, y=0, listpot=0):
         super().__init__()
-        self.hung_widget = Hung_widget(funcs =[":/exit.png",":/OCR.png"])
+        self.hung_widget = Hung_widget(funcs =[":/exit.png",":/ontop.png",":/OCR.png",":/copy.png",":/saveicon.png"])
+        self.tips_shower = TipsShower(" ",(QApplication.desktop().width()//2,50,120,50))
+        self.tips_shower.hide()
         self.imgpix = img
         self.listpot = listpot
         self.setPixmap(self.imgpix)
@@ -391,19 +424,57 @@ class Freezer(QLabel):
         self.setToolTip("Ctrl+滚轮可以调节透明度")
         # self.setMaximumSize(QApplication.desktop().size())
         self.timer = QTimer(self)  # 创建一个定时器
-        self.timer.setInterval(500)  # 设置定时器的时间间隔为1秒
+        self.timer.setInterval(200)  # 设置定时器的时间间隔为1秒
         self.timer.timeout.connect(self.check_mouse_leave)  # 定时器超时时触发check_mouse_leave函数
         
         self.hung_widget.button_signal.connect(self.hw_signalcallback)
-        self.move(x, y)
         self.hung_widget.show()
+        self.move(x, y)
+
+        self.on_ocr = False
     def hw_signalcallback(self,s):
         print("callback",s)
-        if s==0:#退出
+        s = s.lower()
+        self.tips_shower.set_pos(self.x(),self.y())
+        if "exit" in s:#退出
             self.clear()
-        elif s==1:#文字识别
+        elif "ocr" in s:#文字识别
+            self.tips_shower.setText("文字识别中...",color=Qt.green)
             self.ocr()
+        elif "ontop" in s:
+            self.tips_shower.setText("{}置顶...".format("取消"if self.on_top else "设置"),color=Qt.green)
+            self.change_ontop()
+        elif "copy" in s:
+            clipboard = QApplication.clipboard()
+            try:
+                clipboard.setPixmap(self.imgpix)
+            except:
+                self.tips_shower.setText("复制失败",color=Qt.green)
+            else:
+                self.tips_shower.setText("已复制图片",color=Qt.green)
+        elif "save" in s:
+            self.tips_shower.setText("图片另存为...",color=Qt.green)
+            img = self.imgpix
+            path, l = QFileDialog.getSaveFileName(self, "另存为", QStandardPaths.writableLocation(
+                QStandardPaths.PicturesLocation), "png Files (*.png);;"
+                                                  "jpg file(*.jpg);;jpeg file(*.JPEG);; bmp file(*.BMP );;ico file(*.ICO);;"
+                                                  ";;all files(*.*)")
+            if path:
+                img.save(path)
     def ocr(self):
+        self.on_ocr = True
+        if not os.path.exists("j_temp"):
+            os.mkdir("j_temp")
+        self.pixmap().save("j_temp/tempocr.png", "PNG")
+        cv_image = cv2.imread("j_temp/tempocr.png")
+        self.ocrthread = OcrimgThread(cv_image)
+        self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
+        self.ocrthread.start()
+        self.Loading_label = Loading_label(self)
+        self.Loading_label.setGeometry(0, 0, self.width(), self.height())
+        self.Loading_label.start()
+        QApplication.processEvents()
+    def ocr_res_signalhandle(self,result):
         pass
     def contextMenuEvent(self, event):
         menu = QMenu(self)
@@ -431,19 +502,22 @@ class Freezer(QLabel):
             except:
                 print('复制失败')
         elif action == topaction:
-            if self.on_top:
-                self.on_top = False
-                self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-                self.setWindowFlag(Qt.Tool, False)
-                self.show()
-            else:
-                self.on_top = True
-                self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-                self.setWindowFlag(Qt.Tool, True)
-                self.show()
+            self.change_ontop()
         elif action == rectaction:
             self.drawRect = not self.drawRect
             self.update()
+            
+    def change_ontop(self):
+        if self.on_top:
+            self.on_top = False
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
+            self.setWindowFlag(Qt.Tool, False)
+            self.show()
+        else:
+            self.on_top = True
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
+            self.setWindowFlag(Qt.Tool, True)
+            self.show()
     def setWindowOpacity(self,opacity):
         super().setWindowOpacity(opacity)
         self.hung_widget.setWindowOpacity(opacity)
@@ -490,6 +564,12 @@ class Freezer(QLabel):
         if self.x()+self.width() > QApplication.desktop().width() - hw_w:
             hw_x = self.x()-hw_w
         self.hung_widget.move(hw_x,hw_y)
+        
+    def resizeEvent(self, a0):
+        super().resizeEvent(a0)
+        if hasattr(self,"Loading_label"):
+            self.Loading_label.setGeometry(0, 0, self.width(), self.height())
+            
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             if event.x() > self.width() - 20 and event.y() > self.height() - 20:
@@ -530,6 +610,7 @@ class Freezer(QLabel):
     def leaveEvent(self,e):
         super().leaveEvent(e)
         self.timer.start()
+        self.settingOpacity = False
         
     def check_mouse_leave(self):
         if not self.underMouse() and not self.hung_widget.underMouse():

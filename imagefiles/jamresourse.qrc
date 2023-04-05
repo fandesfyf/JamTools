@@ -52,5 +52,6 @@
 	<file>clear.png</file>
 	<file>copy.png</file>
 	<file>exit.png</file>
+	<file>ontop.png</file>
 </qresource>
 </RCC>

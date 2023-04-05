@@ -74,7 +74,7 @@ class TipsShower(QLabel):
     def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=35, timeout=1000):
         super().__init__(parent)
         self.parent = parent
-        self.area = targetarea
+        self.area = list(targetarea)
         self.timeout = timeout
         self.rfont = QFont('', fontsize)
         self.setFont(self.rfont)
@@ -88,7 +88,8 @@ class TipsShower(QLabel):
         self.show()
 
         self.setStyleSheet("color:white")
-
+    def set_pos(self,x,y):
+        self.area[0],self.area[1]=[x,y]
     def setText(self, text, autoclose=True, font: QFont = None, color: QColor = None) -> None:
         super(TipsShower, self).setText(text)
         print("settext")
