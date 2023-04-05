@@ -753,7 +753,8 @@ class Freezer(QLabel):
         self.hide()
         if hasattr(self,"Loading_label"):
             self.Loading_label.stop()
-        self.text_shower.close()
+        self.text_shower.clear()
+        self.text_shower.hide()
         del self.showing_imgpix
         self.hung_widget.clear()
         super().clear()
