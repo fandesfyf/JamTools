@@ -37,6 +37,7 @@ class Translator(QObject):
                         '俄语': 'RU', '西班牙语': 'SP'}
         self.translate_engine_info = {"YouDao":yd_lang_dict,
                                       "BaiDu":bd_lang_dict}
+        self.tra_result = None
         
     def get_available_langs(self,engine="YouDao"):
         return list(self.translate_engine_info[engine].keys())
@@ -57,6 +58,8 @@ class Translator(QObject):
         else:
             print("调用错误")
             self.status_signal.emit("调用错误")
+    def wait(self):
+        self.thread.join() 
             
     def Youdaotra(self):
         try:
@@ -74,6 +77,7 @@ class Translator(QObject):
             result_type_dict = dict(zip(mode_dict.values(),mode_dict.keys()))
             from_lan,to_lan = res["type"].split("2")
             from_lan,to_lan = result_type_dict[from_lan],result_type_dict[to_lan]
+            self.tra_result = result
             self.result_signal.emit(result,from_lan,to_lan)
             self.status_signal.emit("翻译完成!")
         except Exception as e:
@@ -90,6 +94,7 @@ class Translator(QObject):
                 result,from_lan,to_lan = result
                 result_type_dict = dict(zip(mode_dict.values(),mode_dict.keys()))
                 from_lan,to_lan = result_type_dict[from_lan],result_type_dict[to_lan]
+                self.tra_result = result
                 self.result_signal.emit(result,from_lan,to_lan)
                 self.status_signal.emit("翻译完成!")
             else:

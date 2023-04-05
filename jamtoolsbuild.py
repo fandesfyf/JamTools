@@ -2,7 +2,7 @@ import time
 
 jamfilelist = ["CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
                "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger", "jamspeak",
-               "jam_FramelessQtextEdit", "jam_transtalater"]
+               "jamWidgets", "jam_transtalater","PaddleOCRModel/PaddleOCRModel"]
 print("说明:main.py为存放引入库的文件(无需管),scr文件夹是fbs打包的项目目录.\n"
       "运行本文件打包时,会自动解析所有jamfilelist中源码的引入库,"
       "并将所有需要的库格式化后写入main.py文件中,从而让pyinstaller可以找到(否则可能有找不到库的错误)"
@@ -44,6 +44,11 @@ if __name__ == '__main__':
     os.mkdir("src/main/python")
     for file in jamfilelist:
         if os.path.exists('{}{}{}'.format(file, suffix, ext)):
+            if "/" in file:
+                path = 'src/main/python/{}'.format("/".join(os.path.split(file)[:-1]))
+                if not os.path.exists(path):
+                    print("创建文件夹{path}")
+                    os.mkdir(path)
             if os.path.exists('src/main/python/{}{}'.format(file, ext)):
                 os.remove('src/main/python/{}{}'.format(file, ext))
                 print('removed src/main/python/{}{}'.format(file, ext))
@@ -85,34 +90,55 @@ if __name__ == '__main__':
     print('copy jamresourse.py')
     if os.path.exists("src/main/resources/base"):
         shutil.rmtree("src/main/resources/base")
+        
+    resource_pack_dict={
+        "dirs":{# from : to
+            "bin/" + PLATFORM_SYS:"src/main/resources/base/bin/"+ PLATFORM_SYS,
+            "html":"src/main/resources/base/html",
+            "site-packages/qt_material":"src/main/resources/base/qt_material",
+            "PaddleOCRModel/modelv3":"src/main/resources/base/PaddleOCRModel/modelv3"
+            },
+        "files":{# dir : files
+            "src/main/resources/base":["log.log", "LICENSE","fake_useragent_0.1.11.json"]+\
+                ["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"]if PLATFORM_SYS == "win32" else [] + ["libopencv_world.so.3.4"] if PLATFORM_SYS == "linux" else [],
+            "src/main/resources/base/PaddleOCRModel":["PaddleOCRModel/ppocr_keys_v1.txt"]
+        }
+    }
     os.makedirs("src/main/resources/base/bin")
-    includedir = ["html", "bin/" + PLATFORM_SYS]
-    includefiles = ["log.log", "LICENSE","fake_useragent_0.1.11.json"]
-    if PLATFORM_SYS == "win32":
-        includefiles.extend(["screen-capture-recorder-x64.dll", "audio_sniffer-x64.dll"])
-    elif PLATFORM_SYS == "linux":
-        includefiles.extend(["libopencv_world.so.3.4"])
-    for d in includedir:
-        td = "src/main/resources/base/" + d
+    dirs = resource_pack_dict["dirs"]
+    print("打包资源目录")
+    for d in dirs:
+        td = dirs[d]
         if os.path.exists(d):
+            rd = "/".join(os.path.split(td)[:-1])
+            if not os.path.exists(rd):
+                print("+创建目录:{rd}")
+                os.makedirs(rd)
             if os.path.exists(td):
                 shutil.rmtree(td)
-                print("移除", td)
+                print("-移除{td}")
             shutil.copytree(d, td)
-            print("copy{}->{}".format(d, td))
+            print(":copy{} -> {}".format(d, td))
         else:
-            print("不存在:", d)
-
-    for f in includefiles:
-        td = "src/main/resources/base/" + f
-        if os.path.exists(f):
-            if os.path.exists(td):
-                os.remove(td)
-                print("移除", td)
-            shutil.copy2(f, td)
-            print("copy{}->{}".format(f, td))
-        else:
-            print("不存在", f)
+            print("!不存在源路径:", d)
+    files = resource_pack_dict["files"]
+    print("打包资源文件")
+    for td in files:
+        fileslist = files[td]
+        if not os.path.exists(td):
+            print("+创建目录:{td}")
+            os.makedirs(td)
+        for file in fileslist:
+            if os.path.exists(file):
+                filename = os.path.split(file)[-1]
+                to_dir_filename=os.path.join(td,filename)
+                if os.path.exists(to_dir_filename):
+                    os.remove(to_dir_filename)
+                    print("-移除", to_dir_filename)
+                shutil.copy2(file, to_dir_filename)
+                print(":copy{} -> {}".format(file, to_dir_filename))
+            else:
+                print("!找不到源文件{f}")
 
     if PLATFORM_SYS == "win32" and os.path.exists("target/installer/Installer.nsi"):
         """重写windows下的nsis配置文件版本号"""
@@ -145,5 +171,12 @@ if __name__ == '__main__':
             print("打包完成")
             if PLATFORM_SYS == "linux":
                 print("linux下自行运行sudo dpkg -i target/JamTools.deb安装")
-
+    else:# win32下打包好之后的操作
+        if os.path.exists("target/JamTools/cv2"):
+            print("replace cv2 module")
+            shutil.rmtree("target/JamTools/cv2")
+            os.mkdir("target/JamTools/cv2")
+            shutil.copy2("opencv_world341.dll", "target/JamTools/cv2/opencv_world341.dll")
+            shutil.copy2("cv2.cp37-win_amd64.pyd", "target/JamTools/cv2/cv2.cp37-win_amd64.pyd")
+        
     print('finished all')

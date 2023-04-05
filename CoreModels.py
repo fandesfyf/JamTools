@@ -8,15 +8,16 @@ import json
 import socket
 import gc
 import sys
+import cv2
 import os, re
 from Logger import Logger
-
+import numpy as np
 Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), ".jamtools.log"))
 sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT
-from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit
 import http.client
 
 import random
@@ -32,16 +33,17 @@ import qrcode
 import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer, QSettings, QFileInfo, \
     QUrl, QObject, QSize,pyqtSlot
-from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCursor, QColor, QDesktopServices, QMovie
+from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QTextCursor, QColor, QDesktopServices, QMovie,\
+    QBrush
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QToolTip, QAction, QTextEdit, QLineEdit, \
     QMessageBox, QFileDialog, QMenu, QSystemTrayIcon, QGroupBox, QComboBox, QCheckBox, QSpinBox, QTabWidget, \
     QDoubleSpinBox, QLCDNumber, QScrollArea, QWidget, QToolBox, QRadioButton, QTimeEdit, QListWidget, QDialog, \
-    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy
+    QProgressBar, QTextBrowser,QListWidgetItem,QVBoxLayout, QHBoxLayout,QStackedWidget,QSizePolicy,QAbstractItemView
 from PyQt5.QtNetwork import QLocalSocket, QLocalServer
 from qt_material import apply_stylesheet,list_themes
-
+import qt_material
 from jamscreenshot import Slabel
-from aip import AipOcr
+# from aip import AipOcr
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from pynput import keyboard, mouse
 from jamcontroller import ActionController, ActionCondition
@@ -65,7 +67,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.13.8B"
+VERSON = "0.14.0B"
 
 
 class JHotkey(QThread):
@@ -682,84 +684,66 @@ class StraThread(QThread):  # 右键画屏翻译线程
         super(QThread, self).__init__()
         self.w = w
         self.signal.connect(jamtools.word_extraction)
+        self.textresult = ""
+        self.traresult = ""
 
     def run(self):
         self.signal.emit(self.w, '正在识别...', '正在翻译...')
         with open("j_temp/sdf.png", 'rb') as i:
-            img = i.read()
+            img_bytes = i.read()
+            np_array = np.frombuffer(img_bytes, np.uint8)
+            img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
         text0 = ''
+        self.textresult = ""
         try:
-            client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-            message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
-            print(message)
-        # message = client.basicAccurate(img)   # 通用文字高精度识别，每天 800 次免费
-        except:
-            print("Unexpected error:", sys.exc_info()[0])
-            self.signal.emit(self.w, 'Unexpected error...', str(sys.exc_info()[0]))
+            self.ocrthread = OcrimgThread(img)
+            self.ocrthread.start()
+            self.ocrthread.wait()
+            self.textresult = self.ocrthread.ocr_result
+            if len(self.textresult):
+                text0 = self.textresult
+            else:
+                raise Exception("识别出错!")
+        except Exception as e:
+            print("Unexpected error:", sys.exc_info()[0],e)
+            self.signal.emit(self.w, 'Unexpected error...', str(e))
             return
         else:
-            if message is None:
-                text0 = "没有文字!"
-            else:
-                for res in message.get('words_result'):
-                    text0 += res.get('words')
             self.signal.emit(self.w, text0, '正在翻译...')
-        # appid = '20190928000337891'
-        # secretKey = 'SiNITAufl_JCVpk7fAUS'
-        salt = str(random.randint(32768, 65536))
-        sign = QSettings('Fandes', 'jamtools').value('tran_appid', '20190928000337891', str) + text0 + salt + QSettings(
-            'Fandes', 'jamtools').value('tran_secretKey', 'SiNITAufl_JCVpk7fAUS', str)
-        m1 = hashlib.md5()
-        m1.update(sign.encode(encoding='utf-8'))
-        sign = m1.hexdigest()
-        # print(text0)
-        if text0 != '':
-            text1 = None
-            myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value('tran_appid',
-                                                                                                   '20190928000337891',
-                                                                                                   str) + '&q=' + quote(
-                text0) + '&from=' + 'auto' + '&to=' + 'zh' + '&salt=' + str(
-                salt) + '&sign=' + sign
             try:
-                httpClient0 = http.client.HTTPConnection('api.fanyi.baidu.com')
-                httpClient0.request('GET', myurl)
-                response = httpClient0.getresponse()
-                s = response.read().decode('utf-8')
-                s = eval(s)
-                print(s)
-                if s['from'] == s['to'] or s['trans_result'][0]['dst'] == s['trans_result'][0]['src']:
-                    print('redo')
-                    salt = str(random.randint(32768, 65536))
-                    sign = QSettings('Fandes', 'jamtools').value('tran_appid', '20190928000337891',
-                                                                 str) + text0 + salt + QSettings('Fandes',
-                                                                                                 'jamtools').value(
-                        'tran_secretKey', 'SiNITAufl_JCVpk7fAUS', str)
-                    m1 = hashlib.md5()
-                    m1.update(sign.encode(encoding='utf-8'))
-                    sign = m1.hexdigest()
-                    if s['from'] == 'zh':
-                        myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value(
-                            'tran_appid', '20190928000337891', str) + '&q=' + quote(
-                            text0) + '&from=' + 'zh' + '&to=' + 'en' + '&salt=' + str(
-                            salt) + '&sign=' + sign
-                    else:
-                        myurl = '/api/trans/vip/translate' + '?appid=' + QSettings('Fandes', 'jamtools').value(
-                            'tran_appid', '20190928000337891', str) + '&q=' + quote(
-                            text0) + '&from=' + 'en' + '&to=' + 'zh' + '&salt=' + str(
-                            salt) + '&sign=' + sign
-                    httpClient0.request('GET', myurl)
-                    response = httpClient0.getresponse()
-                    s = response.read().decode('utf-8')
-                    s = eval(s)
-                    print(s)
-                text1 = s['trans_result'][0]['dst']
-                # text1 = line['dst']
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
+                text1 = ''
+                self.traresult = ""
+                n = 0
+                for i in text0:
+                    if self.is_alphabet(i):
+                        n += 1
+                if n / len(text0) > 0.4:
+                    print("is en")
+                    fr = "英语"
+                    to = "中文"
+                else:
+                    fr = "中文"
+                    to = "英语"
+                self.translator = Translator()
+                self.translator.translate(text0, fr, to)
+                self.translator.wait()
+                if self.translator.tra_result:
+                    self.traresult = self.translator.tra_result
+                else:
+                    raise Exception("翻译出错")
+            except Exception as e:
+                print(e)
+                text1 = str(e)
+            else:
+                text1 = self.traresult
             self.signal.emit(self.w, text0, text1)
-        else:
-            self.signal.emit(self.w, '没有检测到文字...', '请重新操作...')
 
+    def is_alphabet(self, uchar):
+        """判断一个unicode是否是英文字母"""
+        if (u'\u0041' <= uchar <= u'\u005a') or (u'\u0061' <= uchar <= u'\u007a'):
+            return True
+        else:
+            return False
 
 class Draw_grab_width(QLabel):
     # 划屏提字设置界面
@@ -1050,7 +1034,8 @@ class JamToolsWindow(QMainWindow):
         # 左侧功能区
         self.main_list_widget = QListWidget(self)
         # 设置选择模式为单选
-        self.main_list_widget.setSelectionMode(QListWidget.SingleSelection)
+        self.main_list_widget.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.main_list_widget.setSelectionBehavior(QAbstractItemView.SelectItems)
         # self.main_list_widget.setGeometry(QRect(10, 30, 160, 490))
         self.main_list_widget.setFont(groupfont) 
         main_list_map = [{"name": "酱截屏",
@@ -1099,11 +1084,14 @@ class JamToolsWindow(QMainWindow):
             self.main_list_widget.addItem(item)
         self.main_list_widget.setMouseTracking(True)
         # 定义槽函数处理单击事件
-        def handle_item_clicked(item):
+        def handle_item_clicked():
+            QApplication.processEvents()
+            item = self.main_list_widget.selectedItems()[0]
             print(f"Item {item.text()} clicked!")  # 打印出点击的项的文本
             item.func()
+            QApplication.processEvents()
         # 将 itemClicked 信号连接到槽函数
-        self.main_list_widget.itemClicked.connect(handle_item_clicked)
+        self.main_list_widget.itemSelectionChanged.connect(handle_item_clicked)
         self.main_list_widget.setStyleSheet('''
             QListWidget {
                 border: none;
@@ -1315,12 +1303,31 @@ class JamToolsWindow(QMainWindow):
     def update_editbox_color(self):
         init_theme = self.settings.value('qt_material_theme', "dark_blue.xml", type=str)
         edit_box_color = "black" if "light" == init_theme[:5] else "white"
-        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit,QTimeEdit)):
+        for widget in self.findChildren((QComboBox, QSpinBox, QDoubleSpinBox, QPushButton,QLineEdit,QTimeEdit,QListWidgetItem)):
             if widget.objectName() != 'record_screen_btn':
                 widget.setStyleSheet("color: {};".format(edit_box_color))
-        print("update")
+            if isinstance(widget, (QPushButton)):# 更改按钮图标色系
+                self.set_icon_color(widget,Qt.white if edit_box_color =="white" else Qt.black )
+        for widget in self.findChildren(QListWidget):#单独查找QListWidget
+            if isinstance(widget, (QListWidget)):# 更改QListWidget图标色系
+                for i in range(widget.count()):
+                    item = widget.item(i)
+                    if isinstance(item, QListWidgetItem):
+                        self.set_icon_color(item,Qt.white if edit_box_color =="white" else Qt.black)
+        print("update_editbox_color ")
         QApplication.processEvents()
-            
+    def set_icon_color(self,widget,color):
+        icon = widget.icon()
+        if len(icon.availableSizes()):
+            pixmap = icon.pixmap(48,48)
+            brush = QBrush(color)
+            painter = QPainter(pixmap)
+            painter.setCompositionMode(QPainter.CompositionMode_SourceIn)
+            painter.setBrush(brush)
+            painter.drawRect(pixmap.rect())
+            painter.end()
+            widget.setIcon(QIcon(pixmap))
+
     def connect_all(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
@@ -1473,7 +1480,7 @@ class JamToolsWindow(QMainWindow):
     def simple_mode(self):
         self.simplemodebox.setToolTip('Ctrl+回车可快速翻译!')
         self.simplemodebox.resize(250, 250)
-        self.simplemodebox.setWindowOpacity(0.8)
+        # self.simplemodebox.setWindowOpacity(0.8)
         self.hide()
 
     def changesimple(self, show=False):
@@ -3225,12 +3232,11 @@ class JamToolsWindow(QMainWindow):
                 self.hide()  # 删除闪退
             QApplication.processEvents()
 
-            def mutil_cla_signalhandle(filename, text):
+            def mutil_cla_signalhandle(filename,text):
                 print("mutil_cla_signalhandle active")
-                if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
-                    self.ocr_textEdit.insertPlainText("\n>>>>识别图片:{}<<<<\n".format(filename))
-                    self.ocr_textEdit.insertPlainText(text + '\n' * 2)
-                    self.statusBar().showMessage('识别{}完成！'.format(filename))
+                # if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
+                self.ocr_textEdit.insertPlainText(text)
+                # self.statusBar().showMessage('识别{}完成！'.format(filename))
 
             self.mutiocrthread = mutilocr(files)
             self.mutiocrthread.ocr_signal.connect(mutil_cla_signalhandle)
@@ -3482,18 +3488,18 @@ hhh(o゜▽゜)o☆）
         self.chatbt.clicked.connect(self.chat)
         voicebtn = QPushButton("", self.chat_groupBox)
         if self.settings.value("chater/playvoice", False, type=bool):
-            voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+            voicebtn.setIcon(QIcon(":/sound3.png"))
         else:
-            voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+            voicebtn.setIcon(QIcon(":/sound0.png"))
         voicebtn.setGeometry(self.chat_send_textEdit.x() + self.chat_send_textEdit.width() + 5,
                              self.chat_send_textEdit.y() - 25,
                              25, 25)
         
         def viocebtnclick():
             if self.settings.value("chater/playvoice", False, type=bool):
-                voicebtn.setStyleSheet('border-image: url(:/sound0.png);')
+                voicebtn.setIcon(QIcon(":/sound0.png"))
             else:
-                voicebtn.setStyleSheet('border-image: url(:/sound3.png);')
+                voicebtn.setIcon(QIcon(":/sound3.png"))
             self.settings.setValue("chater/playvoice", not self.settings.value("chater/playvoice", False, type=bool))
         
         voicebtn.clicked.connect(viocebtnclick)
@@ -3583,9 +3589,8 @@ hhh(o゜▽゜)o☆）
         if os.path.exists(picfile):
             filename = os.path.basename(picfile)
 
-            with open(picfile, 'rb') as i:
-                img = i.read()
-            self.ocrthread = OcrimgThread(filename, img, 1)
+            img = cv2.imread(picfile)
+            self.ocrthread = OcrimgThread(img)
             if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
                 self.statusBar().showMessage('正在识别: ' + filename)
                 if not self.OCR:
@@ -3651,8 +3656,9 @@ hhh(o゜▽゜)o☆）
         self.setWindowOpacity(0)
         self.settings.setValue("windowx", self.x())
         self.settings.setValue("windowy", self.y())
-        self.move(QApplication.desktop().width()*2, QApplication.desktop().height()*2)
-        self.setWindowOpacity(1)
+        self.hide()
+        # self.move(QApplication.desktop().width()*2, QApplication.desktop().height()*2)
+        # self.setWindowOpacity(1)
 
     def connectss(self):
         self.screenshoter.showm_signal.connect(self.trayicon.showM)
@@ -3882,7 +3888,7 @@ class SettingPage(QScrollArea):
 
         self.timeoutshift = QSpinBox(shiftbox)
         self.timeoutshift.setSuffix("s内触发")
-        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift键才触发")
+        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift+ctrl键才触发")
         self.timeoutshift.move(self.smartShift.x() + self.smartShift.width() + 20, self.smartShift.y())
         self.timeoutshift.valueChanged.connect(lambda a: self.settings.setValue("timeoutshift", a))
         self.timeoutshift.setValue(self.settings.value("timeoutshift", 7, type=int))
@@ -3890,16 +3896,16 @@ class SettingPage(QScrollArea):
         self.shiftFY = QCheckBox("翻译", shiftbox)
         self.shiftFY.move(self.smartShift.x(), self.smartShift.y() + self.smartShift.height())
         self.shiftFY.stateChanged.connect(lambda a: self.settings.setValue("shiftFY", bool(a)))
-        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift键为则翻译")
+        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift+ctrl键为则翻译")
         self.shiftFY.setChecked(self.settings.value("shiftFY", True, bool))
         self.shiftFYzh = QCheckBox("翻译中文", shiftbox)
         self.shiftFYzh.move(self.timeoutshift.x(), self.shiftFY.y())
         self.shiftFYzh.stateChanged.connect(lambda a: self.settings.setValue("shiftFYzh", bool(a)))
-        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift键翻译为英文")
+        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift+ctrl键翻译为英文")
         self.shiftFYzh.setChecked(self.settings.value("shiftFYzh", True, bool))
 
         self.openhtmlbtn = QCheckBox('识别网址', shiftbox)
-        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift直接在浏览器打开网址")
+        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift+ctrl直接在浏览器打开网址")
         self.openhtmlbtn.stateChanged.connect(lambda a: self.settings.setValue("openhttp", bool(a)))
         self.openhtmlbtn.setChecked(self.settings.value("openhttp", True, bool))
         self.openhtmlbtn.move(self.shiftFY.x(), self.shiftFY.y() + self.shiftFY.height())
@@ -3913,7 +3919,7 @@ class SettingPage(QScrollArea):
         self.shiftopendir.move(self.openhtmlbtn.x(), self.openhtmlbtn.y() + self.openhtmlbtn.height())
         self.shiftopendir.stateChanged.connect(lambda a: self.settings.setValue("shiftopendir", bool(a)))
         self.shiftopendir.setChecked(self.settings.value("shiftopendir", True, bool))
-        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
+        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift+ctrl键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
         self.smartShift.stateChanged.connect(self.smartShiftsetting_save)
         self.smartShiftsetting_save(self.smartShift.isChecked())
         # 快捷键
@@ -3956,7 +3962,7 @@ class SettingPage(QScrollArea):
 
         ok_button = QPushButton('验证', fyapi_groub)
         ok_button.move(self.fyapikey.x(), self.fyapikey.y() + self.fyapikey.height())
-        ok_button.clicked.connect(self.fyapichange)
+        # ok_button.clicked.connect(self.fyapichange)
 
         self.grab_widthbox = QGroupBox('划屏提字', self.settings_widget)
         self.grab_widthbox.setGeometry(fyapi_groub.x(), fyapi_groub.y() + fyapi_groub.height() + 20, 200, 150)
@@ -4027,39 +4033,39 @@ class SettingPage(QScrollArea):
         self.shiftFY.setEnabled(a)
         self.timeoutshift.setEnabled(a)
 
-    def apichange(self):
-        global API_KEY, APP_ID, SECRECT_KEY
-        try:
-            if len(self.appid.text()) > 5 and len(self.apikey.text()) > 5 and len(self.secrectkey.text()) > 5:
-                tAPP_ID = self.appid.text()
-                tAPI_KEY = self.apikey.text()
-                tSECRECT_KEY = self.secrectkey.text()
-                QPixmap(':/OCR.png').save('ocr.png')
-                with open('ocr.png', 'rb') as file:
-                    img = file.read()
-                client = AipOcr(tAPP_ID, tAPI_KEY, tSECRECT_KEY)
-                message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
-                print(message)
-                if 'error_code' in message.keys():
-                    print('appid错误!')
-                    raise ConnectionError
-                else:
-                    print('appid 正确')
-                    APP_ID = self.appid.text()
-                    API_KEY = self.apikey.text()
-                    SECRECT_KEY = self.secrectkey.text()
-                    self.settings.setValue('BaiduAI_APPID', APP_ID)
-                    self.settings.setValue('BaiduAI_APPKEY', API_KEY)
-                    self.settings.setValue('BaiduAI_SECRECT_KEY', SECRECT_KEY)
-            else:
-                raise ConnectionError
-        except:
-            QMessageBox.warning(self, "设置失败", "验证失败!", QMessageBox.Yes)
-            self.showm_signal.emit('无效账号!')
-        else:
-            QMessageBox.information(self, "设置成功",
-                                    "设置成功\n请自行留意api的调用量!感谢你的支持!\n(可通过重置设置重置api为作者的测试api)", QMessageBox.Yes)
-            self.appid.setPlaceholderText(self.appid.text())
+    # def apichange(self):
+    #     global API_KEY, APP_ID, SECRECT_KEY
+    #     try:
+    #         if len(self.appid.text()) > 5 and len(self.apikey.text()) > 5 and len(self.secrectkey.text()) > 5:
+    #             tAPP_ID = self.appid.text()
+    #             tAPI_KEY = self.apikey.text()
+    #             tSECRECT_KEY = self.secrectkey.text()
+    #             QPixmap(':/OCR.png').save('ocr.png')
+    #             with open('ocr.png', 'rb') as file:
+    #                 img = file.read()
+    #             client = AipOcr(tAPP_ID, tAPI_KEY, tSECRECT_KEY)
+    #             message = client.basicGeneral(img)  # 通用文字识别，每天 50 000 次免费
+    #             print(message)
+    #             if 'error_code' in message.keys():
+    #                 print('appid错误!')
+    #                 raise ConnectionError
+    #             else:
+    #                 print('appid 正确')
+    #                 APP_ID = self.appid.text()
+    #                 API_KEY = self.apikey.text()
+    #                 SECRECT_KEY = self.secrectkey.text()
+    #                 self.settings.setValue('BaiduAI_APPID', APP_ID)
+    #                 self.settings.setValue('BaiduAI_APPKEY', API_KEY)
+    #                 self.settings.setValue('BaiduAI_SECRECT_KEY', SECRECT_KEY)
+    #         else:
+    #             raise ConnectionError
+    #     except:
+    #         QMessageBox.warning(self, "设置失败", "验证失败!", QMessageBox.Yes)
+    #         self.showm_signal.emit('无效账号!')
+    #     else:
+    #         QMessageBox.information(self, "设置成功",
+    #                                 "设置成功\n请自行留意api的调用量!感谢你的支持!\n(可通过重置设置重置api为作者的测试api)", QMessageBox.Yes)
+    #         self.appid.setPlaceholderText(self.appid.text())
 
     def fyapichange(self):
         try:

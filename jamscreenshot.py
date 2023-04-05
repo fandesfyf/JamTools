@@ -14,7 +14,7 @@ from PyQt5.QtGui import QPixmap, QPainter, QPen, QIcon, QFont, QImage, QColor
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu, QGroupBox, QSpinBox, \
     QWidget
 from PyQt5.QtWidgets import QSlider, QColorDialog
-from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit,Freezer
 
 from jampublic import OcrimgThread, Commen_Thread, TipsShower, PLATFORM_SYS,CONFIG_DICT
 from jamroll_screenshot import Splicing_shots
@@ -696,157 +696,6 @@ class AutotextEdit(QTextEdit):
         super().keyReleaseEvent(e)
 
 
-class Freezer(QLabel):
-    def __init__(self, parent=None, img=None, x=0, y=0, listpot=0):
-        super().__init__()
-
-        self.imgpix = img
-        self.listpot = listpot
-        self.setPixmap(self.imgpix)
-        self.settingOpacity = False
-        self.setWindowOpacity(0.95)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
-        self.setMouseTracking(True)
-        self.drawRect = True
-        # self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.setGeometry(x, y, self.imgpix.width(), self.imgpix.height())
-        self.show()
-        self.drag = self.resize_the_window = False
-        self.on_top = True
-        self.p_x = self.p_y = 0
-        self.setToolTip("Ctrl+滚轮可以调节透明度")
-        # self.setMaximumSize(QApplication.desktop().size())
-
-    def contextMenuEvent(self, event):
-        menu = QMenu(self)
-        quitAction = menu.addAction("退出")
-        copyaction = menu.addAction('复制')
-        saveaction = menu.addAction('另存为')
-        topaction = menu.addAction('(取消)置顶')
-        rectaction = menu.addAction('(取消)边框')
-
-        action = menu.exec_(self.mapToGlobal(event.pos()))
-        if action == quitAction:
-            self.clear()
-        elif action == saveaction:
-            img = self.imgpix
-            path, l = QFileDialog.getSaveFileName(self, "另存为", QStandardPaths.writableLocation(
-                QStandardPaths.PicturesLocation), "png Files (*.png);;"
-                                                  "jpg file(*.jpg);;jpeg file(*.JPEG);; bmp file(*.BMP );;ico file(*.ICO);;"
-                                                  ";;all files(*.*)")
-            if path:
-                img.save(path)
-        elif action == copyaction:
-            clipboard = QApplication.clipboard()
-            try:
-                clipboard.setPixmap(self.imgpix)
-            except:
-                print('复制失败')
-        elif action == topaction:
-            if self.on_top:
-                self.on_top = False
-                self.setWindowFlag(Qt.WindowStaysOnTopHint, False)
-                self.setWindowFlag(Qt.Tool, False)
-                self.show()
-            else:
-                self.on_top = True
-                self.setWindowFlag(Qt.WindowStaysOnTopHint, True)
-                self.setWindowFlag(Qt.Tool, True)
-                self.show()
-        elif action == rectaction:
-            self.drawRect = not self.drawRect
-            self.update()
-
-    def wheelEvent(self, e):
-        if self.isVisible():
-            angleDelta = e.angleDelta() / 8
-            dy = angleDelta.y()
-            if self.settingOpacity:
-                if dy > 0:
-                    if (self.windowOpacity() + 0.1) <= 1:
-                        self.setWindowOpacity(self.windowOpacity() + 0.1)
-                    else:
-                        self.setWindowOpacity(1)
-                elif dy < 0 and (self.windowOpacity() - 0.1) >= 0.11:
-                    self.setWindowOpacity(self.windowOpacity() - 0.1)
-            else:
-                if 2 * QApplication.desktop().width() >= self.width() >= 50:
-                    w = self.width() + dy * 5
-                    if w < 50: w = 50
-                    if w > 2 * QApplication.desktop().width(): w = 2 * QApplication.desktop().width()
-                    scale = self.imgpix.height() / self.imgpix.width()
-                    h = w * scale
-                    s = self.width() / w  # 缩放比例
-                    mdx = e.x() * s - e.x()
-                    mdy = e.y() * s - e.y()
-                    self.setPixmap(self.imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-                    self.setGeometry(self.x() + mdx, self.y() + mdy, w, h)
-                    QApplication.processEvents()
-
-            self.update()
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            if event.x() > self.width() - 20 and event.y() > self.height() - 20:
-                self.resize_the_window = True
-                self.setCursor(Qt.SizeFDiagCursor)
-            else:
-                self.setCursor(Qt.SizeAllCursor)
-                self.drag = True
-                self.p_x, self.p_y = event.x(), event.y()
-            # self.resize(self.width()/2,self.height()/2)
-            # self.setPixmap(self.pixmap().scaled(self.pixmap().width()/2,self.pixmap().height()/2))
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.setCursor(Qt.ArrowCursor)
-            self.drag = self.resize_the_window = False
-
-    def mouseMoveEvent(self, event):
-        if self.isVisible():
-
-            if self.drag:
-                self.move(event.x() + self.x() - self.p_x, event.y() + self.y() - self.p_y)
-            elif self.resize_the_window:
-                if event.x() > 10 and event.y() > 10:
-                    w = event.x()
-                    scale = self.imgpix.height() / self.imgpix.width()
-                    h = w * scale
-                    self.resize(w, h)
-                    self.setPixmap(self.imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-            elif event.x() > self.width() - 20 and event.y() > self.height() - 20:
-                self.setCursor(Qt.SizeFDiagCursor)
-            else:
-                self.setCursor(Qt.ArrowCursor)
-
-    def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Escape:
-            self.clear()
-        elif e.key() == Qt.Key_Control:
-            self.settingOpacity = True
-
-    def keyReleaseEvent(self, e) -> None:
-        if e.key() == Qt.Key_Control:
-            self.settingOpacity = False
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        if self.drawRect:
-            painter = QPainter(self)
-            painter.setPen(QPen(Qt.green, 1, Qt.SolidLine))
-            painter.drawRect(0, 0, self.width() - 1, self.height() - 1)
-            painter.end()
-
-    def clear(self):
-        self.clearMask()
-        self.hide()
-        del self.imgpix
-        super().clear()
-        # jamtools.freeze_imgs[self.listpot] = None
-
-    def closeEvent(self, e):
-        self.clear()
-        e.ignore()
 
 
 class Slabel(QLabel):  # 区域截图功能
@@ -872,6 +721,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.paintlayer = PaintLayer(self)  # 绘图层
         self.mask = MaskLayer(self)  # 遮罩层
         self.text_box = AutotextEdit(self)  # 文字工具类
+        self.ocr_freezer = None
         self.shower = FramelessEnterSendQTextEdit(self, enter_tra=True)  # 截屏时文字识别的小窗口
         self.settings = QSettings('Fandes', 'jamtools')
         self.setMouseTracking(True)
@@ -884,7 +734,6 @@ class Slabel(QLabel):  # 区域截图功能
         self.save_botton = QPushButton(QIcon(":/saveicon.png"), '', self.botton_box)
         self.save_botton.clicked.connect(lambda: self.cutpic(1))
         self.ssrec_botton = QPushButton(QIcon(":/ssrecord.png"), '', self.botton_box)
-        self.cla_botton = QPushButton(self.botton_box)
         self.ocr_botton = QPushButton(self.botton_box)
         self.roll_ss_btn = QPushButton(self.botton_box)
         self.sure_btn = QPushButton("确定", self.botton_box)
@@ -935,7 +784,6 @@ class Slabel(QLabel):  # 区域截图功能
             self.freeze_img_botton.hide()
             self.roll_ss_btn.hide()
             self.ocr_botton.hide()
-            self.cla_botton.hide()
             self.ssrec_botton.hide()
             
         # self.setVisible(False)
@@ -981,7 +829,7 @@ class Slabel(QLabel):  # 区域截图功能
     def init_slabel_ui(self):  # 初始化界面的参数
 
         self.shower.hide()
-        self.shower.setWindowOpacity(0.8)
+        # self.shower.setWindowOpacity(0.8)
         # if PLATFORM_SYS == "darwin":
         #     self.move(-QApplication.desktop().width(), -QApplication.desktop().height())
 
@@ -996,11 +844,8 @@ class Slabel(QLabel):  # 区域截图功能
         self.freeze_img_botton.setIcon(QIcon(":/freeze.png"))
         self.freeze_img_botton.setToolTip('固定图片于屏幕上')
         self.freeze_img_botton.clicked.connect(self.freeze_img)
-        self.cla_botton.setGeometry(self.freeze_img_botton.x() + self.freeze_img_botton.width(), 0, 40, 35)
-        self.cla_botton.setIcon(QIcon(":/CLA.png"))
-        self.cla_botton.setToolTip('图像主体识别')
-        self.cla_botton.clicked.connect(self.cla)
-        self.ocr_botton.setGeometry(self.cla_botton.x() + self.cla_botton.width(), 0, 40, 35)
+
+        self.ocr_botton.setGeometry(self.freeze_img_botton.x() + self.freeze_img_botton.width(), 0, 40, 35)
         self.ocr_botton.setIcon(QIcon(":/OCR.png"))
         self.ocr_botton.setToolTip('文字识别')
         self.ocr_botton.clicked.connect(self.ocr)
@@ -1019,7 +864,7 @@ class Slabel(QLabel):  # 区域截图功能
         a = self.roll_ss_btn.width() if PLATFORM_SYS != "darwin" else 0
         if self.mode == "screenshot":
             self.botton_box.resize(
-                self.sure_btn.width() + self.cla_botton.width() + self.ocr_botton.width() + self.ssrec_botton.width()
+                self.sure_btn.width() + self.ocr_botton.width() + self.ssrec_botton.width()
                 + a + self.save_botton.width() + self.freeze_img_botton.width(),
                 self.sure_btn.height())
         else:
@@ -1603,6 +1448,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.activateWindow()
         self.raise_()
         self.update()
+        
         QApplication.processEvents()
 
     def init_ss_thread_fun(self, get_pix):  # 后台初始化截屏线程,用于寻找所有智能选区
@@ -1666,29 +1512,35 @@ class Slabel(QLabel):  # 区域截图功能
 
     def ocr(self):
         self.Tipsshower.setText("正在识别...")
-        self.shower.move(self.x1, self.y1)
-        self.shower.show()
-        self.shower.clear()
+        # self.shower.setPlaceholderText("正在识别,请耐心等待...")
+        # self.shower.move(self.x1, self.y1)
+        # self.shower.show()
+        # self.shower.clear()
         self.cutpic(save_as=2)
-        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
-        self.final_get_img.save(ocrimg_temp_path)
-        with open(ocrimg_temp_path, 'rb') as i:
-            img = i.read()
-        self.ocrthread = OcrimgThread('ocrtemp', img, 1)
-        self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
-        self.ocrthread.start()
+        # ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
+        # self.final_get_img.save(ocrimg_temp_path)
+        # # with open(ocrimg_temp_path, 'rb') as i:
+        # #     img = i.read()
+        # img = cv2.imread(ocrimg_temp_path)
+        # self.ocrthread = OcrimgThread(img)
+        # self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
+        # self.ocrthread.start()
+        self.ocr_freezer = Freezer(None, self.final_get_img, min(self.x0, self.x1), min(self.y0, self.y1),
+                                               len(self.parent.freeze_imgs))
+        self.ocr_freezer.ocr()
         QApplication.processEvents()
 
     def ocr_res_signalhandle(self, text):
+        self.shower.setPlaceholderText("")
         self.shower.insertPlainText(text)
-        jt = re.sub(r'[^\w]', '', text).replace('_', '')
-        n = 0
-        for i in text:
-            if self.is_alphabet(i):
-                n += 1
-        if n / len(jt) > 0.4:
-            print("is en")
-            self.shower.tra()
+        # jt = re.sub(r'[^\w]', '', text).replace('_', '')
+        # n = 0
+        # for i in text:
+        #     if self.is_alphabet(i):
+        #         n += 1
+        # if n / len(jt) > 0.4:
+        #     print("is en")
+        #     self.shower.tra()
 
     def is_alphabet(self, uchar):
         """判断一个unicode是否是英文字母"""
@@ -1697,21 +1549,6 @@ class Slabel(QLabel):  # 区域截图功能
         else:
             return False
 
-    def cla(self):
-        self.Tipsshower.setText("正在识别...")
-        self.shower.move(self.x1, self.y1)
-        self.shower.show()
-        self.shower.clear()
-        self.cutpic(save_as=2)
-        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
-        self.final_get_img.save(ocrimg_temp_path)
-        with open(ocrimg_temp_path, 'rb') as i:
-            img = i.read()
-        options = {"top_num": 5}
-        self.ocrthread = OcrimgThread(img, options, 2)
-        self.ocrthread.result_show_signal.connect(self.shower.insertPlainText)
-        self.ocrthread.start()
-        QApplication.processEvents()
 
     def choice(self):  # 选区完毕后显示选择按钮的函数
         self.choicing = True

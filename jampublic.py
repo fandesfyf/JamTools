@@ -11,22 +11,21 @@ import random
 import re
 import sys
 import time
-
+import cv2
 import requests
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer, QSettings, QFileInfo, \
     QUrl, QObject, QSize
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
 from PyQt5.QtCore import QTimer
-from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices
-from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
+from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices,QPixmap
+from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
-from aip import AipOcr, AipImageClassify
 from urllib.parse import quote
-
+import numpy as np
 from fake_useragent import UserAgent
 
 from jamspeak import Speaker
-
+from PaddleOCRModel.PaddleOCRModel import det_rec_functions as OcrDetector
 APP_ID = QSettings('Fandes', 'jamtools').value('BaiduAI_APPID', '17302981', str)  # 获取的 ID，下同
 API_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_APPKEY', 'wuYjn1T9GxGIXvlNkPa9QWsw', str)
 SECRECT_KEY = QSettings('Fandes', 'jamtools').value('BaiduAI_SECRECT_KEY', '89wrg1oEiDzh5r0L63NmWeYNZEWUNqvG', str)
@@ -75,7 +74,7 @@ class TipsShower(QLabel):
     def __init__(self, text, targetarea=(0, 0, 0, 0), parent=None, fontsize=35, timeout=1000):
         super().__init__(parent)
         self.parent = parent
-        self.area = targetarea
+        self.area = list(targetarea)
         self.timeout = timeout
         self.rfont = QFont('', fontsize)
         self.setFont(self.rfont)
@@ -89,7 +88,8 @@ class TipsShower(QLabel):
         self.show()
 
         self.setStyleSheet("color:white")
-
+    def set_pos(self,x,y):
+        self.area[0],self.area[1]=[x,y]
     def setText(self, text, autoclose=True, font: QFont = None, color: QColor = None) -> None:
         super(TipsShower, self).setText(text)
         print("settext")
@@ -132,10 +132,20 @@ class TipsShower(QLabel):
 
 
 class linelabel(QLabel):
-    def __init__(self, parent):
+    move_signal = pyqtSignal(int, int)
+    def __init__(self, parent=None):
         super(linelabel, self).__init__(parent=parent)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-
+        self.setMouseTracking(True)
+        self.moving = False
+        # self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
+        self.setStyleSheet("QPushButton{color:black}"
+                           "QPushButton:hover{color:green}"
+                           "QPushButton:hover{background-color:rgb(200,200,100)}"
+                           "QPushButton{background-color:rgb(239,239,239)}"
+                           "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
+                           "border-radius: 8px;}"
+                           )
     def paintEvent(self, e):
         super(linelabel, self).paintEvent(e)
         painter = QPainter(self)
@@ -143,10 +153,36 @@ class linelabel(QLabel):
         painter.setBrush(brush)
         painter.drawRect(0, 0, self.width(), self.height())
         painter.end()
+        
+    def mouseReleaseEvent(self, e):
+        super().mouseReleaseEvent(e)
+        if e.button() == Qt.LeftButton:
+            self.moving = False
+            self.setCursor(Qt.ArrowCursor)
+            self.update()
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self.moving = True
+            self.dx = e.x()
+            self.dy = e.y()
+            self.setCursor(Qt.SizeAllCursor)
+            self.update()
 
+    def mouseMoveEvent(self, e):
+        super().mouseMoveEvent(e)
+        if self.isVisible():
+            if self.moving:
+                self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
+                self.update()
+                self.move_signal.emit(self.x(),self.y())
+
+            self.setCursor(Qt.SizeAllCursor)
+
+                
 
 
 class mutilocr(QThread):
+    """多图片文字识别线程"""
     statusbarsignal = pyqtSignal(str)
     ocr_signal = pyqtSignal(str, str)
 
@@ -161,79 +197,88 @@ class mutilocr(QThread):
             self.statusbarsignal.emit('开始识别图片')
             filename = os.path.basename(file)
             self.filename = filename
-            with open(file, 'rb')as i:
-                img = i.read()
+            with open(file, 'rb') as f:
+                img_bytes = f.read()
+                # 从字节数组读取图像
+                np_array = np.frombuffer(img_bytes, np.uint8)
+                img = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
             print("正在识别图片：\t" + filename)
+            
             self.statusbarsignal.emit('正在识别: ' + filename)
-
-            th = OcrimgThread(filename, img, 1)
+            self.ocr_signal.emit(self.filename, "\n>>>>识别图片:{}<<<<\n".format(filename))
+            th = OcrimgThread(img)
             th.result_show_signal.connect(self.mutil_cla_signalhandle)
             th.start()
             th.wait()
             self.threadlist.append(th)
 
     def mutil_cla_signalhandle(self, text):
-        print("aaaa mutil_cla_signalhandle")
+        """一个结果回调"""
         self.ocr_signal.emit(self.filename, text)
         print("已识别{}".format(self.filename))
 
 
 class OcrimgThread(QThread):
+    """文字识别线程"""
     # simple_show_signal = pyqtSignal(str)
     result_show_signal = pyqtSignal(str)
     statusbar_signal = pyqtSignal(str)
-
-    def __init__(self, args0, args1, ocrorimg=0):
+    det_res_img = pyqtSignal(QPixmap)# 返回文字监测结果
+    boxes_info_signal = pyqtSignal(list)# 返回识别信息结果
+    def __init__(self, image):
         super(QThread, self).__init__()
-        self.args0 = args0
-        self.ocr = ocrorimg
-        self.args = args1  # img
+        self.image = image  # img
+        self.ocr_result = None
+        self.ocr_sys = None
         # self.simple_show_signal.connect(jamtools.simple_show)
-
+    def get_match_text(self,match_text_boxes):
+        if self.ocr_sys is not None:
+            return self.ocr_sys.get_format_text(match_text_boxes)
     def run(self):
         self.statusbar_signal.emit('正在识别文字...')
-        if self.ocr == 1:
-            try:
-                client = AipOcr(APP_ID, API_KEY, SECRECT_KEY)
-                # message = client.basicGeneral(self.args)  # 通用文字识别，每天 50 000 次免费
-                message = client.basicAccurate(self.args)  # 通用文字高精度识别，每天 800 次免费
-                text = ''
-                # 输出文本内容
-                # print("xxx", message.values())
-                for res in message.get('words_result'):
-                    text += res.get('words') + '\n'
+        try:
+            self.ocr_sys = OcrDetector(self.image,use_dnn = False,version=3)# 支持v2和v3版本的
+            stime = time.time()
+            # 得到检测框
+            dt_boxes = self.ocr_sys.get_boxes()
+            image = self.ocr_sys.draw_boxes(dt_boxes[0],self.image)
+            # cv2.imwrite("testocr.png",image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # 创建QImage对象
+            height, width, channel = image.shape
+            bytesPerLine = 3 * width
+            qimage = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
-            except:
-                print("Unexpected error:", sys.exc_info(), "jampublic l326")
-                self.statusbar_signal.emit('识别出错！请确保网络畅通')
-                text = str(sys.exc_info()[0])
+            # 创建QPixmap对象
+            qpixmap = QPixmap.fromImage(qimage)
+            self.det_res_img.emit(qpixmap)
+            
+            dettime = time.time()
+            print(len(dt_boxes[0]))
+            if len(dt_boxes[0])==0:
+                text="<没有识别到文字>"
+            else:
+                # 识别 results: 单纯的识别结果，results_info: 识别结果+置信度    原图
+                # 识别模型固定尺寸只能100长度，需要处理可以根据自己场景导出模型 1000
+                # onnx可以支持动态，不受限
+                results, results_info = self.ocr_sys.recognition_img(dt_boxes)
+                # print(f'results :{str(results)}')
+                print("识别时间:",time.time()-dettime,dettime - stime)
+                match_text_boxes = self.ocr_sys.get_match_text_boxes(dt_boxes[0],results)
+                text= self.ocr_sys.get_format_text(match_text_boxes)
+                self.boxes_info_signal.emit(match_text_boxes)
             # print(text)
-            if text == '':
-                text = '空'
+        except Exception as e:
+            print("Unexpected error:",e, "jampublic l326")
+            text = str(sys.exc_info()[0])
+            self.statusbar_signal.emit('识别出错！{}'.format(text))
+        # print(text)
+        if text == '':
+            text = '没有识别到文字'
+        self.ocr_result = text
+        self.result_show_signal.emit(text)
+        self.statusbar_signal.emit('识别完成！')
 
-            self.result_show_signal.emit(text)
-            self.statusbar_signal.emit('识别完成！')
-
-        elif self.ocr == 2:
-            text = ''
-            try:
-                client = AipImageClassify(APP_ID, API_KEY, SECRECT_KEY)
-                result = client.advancedGeneral(self.args0, self.args)['result']
-                for i in result:
-                    # print(i['keyword'],i['score'])
-                    temp = str(i['keyword']) + str(i['score'])
-                    text += temp + '\n'
-            except KeyError:
-                self.statusbar_signal.emit('识别出错！图像大小不正确！')
-                text = '识别出错！图像大小不正确！'
-            except:
-                print("Unexpected error:", sys.exc_info()[0])
-                text = "Unexpected error:" + str(sys.exc_info()[0])
-                self.statusbar_signal.emit('识别出错！请确保网络畅通')
-                # print(result)
-                # jamtools.tra_from_edit.clear()
-            self.result_show_signal.emit(text)
-            self.statusbar_signal.emit("识图完成！")
         print("识别完成")
 
 

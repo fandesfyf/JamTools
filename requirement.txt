@@ -10,6 +10,8 @@ baidu-aip
 PyQt5==5.15.2
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
+onnxruntime==1.14.1
+shapely==2.0.1
 numpy
 Cython==0.29.21
 fake-useragent==0.1.11

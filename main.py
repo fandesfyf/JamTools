@@ -10,10 +10,12 @@ import json
 import socket
 import gc
 import sys
+import cv2
 import os, re
 from Logger import Logger
+import numpy as np
 import jampublic
-from jam_FramelessQtextEdit import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit
 import http.client
 import random
 import shutil
@@ -28,8 +30,8 @@ import PyQt5.QtGui
 import PyQt5.QtWidgets
 import PyQt5.QtNetwork
 from qt_material import apply_stylesheet,list_themes
+import qt_material
 from jamscreenshot import Slabel
-from aip import AipOcr
 import fbs_runtime.application_context.PyQt5
 import pynput
 from jamcontroller import ActionController, ActionCondition
@@ -39,7 +41,6 @@ from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 from jam_transtalater import Translator
 import jamresourse
 import os
-import cv2
 from numpy import asarray
 import base64
 import html
@@ -58,8 +59,8 @@ import math
 import re
 from numpy import array, zeros, uint8, float32,array
 from jamroll_screenshot import Splicing_shots
-from aip import AipOcr, AipImageClassify
 from fake_useragent import UserAgent
+from PaddleOCRModel.PaddleOCRModel import det_rec_functions as OcrDetector
 import operator
 from functools import reduce
 from numpy import zeros, uint8, asarray, vstack, float32
@@ -67,6 +68,11 @@ import io
 import sys, time
 import pyttsx3
 from threading import Thread
+import threading
+import copy
+import onnxruntime
+import pyclipper
+from shapely.geometry import Polygon
 from CoreModels import main
 main()
 
