@@ -407,16 +407,20 @@ class Freezer(QLabel):
         self.hung_widget = Hung_widget(funcs =[":/exit.png",":/ontop.png",":/OCR.png",":/copy.png",":/saveicon.png"])
         self.tips_shower = TipsShower(" ",(QApplication.desktop().width()//2,50,120,50))
         self.tips_shower.hide()
-        self.imgpix = img
+        self.text_shower = FramelessEnterSendQTextEdit(self, enter_tra=True)
+        self.text_shower.hide()
+        self.origin_imgpix = img
+        self.showing_imgpix = self.origin_imgpix
+        self.ocr_res_imgpix = None
         self.listpot = listpot
-        self.setPixmap(self.imgpix)
+        self.setPixmap(self.showing_imgpix)
         self.settingOpacity = False
         self.setWindowOpacity(0.95)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
         self.setMouseTracking(True)
         self.drawRect = True
         # self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.setGeometry(x, y, self.imgpix.width(), self.imgpix.height())
+        self.setGeometry(x, y, self.showing_imgpix.width(), self.showing_imgpix.height())
         self.show()
         self.drag = self.resize_the_window = False
         self.on_top = True
@@ -430,8 +434,8 @@ class Freezer(QLabel):
         self.hung_widget.button_signal.connect(self.hw_signalcallback)
         self.hung_widget.show()
         self.move(x, y)
-
-        self.on_ocr = False
+        self.ocr_status = "waiting"
+        self.ocr_res_info = []
     def hw_signalcallback(self,s):
         print("callback",s)
         s = s.lower()
@@ -447,14 +451,14 @@ class Freezer(QLabel):
         elif "copy" in s:
             clipboard = QApplication.clipboard()
             try:
-                clipboard.setPixmap(self.imgpix)
+                clipboard.setPixmap(self.showing_imgpix)
             except:
                 self.tips_shower.setText("复制失败",color=Qt.green)
             else:
                 self.tips_shower.setText("已复制图片",color=Qt.green)
         elif "save" in s:
             self.tips_shower.setText("图片另存为...",color=Qt.green)
-            img = self.imgpix
+            img = self.showing_imgpix
             path, l = QFileDialog.getSaveFileName(self, "另存为", QStandardPaths.writableLocation(
                 QStandardPaths.PicturesLocation), "png Files (*.png);;"
                                                   "jpg file(*.jpg);;jpeg file(*.JPEG);; bmp file(*.BMP );;ico file(*.ICO);;"
@@ -462,20 +466,59 @@ class Freezer(QLabel):
             if path:
                 img.save(path)
     def ocr(self):
-        self.on_ocr = True
+        if self.ocr_status == "ocr":
+            self.tips_shower.setText("取消识别...",color=Qt.green)
+            self.ocr_status = "abort"
+            self.Loading_label.stop()
+            self.text_shower.hide()
+            self.showing_imgpix = self.origin_imgpix
+            self.setPixmap(self.showing_imgpix.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            
+            return
+        elif self.ocr_status == "show":#正在展示结果,取消展示
+            self.tips_shower.setText("退出文字识别...",color=Qt.green)
+            self.ocr_status = "waiting"
+            self.Loading_label.stop()
+            self.text_shower.hide()
+            self.showing_imgpix = self.origin_imgpix
+            self.setPixmap(self.showing_imgpix.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            return
+        self.ocr_status = "ocr"
         if not os.path.exists("j_temp"):
             os.mkdir("j_temp")
         self.pixmap().save("j_temp/tempocr.png", "PNG")
         cv_image = cv2.imread("j_temp/tempocr.png")
         self.ocrthread = OcrimgThread(cv_image)
         self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
+        self.ocrthread.boxes_info_signal.connect(self.orc_boxes_info_callback)
+        self.ocrthread.det_res_img.connect(self.det_res_img_callback)
         self.ocrthread.start()
         self.Loading_label = Loading_label(self)
         self.Loading_label.setGeometry(0, 0, self.width(), self.height())
         self.Loading_label.start()
+        
+        self.text_shower.setPlaceholderText("正在识别,请耐心等待...")
+        self.text_shower.move(self.x(), self.y()+self.height())
+        self.text_shower.show()
+        self.text_shower.clear()
         QApplication.processEvents()
-    def ocr_res_signalhandle(self,result):
-        pass
+    def orc_boxes_info_callback(self,text_boxes):
+        if self.ocr_status == "ocr":
+            print("rec orc_boxes_info_callback")
+            
+    def det_res_img_callback(self,piximg):
+        if self.ocr_status == "ocr":
+            print("rec det_res_img_callback")
+            self.showing_imgpix = piximg
+            self.ocr_res_imgpix = piximg
+            self.setPixmap(piximg.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            
+    def ocr_res_signalhandle(self,text):
+        if self.ocr_status == "ocr":
+            self.text_shower.setPlaceholderText("")
+            self.text_shower.insertPlainText(text)
+            self.Loading_label.stop()
+            self.ocr_status = "show"
     def contextMenuEvent(self, event):
         menu = QMenu(self)
         quitAction = menu.addAction("退出")
@@ -488,7 +531,7 @@ class Freezer(QLabel):
         if action == quitAction:
             self.clear()
         elif action == saveaction:
-            img = self.imgpix
+            img = self.showing_imgpix
             path, l = QFileDialog.getSaveFileName(self, "另存为", QStandardPaths.writableLocation(
                 QStandardPaths.PicturesLocation), "png Files (*.png);;"
                                                   "jpg file(*.jpg);;jpeg file(*.JPEG);; bmp file(*.BMP );;ico file(*.ICO);;"
@@ -498,7 +541,7 @@ class Freezer(QLabel):
         elif action == copyaction:
             clipboard = QApplication.clipboard()
             try:
-                clipboard.setPixmap(self.imgpix)
+                clipboard.setPixmap(self.showing_imgpix)
             except:
                 print('复制失败')
         elif action == topaction:
@@ -543,10 +586,10 @@ class Freezer(QLabel):
                     w = self.width() + dy * 5
                     if w < 50: w = 50
                     if w > 2 * QApplication.desktop().width(): w = 2 * QApplication.desktop().width()
-                    scale = self.imgpix.height() / self.imgpix.width()
+                    scale = self.showing_imgpix.height() / self.showing_imgpix.width()
                     h = w * scale
                     s = self.width() / w  # 缩放比例
-                    self.setPixmap(self.imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    self.setPixmap(self.showing_imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                     self.resize( w, h)
                     delta_x = -(w - old_width)*old_pos.x()/old_width
                     delta_y = -(h - old_height)*old_pos.y()/old_height
@@ -595,10 +638,10 @@ class Freezer(QLabel):
             elif self.resize_the_window:
                 if event.x() > 10 and event.y() > 10:
                     w = event.x()
-                    scale = self.imgpix.height() / self.imgpix.width()
+                    scale = self.showing_imgpix.height() / self.showing_imgpix.width()
                     h = w * scale
                     self.resize(w, h)
-                    self.setPixmap(self.imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    self.setPixmap(self.showing_imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
             elif event.x() > self.width() - 20 and event.y() > self.height() - 20:
                 self.setCursor(Qt.SizeFDiagCursor)
             else:
@@ -637,7 +680,10 @@ class Freezer(QLabel):
     def clear(self):
         self.clearMask()
         self.hide()
-        del self.imgpix
+        if hasattr(self,"Loading_label"):
+            self.Loading_label.stop()
+        self.text_shower.close()
+        del self.showing_imgpix
         self.hung_widget.clear()
         super().clear()
         # jamtools.freeze_imgs[self.listpot] = None

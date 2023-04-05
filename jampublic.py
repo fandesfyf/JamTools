@@ -18,7 +18,7 @@ from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QStandardPaths, QTimer,
 from PyQt5.QtCore import QRect, Qt, QThread, pyqtSignal, QSettings, QSizeF, QStandardPaths, QUrl
 from PyQt5.QtCore import QTimer
 from PyQt5.QtGui import QColor, QBrush, QTextDocument, QTextCursor, QDesktopServices,QPixmap
-from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
+from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 from urllib.parse import quote
 import numpy as np
@@ -188,7 +188,8 @@ class OcrimgThread(QThread):
     # simple_show_signal = pyqtSignal(str)
     result_show_signal = pyqtSignal(str)
     statusbar_signal = pyqtSignal(str)
-
+    det_res_img = pyqtSignal(QPixmap)# 返回文字监测结果
+    boxes_info_signal = pyqtSignal(list)# 返回识别信息结果
     def __init__(self, image):
         super(QThread, self).__init__()
         self.image = image  # img
@@ -202,7 +203,18 @@ class OcrimgThread(QThread):
             stime = time.time()
             # 得到检测框
             dt_boxes = ocr_sys.get_boxes()
-            ocr_sys.draw_boxes(dt_boxes[0],self.image)
+            image = ocr_sys.draw_boxes(dt_boxes[0],self.image)
+            # cv2.imwrite("testocr.png",image)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # 创建QImage对象
+            height, width, channel = image.shape
+            bytesPerLine = 3 * width
+            qimage = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+
+            # 创建QPixmap对象
+            qpixmap = QPixmap.fromImage(qimage)
+            self.det_res_img.emit(qpixmap)
+            
             dettime = time.time()
             print(len(dt_boxes[0]))
             if len(dt_boxes[0])==0:
@@ -214,8 +226,9 @@ class OcrimgThread(QThread):
                 results, results_info = ocr_sys.recognition_img(dt_boxes)
                 # print(f'results :{str(results)}')
                 print("识别时间:",time.time()-dettime,dettime - stime)
-                text = ocr_sys.get_format_text(dt_boxes[0],results)
-            print(text)
+                text,match_text_boxes = ocr_sys.get_format_text(dt_boxes[0],results)
+                self.boxes_info_signal.emit(match_text_boxes)
+            # print(text)
         except Exception as e:
             print("Unexpected error:",e, "jampublic l326")
             text = str(sys.exc_info()[0])

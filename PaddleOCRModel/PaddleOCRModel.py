@@ -559,6 +559,7 @@ class det_rec_functions(object):
             # 绘制边框
             cv2.drawContours(image, contours, -1, (0, 255, 0), 1)
             # cv2.putText(image,str(contours),(points[0],points[1]))
+        # cv2.imwrite("testocr.png",image)
         # 显示图像
         if display:
             # cv2.namedWindow("Bounding Boxes", cv2.WINDOW_NORMAL)
@@ -636,6 +637,7 @@ class det_rec_functions(object):
             results.append(res[0])
             results_info.append(res)
     def get_format_text(self,dt_boxes,results,threshold = 0.5):
+        match_text_boxes = []
         text_blocks = []
         total_h = 0
         for pos, textres in zip(dt_boxes,results):
@@ -650,7 +652,8 @@ class det_rec_functions(object):
                 height = np.max(pos[:, 1]) - min_y
                 total_h += height
                 print((min_x, min_y, width, height))
-                text_blocks.append({'text': text, 'box': (min_x, min_y, width, height)},)
+                text_blocks.append({'text': text, 'box': (min_x, min_y, width, height)})
+                match_text_boxes.append({'text': text, 'box': pos})
         av_h = int(total_h/len(text_blocks))       
         def sort_blocks(blocks):
             # 定义一个排序函数
@@ -706,7 +709,7 @@ class det_rec_functions(object):
             last_bottom = bottom
             last_right = x + w
 
-        return result   
+        return result,match_text_boxes
     def recognition_img(self, dt_boxes):
         stime = time.time()
         img_ori = self.img  #原图大小
