@@ -58,6 +58,7 @@ from PIL import ImageQt
 import math
 import re
 from numpy import array, zeros, uint8, float32,array
+from jamWidgets import FramelessEnterSendQTextEdit,Freezer
 from jamroll_screenshot import Splicing_shots
 from fake_useragent import UserAgent
 from PaddleOCRModel.PaddleOCRModel import det_rec_functions as OcrDetector
