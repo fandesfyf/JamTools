@@ -721,6 +721,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.paintlayer = PaintLayer(self)  # 绘图层
         self.mask = MaskLayer(self)  # 遮罩层
         self.text_box = AutotextEdit(self)  # 文字工具类
+        self.ocr_freezer = None
         self.shower = FramelessEnterSendQTextEdit(self, enter_tra=True)  # 截屏时文字识别的小窗口
         self.settings = QSettings('Fandes', 'jamtools')
         self.setMouseTracking(True)
@@ -1447,6 +1448,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.activateWindow()
         self.raise_()
         self.update()
+        
         QApplication.processEvents()
 
     def init_ss_thread_fun(self, get_pix):  # 后台初始化截屏线程,用于寻找所有智能选区
@@ -1510,19 +1512,22 @@ class Slabel(QLabel):  # 区域截图功能
 
     def ocr(self):
         self.Tipsshower.setText("正在识别...")
-        self.shower.setPlaceholderText("正在识别,请耐心等待...")
-        self.shower.move(self.x1, self.y1)
-        self.shower.show()
-        self.shower.clear()
+        # self.shower.setPlaceholderText("正在识别,请耐心等待...")
+        # self.shower.move(self.x1, self.y1)
+        # self.shower.show()
+        # self.shower.clear()
         self.cutpic(save_as=2)
-        ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
-        self.final_get_img.save(ocrimg_temp_path)
-        # with open(ocrimg_temp_path, 'rb') as i:
-        #     img = i.read()
-        img = cv2.imread(ocrimg_temp_path)
-        self.ocrthread = OcrimgThread(img)
-        self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
-        self.ocrthread.start()
+        # ocrimg_temp_path = 'j_temp/{}.png'.format("ocrtemp")
+        # self.final_get_img.save(ocrimg_temp_path)
+        # # with open(ocrimg_temp_path, 'rb') as i:
+        # #     img = i.read()
+        # img = cv2.imread(ocrimg_temp_path)
+        # self.ocrthread = OcrimgThread(img)
+        # self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
+        # self.ocrthread.start()
+        self.ocr_freezer = Freezer(None, self.final_get_img, min(self.x0, self.x1), min(self.y0, self.y1),
+                                               len(self.parent.freeze_imgs))
+        self.ocr_freezer.ocr()
         QApplication.processEvents()
 
     def ocr_res_signalhandle(self, text):

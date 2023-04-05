@@ -120,7 +120,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         self.label.move(self.x()+self.width(), self.y())
     def move_signal_callback(self,x,y):
         if self.x() != x-self.width() or self.y() != y:
-            self.move()
+            self.move(x-self.width(),y)
     def copy_text(self):
         text = self.toPlainText().lstrip("\n").rstrip("\n")
         if len(text):
@@ -191,6 +191,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
             if self.y() + self.height() > winheight:
                 self.move(self.x(), winheight - border - self.height())
         if recheck:
+            self.textAreaChanged(recheck=False)
             self.textAreaChanged(recheck=False)
         self.adjustBotton()
 
@@ -439,6 +440,7 @@ class Freezer(QLabel):
         self.move(x, y)
         self.ocr_status = "waiting"
         self.ocr_res_info = []
+        
     def hw_signalcallback(self,s):
         print("callback",s)
         s = s.lower()
