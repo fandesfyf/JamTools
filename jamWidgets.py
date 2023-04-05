@@ -2,10 +2,10 @@ import os
 import re
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl
 from PyQt5.QtGui import QTextCursor, QDesktopServices
-from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage
+from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage,QPixmap
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit
-from PyQt5.QtGui import QPainter, QColor, QLinearGradient,QMovie
-from PyQt5.QtCore import Qt, QTimer,QSize
+from PyQt5.QtGui import QPainter, QColor, QLinearGradient,QMovie,QPolygon
+from PyQt5.QtCore import Qt, QTimer,QSize,QPoint
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl,QTimer
@@ -49,10 +49,14 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
                            "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
                            "border-radius: 8px;}"
                            )
-        self.label = linelabel(self)
-        self.colse_botton = QPushButton('X', self)
+        self.setGeometry(QApplication.desktop().width()//2,QApplication.desktop().height()//2,100,100)
+        self.menu_size = 28
+        self.label = linelabel()
+        self.label.setGeometry(self.x() + self.width(),self.y(), 28, self.height())
+        self.label.move_signal.connect(self.move_signal_callback)
+        self.colse_botton = QPushButton('X', self.label)
         self.colse_botton.setToolTip('关闭')
-        self.colse_botton.resize(25, 25)
+        self.colse_botton.resize(self.menu_size, self.menu_size)
         self.colse_botton.clicked.connect(self.hide)
         self.colse_botton.show()
         self.colse_botton.setStyleSheet(
@@ -61,40 +65,48 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
             "QPushButton:hover{color:green}"
             "QPushButton:hover{background-color:rgb(150,50,0)}"
             "QPushButton{border-radius:0};")
-        self.tra_botton = QPushButton('译', self)
-        self.tra_botton.resize(25, 25)
+        self.tra_botton = QPushButton(QIcon(":./tra.png"),'', self.label)
+        self.tra_botton.resize(self.menu_size, self.menu_size)
         self.tra_botton.clicked.connect(self.tra)
         self.tra_botton.setToolTip('翻译/快捷键Ctrl+回车')
         self.tra_botton.show()
 
-        self.detail_botton = QPushButton('详', self)
-        self.detail_botton.resize(25, 25)
+        self.copy_botton = QPushButton(QIcon(":./copy.png"),'', self.label)
+        self.copy_botton.resize(self.menu_size, self.menu_size)
+        self.copy_botton.clicked.connect(self.copy_text)
+        self.copy_botton.setToolTip('复制内容到剪切板')
+        self.copy_botton.show()
+        
+        self.detail_botton = QPushButton('详', self.label)
+        self.detail_botton.resize(self.menu_size, self.menu_size)
         self.detail_botton.clicked.connect(self.detail)
         self.detail_botton.setToolTip('跳转百度翻译网页版查看详细解析')
         self.detail_botton.show()
 
-        self.speak_botton = QPushButton('听', self)
-        self.speak_botton.resize(25, 25)
+        self.speak_botton = QPushButton('听', self.label)
+        self.speak_botton.resize(self.menu_size, self.menu_size)
         self.speak_botton.clicked.connect(self.speak)
         self.speak_botton.setToolTip('播放音频/快捷键F4')
         self.speak_botton.show()
 
-        self.clear_botton = QPushButton(QIcon(":./clear.png"), "", self)
-        self.clear_botton.resize(25, 25)
+        self.clear_botton = QPushButton(QIcon(":./clear.png"), "", self.label)
+        self.clear_botton.resize(self.menu_size, self.menu_size)
         self.clear_botton.clicked.connect(self.clear)
         self.clear_botton.setToolTip('清空')
         self.clear_botton.show()
-        self.last_botton = QPushButton('<', self)
-        self.last_botton.resize(13, 13)
+        self.last_botton = QPushButton('<', self.label)
+        self.last_botton.resize(self.menu_size//2, self.menu_size//2)
         self.last_botton.clicked.connect(self.last_history)
         self.last_botton.setToolTip('上一个历史记录Ctrl+←')
         self.last_botton.show()
-        self.next_botton = QPushButton('>', self)
-        self.next_botton.resize(13, 13)
+        self.next_botton = QPushButton('>', self.label)
+        self.next_botton.resize(self.menu_size//2, self.menu_size//2)
         self.next_botton.clicked.connect(self.next_history)
         self.next_botton.setToolTip('下一个历史记录Ctrl+→')
         self.next_botton.show()
 
+        
+        
         self.setToolTip('Ctrl+回车可快速翻译,拖动边框可改变位置')
         self.clear_signal.connect(self.clear)
         self.textAreaChanged()
@@ -103,6 +115,17 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
 
         if enter_tra:
             self.action = self.tra
+    def move(self,x,y,active=False):
+        super().move(x,y)
+        self.label.move(self.x()+self.width(), self.y())
+    def move_signal_callback(self,x,y):
+        if self.x() != x-self.width() or self.y() != y:
+            self.move()
+    def copy_text(self):
+        text = self.toPlainText().lstrip("\n").rstrip("\n")
+        if len(text):
+            clipboard = QApplication.clipboard()
+            clipboard.setText(text)
 
     def detail(self):
         text = self.toPlainText().split("翻译结果")[0].lstrip("\n").rstrip("\n")
@@ -144,20 +167,20 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         if text != "":
             Speaker().speak(text)
 
-    def textAreaChanged(self, minsize=180, recheck=True):
+    def textAreaChanged(self, minsize=200, recheck=True,border=30):
         self.document.adjustSize()
-        newWidth = self.document.size().width() + 28
-        newHeight = self.document.size().height() + 15
+        newWidth = self.document.size().width() + border
+        newHeight = self.document.size().height() + border//2
         winwidth, winheight = QApplication.desktop().width(), QApplication.desktop().height()
         if newWidth != self.width():
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
-            elif newWidth > winwidth * 3 // 7:
-                self.setFixedWidth(winwidth * 3 // 7 + 28)
+            elif newWidth > winwidth // 2:
+                self.setFixedWidth(winwidth // 2 + border)
             else:
                 self.setFixedWidth(newWidth)
             if self.x() + self.width() > winwidth:
-                self.move(winwidth - 28 - self.width(), self.y())
+                self.move(winwidth - border - self.width(), self.y())
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
@@ -166,21 +189,22 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
             else:
                 self.setFixedHeight(newHeight)
             if self.y() + self.height() > winheight:
-                self.move(self.x(), winheight - 28 - self.height())
+                self.move(self.x(), winheight - border - self.height())
         if recheck:
             self.textAreaChanged(recheck=False)
         self.adjustBotton()
 
     def adjustBotton(self):
-        self.label.setGeometry(self.width() - 28, 0, 28, self.height())
-        self.colse_botton.move(self.width() - 26, 1)
-        self.tra_botton.move(self.width() - 26, self.height() - 26)
+        self.label.setGeometry(self.x()+self.width(), self.y(), 28, self.height())
+        self.colse_botton.move(0, 1)
+        self.tra_botton.move(0, self.height() - self.tra_botton.height())
         self.speak_botton.move(self.tra_botton.x(), self.tra_botton.y() - self.speak_botton.height())
         self.detail_botton.move(self.speak_botton.x(), self.speak_botton.y() - self.detail_botton.height())
         self.clear_botton.move(self.detail_botton.x(), self.detail_botton.y() - self.clear_botton.height())
-        self.last_botton.move(self.clear_botton.x(), self.clear_botton.y() - self.last_botton.height())
-        self.next_botton.move(self.clear_botton.x() + self.clear_botton.width() - self.next_botton.width(),
-                              self.clear_botton.y() - self.next_botton.height())
+        self.copy_botton.move(self.clear_botton.x(), self.clear_botton.y() - self.copy_botton.height())
+        self.last_botton.move(self.copy_botton.x(), self.copy_botton.y() - self.last_botton.height())
+        self.next_botton.move(self.copy_botton.x() + self.copy_botton.width() - self.next_botton.width(),
+                              self.copy_botton.y() - self.next_botton.height())
 
     def get_tra_resultsignal(self, text,fr,to):
         self.moveCursor(QTextCursor.End)
@@ -191,16 +215,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         super(FramelessEnterSendQTextEdit, self).insertPlainText(text)
         self.show()
 
-    def mousePressEvent(self, e):
-        if e.button() == Qt.LeftButton:
-            if e.x() > self.width() - 25 or e.y() < 10 or e.y() > self.height() - 20:
-                self.moving = True
-                self.dx = e.x()
-                self.dy = e.y()
-                self.viewport().setCursor(Qt.SizeAllCursor)
-                self.viewport().update()
-            else:
-                super().mousePressEvent(e)
+    
 
     def wheelEvent(self, e) -> None:
         super(FramelessEnterSendQTextEdit, self).wheelEvent(e)
@@ -212,23 +227,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
             elif angle < 0 and self.windowOpacity() > 0.2:
                 self.setWindowOpacity(self.windowOpacity() - 0.1)
 
-    def mouseReleaseEvent(self, e):
-        super().mouseReleaseEvent(e)
-        if e.button() == Qt.LeftButton:
-            self.moving = False
-            self.viewport().setCursor(Qt.ArrowCursor)
-            self.viewport().update()
-
-    def mouseMoveEvent(self, e):
-        super().mouseMoveEvent(e)
-        if self.isVisible():
-            if self.moving:
-                self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
-                self.viewport().update()
-            if e.x() > self.width() - 25 or e.y() < 10 or e.y() > self.height() - 20:
-                self.viewport().setCursor(Qt.SizeAllCursor)
-            else:
-                self.viewport().setCursor(Qt.ArrowCursor)
+    
             
 
     def keyPressEvent(self, e):
@@ -296,18 +295,22 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
             self.history_pos = hp - 1
             self.setText(self.history[self.history_pos])
         # print("last h", self.history_pos, len(self.history))
-
+    def showEvent(self,e):
+        super().showEvent(e)
+        self.label.show()
     def hide(self) -> None:
         self.addhistory()
         super(FramelessEnterSendQTextEdit, self).hide()
+        self.label.hide()
         if self.autoreset:
             print('删除', self.autoreset - 1)
             self.del_myself_signal.emit(self.autoreset - 1)
+            self.label.close()
             self.close()
 
     def closeEvent(self, e) -> None:
         super(FramelessEnterSendQTextEdit, self).closeEvent(e)
-
+        self.label.close()
     def clear(self, notsave=False):
         save = not notsave
         if save:
@@ -504,8 +507,11 @@ class Freezer(QLabel):
         QApplication.processEvents()
     def orc_boxes_info_callback(self,text_boxes):
         if self.ocr_status == "ocr":
+            for tb in text_boxes:
+                tb["select"]=False
+            self.ocr_res_info = text_boxes
             print("rec orc_boxes_info_callback")
-            
+
     def det_res_img_callback(self,piximg):
         if self.ocr_status == "ocr":
             print("rec det_res_img_callback")
@@ -607,14 +613,77 @@ class Freezer(QLabel):
         if self.x()+self.width() > QApplication.desktop().width() - hw_w:
             hw_x = self.x()-hw_w
         self.hung_widget.move(hw_x,hw_y)
+        self.text_shower.move(self.x(), self.y()+self.height())#主动移动
         
     def resizeEvent(self, a0):
         super().resizeEvent(a0)
         if hasattr(self,"Loading_label"):
             self.Loading_label.setGeometry(0, 0, self.width(), self.height())
+    def draw_ocr_select_result(self,ids = []):
+        qpixmap = self.ocr_res_imgpix.copy()
+        painter = QPainter(qpixmap)
+        
+        for i,text_box in enumerate(self.ocr_res_info):
+            if i in ids:
+                pen = QPen(Qt.green)
+            else:
+                pen = QPen(Qt.red)
+            pen.setWidth(2) 
+            painter.setPen(pen)
+            contour = text_box["box"]
+            points = []
+            for point in contour:
+                x, y = point
+                points.append(QPoint(x, y))
+            polygon = QPolygon(points + [points[0]])
+            painter.drawPolyline(polygon)
+        painter.end()
+        return qpixmap
+    def check_select_ocr_box(self,x,y):
+        select_ids = []
+        change = False
+        for i,text_box in enumerate(self.ocr_res_info):
+            contour = text_box["box"]
+            dist = cv2.pointPolygonTest(contour, (x,y), False)
+            if dist >= 0:
+                text_box["select"] = ~text_box["select"]
+                change = True
+            if text_box["select"]:
+                select_ids.append(i)
             
+        return select_ids,change
+    def update_ocr_text(self,ids):
+        match_text_box = []
+        for i,text_box in enumerate(self.ocr_res_info):
+            if i in ids:
+                match_text_box.append(text_box)
+        if hasattr(self,"ocrthread"):
+            res = self.ocrthread.get_match_text(match_text_box)
+            if res is not None:
+                return res
+        return None
+    def update_ocr_select_result(self,x,y):
+        select_ids,changed = self.check_select_ocr_box(x,y)
+        if changed:
+            pix = self.draw_ocr_select_result(ids = select_ids)
+            self.showing_imgpix = pix
+            self.setPixmap(pix.scaled(self.width(), self.height(), Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            update_res = self.update_ocr_text(select_ids)
+            if update_res is not None:
+                # 更新结果
+                self.text_shower.move(self.x(), self.y()+self.height())
+                self.text_shower.show()
+                self.text_shower.clear()
+                self.text_shower.insertPlainText(update_res)
+        return changed
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
+            if self.ocr_status=="show":
+                sx,sy = self.origin_imgpix.width()/self.width(),self.origin_imgpix.height()/self.height()
+                realx,realy = event.x()*sx,event.y()*sy
+                changed = self.update_ocr_select_result(realx,realy)
+                if changed:
+                    return
             if event.x() > self.width() - 20 and event.y() > self.height() - 20:
                 self.resize_the_window = True
                 self.setCursor(Qt.SizeFDiagCursor)

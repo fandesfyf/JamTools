@@ -132,10 +132,20 @@ class TipsShower(QLabel):
 
 
 class linelabel(QLabel):
-    def __init__(self, parent):
+    move_signal = pyqtSignal(int, int)
+    def __init__(self, parent=None):
         super(linelabel, self).__init__(parent=parent)
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-
+        self.setMouseTracking(True)
+        self.moving = False
+        # self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)
+        self.setStyleSheet("QPushButton{color:black}"
+                           "QPushButton:hover{color:green}"
+                           "QPushButton:hover{background-color:rgb(200,200,100)}"
+                           "QPushButton{background-color:rgb(239,239,239)}"
+                           "QScrollBar{width:3px;border:none; background-color:rgb(200,200,200);"
+                           "border-radius: 8px;}"
+                           )
     def paintEvent(self, e):
         super(linelabel, self).paintEvent(e)
         painter = QPainter(self)
@@ -143,7 +153,32 @@ class linelabel(QLabel):
         painter.setBrush(brush)
         painter.drawRect(0, 0, self.width(), self.height())
         painter.end()
+        
+    def mouseReleaseEvent(self, e):
+        super().mouseReleaseEvent(e)
+        if e.button() == Qt.LeftButton:
+            self.moving = False
+            self.setCursor(Qt.ArrowCursor)
+            self.update()
+    def mousePressEvent(self, e):
+        if e.button() == Qt.LeftButton:
+            self.moving = True
+            self.dx = e.x()
+            self.dy = e.y()
+            self.setCursor(Qt.SizeAllCursor)
+            self.update()
 
+    def mouseMoveEvent(self, e):
+        super().mouseMoveEvent(e)
+        if self.isVisible():
+            if self.moving:
+                self.move(e.x() + self.x() - self.dx, e.y() + self.y() - self.dy)
+                self.update()
+                self.move_signal.emit(self.x(),self.y())
+
+            self.setCursor(Qt.SizeAllCursor)
+
+                
 
 
 class mutilocr(QThread):
@@ -194,16 +229,19 @@ class OcrimgThread(QThread):
         super(QThread, self).__init__()
         self.image = image  # img
         self.ocr_result = None
+        self.ocr_sys = None
         # self.simple_show_signal.connect(jamtools.simple_show)
-
+    def get_match_text(self,match_text_boxes):
+        if self.ocr_sys is not None:
+            return self.ocr_sys.get_format_text(match_text_boxes)
     def run(self):
         self.statusbar_signal.emit('正在识别文字...')
         try:
-            ocr_sys = OcrDetector(self.image,use_dnn = False,version=3)# 支持v2和v3版本的
+            self.ocr_sys = OcrDetector(self.image,use_dnn = False,version=3)# 支持v2和v3版本的
             stime = time.time()
             # 得到检测框
-            dt_boxes = ocr_sys.get_boxes()
-            image = ocr_sys.draw_boxes(dt_boxes[0],self.image)
+            dt_boxes = self.ocr_sys.get_boxes()
+            image = self.ocr_sys.draw_boxes(dt_boxes[0],self.image)
             # cv2.imwrite("testocr.png",image)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             # 创建QImage对象
@@ -223,10 +261,11 @@ class OcrimgThread(QThread):
                 # 识别 results: 单纯的识别结果，results_info: 识别结果+置信度    原图
                 # 识别模型固定尺寸只能100长度，需要处理可以根据自己场景导出模型 1000
                 # onnx可以支持动态，不受限
-                results, results_info = ocr_sys.recognition_img(dt_boxes)
+                results, results_info = self.ocr_sys.recognition_img(dt_boxes)
                 # print(f'results :{str(results)}')
                 print("识别时间:",time.time()-dettime,dettime - stime)
-                text,match_text_boxes = ocr_sys.get_format_text(dt_boxes[0],results)
+                match_text_boxes = self.ocr_sys.get_match_text_boxes(dt_boxes[0],results)
+                text= self.ocr_sys.get_format_text(match_text_boxes)
                 self.boxes_info_signal.emit(match_text_boxes)
             # print(text)
         except Exception as e:

@@ -636,24 +636,33 @@ class det_rec_functions(object):
             res = self.get_img_res(self.onet_rec_session, pic, self.postprocess_op)
             results.append(res[0])
             results_info.append(res)
-    def get_format_text(self,dt_boxes,results,threshold = 0.5):
+    def get_match_text_boxes(self,dt_boxes,results,threshold = 0.5):
         match_text_boxes = []
-        text_blocks = []
-        total_h = 0
         for pos, textres in zip(dt_boxes,results):
             if textres[1]>threshold:
                 text = textres[0]
-                # 提取最小的x和y
-                min_x = np.min(pos[:, 0])
-                min_y = np.min(pos[:, 1])
-
-                # 提取近似的宽度和高度
-                width = np.max(pos[:, 0]) - min_x
-                height = np.max(pos[:, 1]) - min_y
-                total_h += height
-                print((min_x, min_y, width, height))
-                text_blocks.append({'text': text, 'box': (min_x, min_y, width, height)})
                 match_text_boxes.append({'text': text, 'box': pos})
+        return match_text_boxes
+    
+    def get_format_text(self,match_text_boxes):
+        if len(match_text_boxes) == 0:
+            return "no result"
+        text_blocks = []
+        total_h = 0
+        for text_box in match_text_boxes:
+            pos = text_box["box"]
+            text = text_box["text"]
+            # 提取最小的x和y
+            min_x = np.min(pos[:, 0])
+            min_y = np.min(pos[:, 1])
+
+            # 提取近似的宽度和高度
+            width = np.max(pos[:, 0]) - min_x
+            height = np.max(pos[:, 1]) - min_y
+            total_h += height
+            print((min_x, min_y, width, height))
+            text_blocks.append({'text': text, 'box': (min_x, min_y, width, height)})
+        
         av_h = int(total_h/len(text_blocks))       
         def sort_blocks(blocks):
             # 定义一个排序函数
@@ -709,7 +718,7 @@ class det_rec_functions(object):
             last_bottom = bottom
             last_right = x + w
 
-        return result,match_text_boxes
+        return result
     def recognition_img(self, dt_boxes):
         stime = time.time()
         img_ori = self.img  #原图大小
@@ -776,7 +785,7 @@ if __name__=='__main__':
     results, results_info = ocr_sys.recognition_img(dt_boxes)
     print(f'results :{str(results)}',len(results))
     print(f'results_info :{str(results_info)}')
-    print(ocr_sys.get_format_text(dt_boxes[0],results))
+    print(ocr_sys.get_format_text(ocr_sys.get_match_text_boxes(dt_boxes[0],results)))
     print(time.time()-dettime,dettime - stime)
 
 
