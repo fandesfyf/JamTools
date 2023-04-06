@@ -13,6 +13,8 @@ PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
 onnxruntime
 shapely
+pyclipper
+qt_material
 numpy
 Cython==0.29.21
 fake-useragent==0.1.11

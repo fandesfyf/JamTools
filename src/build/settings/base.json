@@ -3,5 +3,5 @@
     "author": "Fandes",
     "main_module": "src/main/python/main.py",
     "version": "0.13",
-    "hidden_imports": ["pynput.keyboard._darwin","pynput.mouse._darwin"]
+    "hidden_imports": ["qt_material","pynput.keyboard._darwin","pynput.mouse._darwin"]
 }
