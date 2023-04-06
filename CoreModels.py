@@ -5466,9 +5466,10 @@ class CheckForUpdateThread(QThread):
                     s+=2048
                     nt=time.time()
                     sc += 2048
-                    if nt-lt !=0:
+                    if nt-lt >= 0.2:
                         self.updating_signal.emit(
-                            "正在下载:\n{:.2f}M 速度:{:.2f}M/s".format(s / 1024 / 1024,sc/1024/1024/(nt-lt)),int(s/totalsize*100))
+                            "正在下载:\n{:.2f}M/{:.2f}M {}% 速度:{:.2f}M/s ".format(s / 1024 / 1024,totalsize/ 1024 / 1024,
+                                                                        int(s/totalsize*100),sc/1024/1024/(nt-lt)),int(s/totalsize*100))
                         lt=nt
                         sc=0
         return totalsize
