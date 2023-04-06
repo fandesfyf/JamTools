@@ -18,11 +18,20 @@ import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # 禁用安全请求警告
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+def get_request_session(url="https://github.com"):
+    # 获取系统的代理设置
+    proxies = requests.utils.get_environ_proxies(url)
 
+    # 创建一个 session 对象
+    session = requests.session()
+    # 设置代理配置
+    session.proxies = proxies
+    return session
 def gethtml(url, times=3):  # 下载一个链接
     try:
         ua = "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36 Edg/108.0.1462.54"
-        response = requests.get(url, headers={"User-Agent": ua}, timeout=8, verify=False)
+        session = get_request_session(url)
+        response = session.get(url, headers={"User-Agent": ua}, timeout=8, verify=False)
         response.encoding = 'utf-8'
         if response.status_code == 200:
             return response.text

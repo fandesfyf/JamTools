@@ -16,7 +16,7 @@ Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), ".jamtools.log"))
 sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT
+    SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT,get_request_session
 from jamWidgets import FramelessEnterSendQTextEdit
 import http.client
 
@@ -5448,7 +5448,8 @@ class CheckForUpdateThread(QThread):
         return versiondict,p
 
     def downloadupdate(self,url):
-        response = requests.get(url, stream=True, verify=False)
+        session = get_request_session(url)
+        response = session.get(url, stream=True, verify=False)
         totalsize=int(response.headers["Content-Length"])
         if os.path.exists(self.newversonname) and os.path.getsize(self.newversonname)==totalsize:
             print("已存在更新文件!")
