@@ -2238,6 +2238,8 @@ class Slabel(QLabel):  # 区域截图功能
 
     def clear_and_hide(self):  # 清理退出
         print("clear and hide")
+        if self.ocr_freezer is not None:
+            self.ocr_freezer.clear()
         if PLATFORM_SYS == "darwin":  # 如果系统为macos
             print("drawin hide")
             self.setWindowOpacity(0)
