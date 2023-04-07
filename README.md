@@ -43,49 +43,92 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 小窗模式：(其实就是系统托盘加一个小界面)小窗模式下不会显示主界面，截屏(Alt+z)、小窗翻译(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示, 不会打开主界面，小窗可以(回车)翻译(英-中),双击系统托盘可以进入主界面
 ##大部分功能可以在系统托盘调用！
 
-# 界面展示
+# 功能展示
 
-所有图片可以看image目录下的
-
-### macos和ubuntu下的界面
-
-![imgae](image/ui.jpg)
-
-### 截屏界面
+### 酱截屏(全局快捷键Alt+z)
+- 截屏功能页面,包含隐藏窗口、自动保存文件、复制文件还是图像数据、滚动截屏参数等
 
 ![image](image/jp.png)
 
-##### 截屏时
+- 支持截屏时选区录屏、文字识别(离线)、翻译等
+![image](image/截屏文字识别.gif)
+
+- 截屏时有各种画笔橡皮擦工具、透视裁剪、油漆桶、多边形截图等工具
 
 ![image](image/jp0.jpg)
 ![image](image/jp1.jpg)
 
-### 录屏界面
+- 支持将截屏固定到屏幕上，固定的截屏可以快速放大缩小(鼠标滚轮)、设置透明度、边框、置顶、文字识别等方便的操作
+![image](image/固定截屏.gif)
+### 酱录屏(全局快捷键Alt+c)
+支持设定录屏区域、录屏码率、帧率、录制鼠标、硬件加速、录制gif等各种常见格式的视频
 
 ![image](image/sc.png)
 
-### 文字提取界面
-
+### 酱识字
+文字识别已经集成到截屏、固定截屏等页面，也可以通过主窗口的这个页面进行手动调用，支持批量识别。基于paddleocr离线识别。
 ![image](image/ocr.png)
 
-### 多媒体格式转化界面
+### 酱转换
+各种多媒体格式转化
 
+- 裁剪拼接
+
+支持图片、视频、音频的简单裁剪拼接
 ![image](image/51.png)
+
+- 压缩转码
+
+支持各种图片批量调整分辨率和格式、批量调整视频码率、帧率、分辨率等；
+
+支持视频批量压缩，视频格式转换(包含gif等常见格式转换)，支持视频批量打马赛克、批量添加、去水印(这个只是添加一个模糊而已)；
+
+支持音频批量格式、码率调整
+
+支持gif批量压缩
+
 ![image](image/52.png)
+
+- 提取混合
+
+支持将从视频提取音频、去除音频、混合音频，从视频中抽取图片帧，图片转视频，批量文件重命名等
+
 ![image](image/53.png)
 
-### 键鼠动作录制播放界面
+### 酱控制
 
+- 录制你的键鼠动作并无限制重放动作，适用于批量重复操作的自动化，支持简单的播放条件设置
 ![image](image/61.png)
 ![image](image/62.png)
 
-### 聊天机器人界面
+### 酱传输
+
+局域网文件传输功能，能够在局域网内快速传输文件，有通过客户端传输和通过网页端传输两种方式。
+
+- 通过客户端传输，双方都装有jamtools，直接通过连接码建立连接，即可互发文件，支持断点续传、多线程传输
+![image](image/trasf1.png)
+
+- 网页端传输，有一方安装jamtools，选择共享文件夹，即可共享链接，对方可以下载该文件夹内的文件或者上传文件到文件夹，支持断点续传、多文件批量下载等
+
+![image](image/trasf0.jpg)
+
+### 酱聊天
+
+- 彩蛋功能，聊天机器人
 
 ![image](image/chat.png)
 
 ### 其它功能
 
 ![image](image/other.jpg)
+
+- 右键划屏提字/翻译
+
+按下alt使用鼠标右键框选屏幕，即可快速提取框选中区域的文字并翻译
+
+![image](image/smocr.gif)
+
+- 智能剪切板，识别到剪切板改变内n秒(可以在设置内更改)，按下shift+ctrl，可以快速翻译、打开链接(快速打开浏览器进入页面)、复制百度云提取码等操作
 
 # 项目目录
 
@@ -235,23 +278,31 @@ Wheel
 Pillow
 pynput
 fbs==0.9.0 #高版本fbs变成收费了,但支持了更高版本的python
-pyttsx3
 qrcode
-requests
+requests==2.27 
+urllib3==1.25.8
+pyttsx3
 PyInstaller==3.4
 baidu-aip
 PyQt5==5.15.2
 PyQt5-sip==12.8.1
 PyQt5-stubs==5.14.2.2
+onnxruntime
+shapely
+pyclipper
+qt_material
 numpy
-opencv-contrib-python==3.4.2.17#如果需要完整cv2支持,则安装这个版本的包,一定是这个版本(包含sift算法);如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
-Cython==0.29.21#如果需要编译
-
+Cython==0.29.21 #如果需要编译
+fake-useragent==0.1.11
 setuptools==50.3.0
+chardet
+comtypes
+opencv-contrib-python # 如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
+
 ```
 
-也可以通过```  pip3 install -r requirement.txt```安装所有依赖
+也可以通过```pip3 install -r requirement.txt```安装所有依赖
 
 此外,本软件多媒体处理能力主要依赖于[ffmpeg库](https://ffmpeg.org/),需要自行下载[ffmpeg](https://ffmpeg.org/)(用于录屏和多媒体处理)和[gifsicle](http://www.lcdf.org/gifsicle/)(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
-配置好以上环境后,可以通过运行jamtoolsbuild.py文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
+配置好以上环境后,可以通过运行`jamtoolsbuild.py`文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
