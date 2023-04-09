@@ -17,6 +17,80 @@ import jamresourse
 from jampublic import linelabel,TipsShower,OcrimgThread
 from jam_transtalater import Translator
 from jamspeak import Speaker
+
+class PreviewWindow(QLabel):
+    """图片预览窗口"""
+    def __init__(self,parent=None):
+        super().__init__(parent)
+
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+
+        desktop = QApplication.desktop()
+        screen_rect = desktop.screenGeometry()
+        window_width = screen_rect.width() // 5
+        self.resize(window_width, screen_rect.height()//2)
+
+        self.setAlignment(Qt.AlignCenter)
+        self.setScaledContents(True)
+        self.dragging = False
+        self.offset = QPoint()
+        self.hide()
+        
+    def set_image(self, pixmap, x, y):
+        self.setPixmap(pixmap)
+        
+        desktop = QApplication.desktop()
+        screen_rect = desktop.screenGeometry()
+        pixmap_width = pixmap.width()
+        pixmap_height = pixmap.height()
+        s = pixmap_height / pixmap_width
+        window_width = self.width()
+
+        # adjust pixmap width to fit window
+        label_width = int(window_width)
+        label_height = int(label_width * s)
+        # self.setFixedSize(label_width, label_height)
+        if label_height > screen_rect.height()*2//3:
+            label_height = screen_rect.height()*2//3
+            label_width = int(label_height/s)
+        # adjust window height to fit image
+        self.resize(label_width, label_height)
+        d_l_x = x
+        d_l_y = y
+        
+        if d_l_y - self.height()<0:
+            self.move(screen_rect.x() + x,0)
+            
+        else:
+            self.move(screen_rect.x() + x, d_l_y - self.height())
+        
+        self.dragging = False
+        self.offset = QPoint()
+        self.update()
+        self.show()
+        
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.dragging = True
+            self.offset = event.pos()
+
+    def mouseMoveEvent(self, event):
+        if self.dragging:
+            self.move(self.pos() + event.pos() - self.offset)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.dragging = False
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        # draw border
+        painter = QPainter(self)
+        pen = QPen(Qt.red, 4, Qt.SolidLine)
+        painter.setPen(pen)
+        painter.drawRect(self.rect())
+
 class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语音
     clear_signal = pyqtSignal()
     showm_signal = pyqtSignal(str)
@@ -755,7 +829,8 @@ class Freezer(QLabel):
             self.Loading_label.stop()
         self.text_shower.clear()
         self.text_shower.hide()
-        del self.showing_imgpix
+        if hasattr(self,"showing_imgpix"):
+            del self.showing_imgpix
         self.hung_widget.clear()
         super().clear()
         # jamtools.freeze_imgs[self.listpot] = None

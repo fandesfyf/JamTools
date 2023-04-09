@@ -1583,27 +1583,28 @@ class Slabel(QLabel):  # 区域截图功能
         y0 = min(self.y0, self.y1)
         x1 = max(self.x0, self.x1)
         y1 = max(self.y0, self.y1)
-        roller = Splicing_shots()
+        self.roller = Splicing_shots()
         area = (x0, y0, x1 - x0, y1 - y0)
         if (x1 - x0) < 50 or (y1 - y0) < 50:
             self.showm_signal.emit('过小!')
             self.Tipsshower.setText("滚动面积过小!")
             return
         self.hide()
-        roller.setup()
+        self.roller.setup()
 
         try:
             if not self.parent.ssview:
                 self.parent.init_ssview()
         except:
             print(sys.exc_info())
-        exi = roller.roll_manager(area)
+        self.roller.exit_roll_signal.connect(self.roll_exit_callback)
+        exi = self.roller.roll_manager(area)
         print('roller end')
         if exi:
             print("未完成滚动截屏,用户退出")
             self.clear_and_hide()
             return
-
+    def roll_exit_callback(self):
         self.final_get_img = QPixmap('j_temp/{}.png'.format(CONFIG_DICT["last_pic_save_name"]))
         if __name__ == '__main__':  # 当直接运行本文件时直接保存,测试用
             QApplication.clipboard().setPixmap(self.final_get_img)
@@ -1611,6 +1612,7 @@ class Slabel(QLabel):  # 区域截图功能
             print("已复制到剪切板")
             return  # 直接运行本文件时到此结束
         self.manage_data()
+        self.clear_and_hide()
 
     def cutpic(self, save_as=0):  # 裁剪图片
         """裁剪图片,0:正常截图保存模式, 1:另存为模式, 2:内部调用保存图片, 3:内部调用,直接返回图片"""

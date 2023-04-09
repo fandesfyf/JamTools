@@ -9,18 +9,88 @@ from functools import reduce
 import cv2
 from numpy import zeros, uint8, asarray, vstack, float32
 from PIL import Image
-from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QObject
+from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QTimer, QSettings, QObject,pyqtSlot,QThread
 from PyQt5.QtGui import QPixmap, QPainter, QPen, QColor
 from PyQt5.QtWidgets import QApplication, QLabel
+from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage,QPixmap
 from pynput.mouse import Controller as MouseController
 from pynput.mouse import Listener as MouseListenner
 from pynput import mouse
-
+from jamWidgets import PreviewWindow
 from jampublic import Commen_Thread, TipsShower, CONFIG_DICT
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 
 if not os.path.exists("j_temp"):
     os.mkdir("j_temp")
+class MergeThread(QThread):
+    previewersignal = pyqtSignal(QPixmap)
+    def __init__(self, parent = None) -> None:
+        super().__init__(parent)
+        self.parent = parent
+        self.picMatcher = self.parent.picMatcher
+        self.img_list=self.parent.img_list
+        self.finalimg = None
+        
+    def run(self) -> None:
+        self.match_and_merge()
+    def cvimg2pixmap(self,image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # 创建QImage对象
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        qimage = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
+        # 创建QPixmap对象
+        qpixmap = QPixmap.fromImage(qimage)
+        return qpixmap    
+    def match_and_merge(self):  # 图像寻找拼接点并拼接的主函数,运行于后台线程,从self.img_list中取数据进行拼接
+        same = 0
+        while not len(self.img_list):  # 首次运行时进行判断是否开始收到数据
+            time.sleep(0.1)
+        try:
+            self.finalimg = self.img_list.pop(0)
+            compare_img1 = cv2.cvtColor(self.finalimg, cv2.COLOR_RGB2GRAY)
+        except:
+            print("线程启动过早", sys.exc_info())
+            return
+
+        while self.parent.in_rolling or len(self.img_list):  # 如果正在滚动或者self.img_list有图片没有被拼接
+            if len(self.img_list):  # 如果有图片
+                rgbimg2 = self.img_list.pop(0)  # 取出图片
+                compare_img2 = cv2.cvtColor(rgbimg2, cv2.COLOR_RGB2GRAY)  # 预处理
+                distance, m1, m2 = self.picMatcher.match(compare_img1, compare_img2)  # 调用picMatcher的match方法获取拼接匹配信息
+                # compare_img2 = self.offset(compare_img2, distance)
+                if distance == 0:
+                    print("重复!", same)
+                    same += 1
+                    if same >= 3:
+                        print("roller same break")
+                        break
+                    continue
+                else:
+                    same = 0
+
+                finalheightforcutting = self.finalimg.shape[0]
+                imgheight = rgbimg2.shape[0]
+                finalheightforcutting -= imgheight - int(m1)  # 拼接图片的裁剪高度
+                i1 = self.finalimg[:finalheightforcutting, :, :]
+                i2 = rgbimg2[int(m2):, :, :]
+                self.finalimg = vstack((i1, i2))
+                previewimg = self.cvimg2pixmap(self.finalimg)
+                print(previewimg.width(),previewimg.height())
+                self.parent.previewer.set_image(previewimg,0,0)
+                self.previewersignal.emit(previewimg)
+                compare_img1 = compare_img2
+                print("sucesmerge a img")
+            else:  # 等待图片到来
+                # print("waiting for img")
+                time.sleep(0.05)  # 后台线程没有收到图片时,睡眠一下避免占用过高
+        self.parent.in_rolling = False
+        print("end merge")
+        CONFIG_DICT["last_pic_save_name"]="{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))
+        cv2.imwrite("j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]), self.finalimg)
+
+        print("长图片保存到j_temp/{}.png".format(CONFIG_DICT["last_pic_save_name"]))
 class PicMatcher:  # 图像匹配类
     def __init__(self, nfeatures=500, draw=False):
         self.SIFT = cv2.xfeatures2d_SIFT.create(nfeatures=nfeatures)  # 生成sift算子
@@ -101,14 +171,15 @@ class PicMatcher:  # 图像匹配类
         print("write a frame")
 
 
-class Splicing_shots(QObject):  # 滚动截屏主类
+class Splicing_shots(QWidget):  # 滚动截屏主类
     showm_signal = pyqtSignal(str)
     statusBar_signal = pyqtSignal(str)
-
+    previewersignal = pyqtSignal(QPixmap)
+    exit_roll_signal = pyqtSignal()
     def __init__(self, parent: QLabel = None, draw=False):
         super(Splicing_shots, self).__init__()
         self.parent = parent
-
+        self.rollerthread = None
         self.clear_timer = QTimer()  # 后台清理器,暂时不用
         self.clear_timer.timeout.connect(self.setup)
         # self.showrect = Transparent_windows()
@@ -121,8 +192,9 @@ class Splicing_shots(QObject):  # 滚动截屏主类
 
     def init_splicing_shots(self):
         self.finalimg = None
+        self.area = [0,0,0,0]
         self.img_list = []
-        self.roll_speed = self.settings.value('screenshot/roll_speed', 3, type=int)
+        self.roll_speed = self.settings.value('screenshot/roll_speed', 2, type=int)
         self.in_rolling = False
         if not os.path.exists(QStandardPaths.writableLocation(
                 QStandardPaths.PicturesLocation) + '/JamPicture/screenshots'):
@@ -135,7 +207,7 @@ class Splicing_shots(QObject):  # 滚动截屏主类
             print('clear')
         self.finalimg = None
         self.img_list = []
-        self.roll_speed = self.settings.value('screenshot/roll_speed', 3, type=int)
+        self.roll_speed = self.settings.value('screenshot/roll_speed', 2, type=int)
         self.in_rolling = False
         if not os.path.exists("j_temp"):
             os.mkdir("j_temp")
@@ -148,7 +220,16 @@ class Splicing_shots(QObject):  # 滚动截屏主类
             return True
         else:
             return False
+    def cvimg2pixmap(self,image):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # 创建QImage对象
+        height, width, channel = image.shape
+        bytesPerLine = 3 * width
+        qimage = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
+        # 创建QPixmap对象
+        qpixmap = QPixmap.fromImage(qimage)
+        return qpixmap
     def match_and_merge(self):  # 图像寻找拼接点并拼接的主函数,运行于后台线程,从self.img_list中取数据进行拼接
         same = 0
         while not len(self.img_list):  # 首次运行时进行判断是否开始收到数据
@@ -164,7 +245,11 @@ class Splicing_shots(QObject):  # 滚动截屏主类
             if len(self.img_list):  # 如果有图片
                 rgbimg2 = self.img_list.pop(0)  # 取出图片
                 compare_img2 = cv2.cvtColor(rgbimg2, cv2.COLOR_RGB2GRAY)  # 预处理
-                distance, m1, m2 = self.picMatcher.match(compare_img1, compare_img2)  # 调用picMatcher的match方法获取拼接匹配信息
+                try:
+                    distance, m1, m2 = self.picMatcher.match(compare_img1, compare_img2)  # 调用picMatcher的match方法获取拼接匹配信息
+                except Exception as e:
+                    print(e,251,__file__)
+                    distance = 0
                 # compare_img2 = self.offset(compare_img2, distance)
                 if distance == 0:
                     print("重复!", same)
@@ -182,6 +267,9 @@ class Splicing_shots(QObject):  # 滚动截屏主类
                 i1 = self.finalimg[:finalheightforcutting, :, :]
                 i2 = rgbimg2[int(m2):, :, :]
                 self.finalimg = vstack((i1, i2))
+                previewimg = self.cvimg2pixmap(self.finalimg)
+                print(previewimg.width(),previewimg.height())
+                self.previewersignal.emit(previewimg)
                 compare_img1 = compare_img2
                 print("sucesmerge a img")
             else:  # 等待图片到来
@@ -198,7 +286,7 @@ class Splicing_shots(QObject):  # 滚动截屏主类
 
     def auto_roll(self, area):  # 自动滚动模式
         x, y, w, h = area
-        self.rollermask.tips.setText("单击停止")
+        self.rollermask.setText("单击停止")
         QApplication.processEvents()
         speed = round(1 / self.roll_speed, 2)
         screen = QApplication.primaryScreen()
@@ -235,7 +323,7 @@ class Splicing_shots(QObject):  # 滚动截屏主类
                     i += 1
                     break
             oldimg = newimg
-            controler.scroll(dx=0, dy=-3)  # 控制鼠标滚动
+            controler.scroll(dx=0, dy=-2)  # 控制鼠标滚动
             time.sleep(speed)  # 通过sleep控制自动滚动速度
             # cv2.imwrite('j_temp/{0}.png'.format(i), img)
             i += 1
@@ -243,6 +331,7 @@ class Splicing_shots(QObject):  # 滚动截屏主类
         listener.stop()
         # self.showrect.hide()
         self.match_thread.wait()
+        self.exit_roll_signal.emit()
 
     def inthearea(self, pos, area):  # 点在区域中
         if area[0] < pos[0] < area[0] + area[2] and area[1] < pos[1] < area[1] + area[3]:
@@ -252,7 +341,7 @@ class Splicing_shots(QObject):  # 滚动截屏主类
 
     def scroll_to_roll(self, area):  # 手动滚动模式
         x, y, w, h = area
-        self.rollermask.tips.setText("向下滚动,单击结束")
+        self.rollermask.setText("向下滚动,单击结束")
         QApplication.processEvents()
         screen = QApplication.primaryScreen()
         winid = QApplication.desktop().winId()
@@ -275,11 +364,12 @@ class Splicing_shots(QObject):  # 滚动截屏主类
             # print(px, py, x_axis, y_axis)
             # if not self.inthearea((px,py),area):
             #     return
-            self.a_step += 1
-            if self.a_step < 2:
-                return
-            else:
-                self.a_step = 0
+            print("scrolling")
+            # self.a_step += 1
+            # if self.a_step < 2:
+            #     return
+            # else:
+            #     self.a_step = 0
             if y_axis < 0:
                 if self.rid >= self.id:  # 当滚动id与真实id一样时说明
                     pix = screen.grabWindow(winid, x, y, w, h)  # 滚动段距离进行截屏
@@ -295,7 +385,6 @@ class Splicing_shots(QObject):  # 滚动截屏主类
             else:  # 方向往回滚时id-1,以记录往回的步数
                 self.rid -= 1
                 print("方向错误")
-
         listener = MouseListenner(on_click=onclick, on_scroll=on_scroll)  # 鼠标监听器,传入函数句柄
         self.match_thread = Commen_Thread(self.match_and_merge)  # 也是把拼接函数放入后台线程中
         self.in_rolling = True
@@ -307,27 +396,40 @@ class Splicing_shots(QObject):  # 滚动截屏主类
         listener.stop()
         # self.showrect.hide()
         self.match_thread.wait()  # 等待拼接线程结束
-
+        print("scroll_to_roll exit")
+        self.exit_roll_signal.emit()
+    @pyqtSlot(QPixmap)
+    def set_previewer(self,img):
+        print("set previewr")
+        desktop = QApplication.desktop()
+        if self.area[0]+self.area[2] + self.previewer.width() < desktop.width():
+            self.previewer.set_image(img,self.area[0]+self.area[2],self.area[1]+self.area[3])
+        else:
+            self.previewer.set_image(img,self.area[0]- self.previewer.width(),self.area[1]+self.area[3])
+        
     def roll_manager(self, area):  # 滚动截屏控制器,控制滚动截屏的模式(自动还是手动滚)
+        self.area = area
         x, y, w, h = area
         self.mode = 1
 
         def on_click(x, y, button, pressed):  # 用户点击了屏幕说明用户想自动滚
             print(x, y, button)
             if button == mouse.Button.left:
-                if area[0] < x < area[0] + area[2] and area[1] < y < area[1] + area[3] and not pressed:
+                if self.area[0] < x < self.area[0] + self.area[2] and self.area[1] < y < self.area[1] + self.area[3] and not pressed:
                     self.mode = 1
-                    lis.stop()
+                    self.mouseListenner.stop()
             elif button == mouse.Button.right:
                 self.mode = 2
-                lis.stop()
+                self.mouseListenner.stop()
 
         def on_scroll(x, y, button, pressed):  # 用户滚动了鼠标说明用户想要手动滚
 
             self.mode = 0
-            lis.stop()
-
+            self.mouseListenner.stop()
+        
         self.rollermask = roller_mask(area)  # 滚动截屏遮罩层初始化
+        self.previewer = PreviewWindow() # 预览窗口
+        self.previewersignal.connect(self.set_previewer)
         # self.showrect.setGeometry(x, y, w, h)
         # self.showrect.show()
         pix = QApplication.primaryScreen().grabWindow(QApplication.desktop().winId(), x, y, w, h)  # 先截一张图片
@@ -335,24 +437,35 @@ class Splicing_shots(QObject):  # 滚动截屏主类
         img = cv2.cvtColor(asarray(newimg), cv2.COLOR_RGB2BGR)
         self.img_list.append(img)
         QApplication.processEvents()
-        lis = MouseListenner(on_click=on_click, on_scroll=on_scroll)  # 鼠标监听器初始化并启动
-        lis.start()
+        self.mouseListenner = MouseListenner(on_click=on_click, on_scroll=on_scroll)  # 鼠标监听器初始化并启动
+        self.mouseListenner.start()
         print("等待用户开始")
-        lis.join()
-        lis.stop()
+        self.mouseListenner.join()
+        self.mouseListenner.stop()
         if self.mode == 1:  # 判断用户选择的模式
             print("auto_roll")
-            self.auto_roll(area)
+            self.rollerthread = Commen_Thread(self.auto_roll,area)
+            # self.auto_roll(area)
         elif self.mode == 2:
             print("exit roller")
             return 1
         else:
             print("scroll_to_roll")
-            self.scroll_to_roll(area)
-        self.showm_signal.emit("长截图完成")
-        self.rollermask.hide()
-        return 0
-
+            self.rollerthread = Commen_Thread(self.scroll_to_roll,area)
+            # self.scroll_to_roll(area)
+        self.rollerthread.start()
+        self.exit_roll_signal.connect(self.exit_roll)
+        print("exit")
+        # self.showm_signal.emit("长截图完成")
+        # self.rollermask.hide()
+        # return 0
+    def exit_roll(self):
+        if hasattr(self,"rollermask"):
+            self.rollermask.clear()
+            self.rollermask.hide()
+        if hasattr(self,"previewer"):
+            self.previewer.clear()
+            self.previewer.hide()
 
 class roller_mask(QLabel):  # 滚动截屏遮罩层
     def __init__(self, area):
@@ -360,12 +473,11 @@ class roller_mask(QLabel):  # 滚动截屏遮罩层
         transparentpix = QPixmap(QApplication.desktop().size())
         transparentpix.fill(Qt.transparent)
         self.area = area
-
         self.tips = TipsShower("单击自动滚动;\n或手动下滚;", area)
 
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setPixmap(transparentpix)
         self.showFullScreen()
 
@@ -395,4 +507,4 @@ if __name__ == '__main__':
     # s.match_and_merge()
     s.roll_manager((400, 60, 500, 600))
     # t = TipsShower("按下以开始")
-    sys.exit(app.exec_())
+    app.exec_()

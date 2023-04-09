@@ -2013,7 +2013,7 @@ class JamToolsWindow(QMainWindow):
         text = QLabel(roll_ss_box)
         self.roll_speed = QSpinBox(roll_ss_box)
         self.roll_speed.setGeometry(80, self.roll_nfeatures.y() + 30, 70, 20)
-        self.roll_speed.setValue(self.settings.value('screenshot/roll_speed', 10, type=int))
+        self.roll_speed.setValue(self.settings.value('screenshot/roll_speed', 2, type=int))
         self.roll_speed.setMinimum(1)
         self.roll_speed.setMaximum(50)
         self.roll_speed.valueChanged.connect(self.setting_save)
