@@ -112,11 +112,11 @@ if __name__ == '__main__':
         if os.path.exists(d):
             rd = "/".join(os.path.split(td)[:-1])
             if not os.path.exists(rd):
-                print("+创建目录:{rd}")
+                print(f"+创建目录:{rd}")
                 os.makedirs(rd)
             if os.path.exists(td):
                 shutil.rmtree(td)
-                print("-移除{td}")
+                print(f"-移除{td}")
             shutil.copytree(d, td)
             print(":copy{} -> {}".format(d, td))
         else:
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     for td in files:
         fileslist = files[td]
         if not os.path.exists(td):
-            print("+创建目录:{td}")
+            print(f"+创建目录:{td}")
             os.makedirs(td)
         for file in fileslist:
             if os.path.exists(file):
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                 shutil.copy2(file, to_dir_filename)
                 print(":copy{} -> {}".format(file, to_dir_filename))
             else:
-                print("!找不到源文件{f}")
+                print(f"!找不到源文件{file}")
 
     if PLATFORM_SYS == "win32" and os.path.exists("target/installer/Installer.nsi"):
         """重写windows下的nsis配置文件版本号"""

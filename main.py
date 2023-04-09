@@ -65,6 +65,7 @@ from PaddleOCRModel.PaddleOCRModel import det_rec_functions as OcrDetector
 import operator
 from functools import reduce
 from numpy import zeros, uint8, asarray, vstack, float32
+from jamWidgets import PreviewWindow
 import io
 import sys, time
 import pyttsx3
