@@ -178,9 +178,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         self.next_botton.clicked.connect(self.next_history)
         self.next_botton.setToolTip('下一个历史记录Ctrl+→')
         self.next_botton.show()
-
-        
-        
+        desktop = QApplication.desktop().screenGeometry()
+        self.move(desktop.width()//2,desktop.height()//2)
         self.setToolTip('Ctrl+回车可快速翻译,拖动边框可改变位置')
         self.clear_signal.connect(self.clear)
         self.textAreaChanged()
@@ -840,4 +839,14 @@ class Freezer(QLabel):
         
         e.ignore()
 
+
+if __name__ == "__main__":
+    import sys
+    app = QApplication(sys.argv)
+    s = FramelessEnterSendQTextEdit()
+    # s.img_list = [cv2.imread("j_temp/{}.png".format(name)) for name in range(45, 51)]
+    # s.match_and_merge()
+    s.show()
+    # t = TipsShower("按下以开始")
+    app.exec_()
 

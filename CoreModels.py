@@ -3947,7 +3947,7 @@ class SettingPage(QScrollArea):
 
         ok_apibutton = QPushButton('验证', api_groub)
         ok_apibutton.move(self.secrectkey.x(), self.secrectkey.y() + self.secrectkey.height())
-        ok_apibutton.clicked.connect(self.apichange)
+        # ok_apibutton.clicked.connect(self.apichange)
 
         # 翻译api
         fyapi_groub = QGroupBox('百度翻译 API', self.settings_widget)
