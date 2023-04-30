@@ -91,6 +91,34 @@ class PreviewWindow(QLabel):
         painter.setPen(pen)
         painter.drawRect(self.rect())
 
+class EnterSendQTextEdit(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.parent = parent
+        self.action = self.show
+
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_Return:
+            try:
+                if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
+                    if QApplication.keyboardModifiers() in (Qt.ControlModifier, Qt.AltModifier):
+                        self.insertPlainText('\n')
+                    else:
+                        # print('enter')
+                        pass
+                else:
+                    # print('returnkey')
+                    self.action()
+            except:
+                print('回车失败', sys.exc_info())
+            return
+        super().keyPressEvent(e)
+
+    def keyenter_connect(self, action):
+        self.action = action
+
+
+
 class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语音
     clear_signal = pyqtSignal()
     showm_signal = pyqtSignal(str)
@@ -372,6 +400,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
     def showEvent(self,e):
         super().showEvent(e)
         self.label.show()
+        self.setFocus()
     def hide(self) -> None:
         self.addhistory()
         super(FramelessEnterSendQTextEdit, self).hide()

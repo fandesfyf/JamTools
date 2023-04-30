@@ -17,7 +17,7 @@ sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT,get_request_session
-from jamWidgets import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit,EnterSendQTextEdit
 import http.client
 
 import random
@@ -55,6 +55,8 @@ import jamresourse
 
 if PLATFORM_SYS == "win32":
     import win32con
+    import win32api
+
     import ctypes, ctypes.wintypes
     try:# win7 don't have SetProcessDpiAwareness
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
@@ -74,13 +76,32 @@ class JHotkey(QThread):
     ss_signal = pyqtSignal()
     ocr_signal = pyqtSignal()
     recordchange_signal = pyqtSignal()
+    record_setarea_signal = pyqtSignal()
     listening_change_signal = pyqtSignal()
     running_change_signal = pyqtSignal()
     showm_signal = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
-
+        self.settings = QSettings('Fandes', 'jamtools')
+        self.hotkeys = self.get_dicts()
+    def get_dicts(self):
+        if PLATFORM_SYS == "darwin":
+            ss = self.settings.value('hotkey_ss', "alt<+>Ω", type=str)
+            ocr = self.settings.value('hotkey_ocr', "alt<+>≈", type=str)
+            rc = self.settings.value('hotkey_rc', "alt<+>ç", type=str)
+            rcs = self.settings.value('hotkey_rcs', "ctrl<+>alt<+>ç", type=str)
+            a1 = self.settings.value('hotkey_a1', "alt<+>¡", type=str)
+            a2 = self.settings.value('hotkey_a2', "alt<+>™", type=str)
+        else:
+            ss = self.settings.value('hotkey_ss', "alt<+>z", type=str)
+            ocr = self.settings.value('hotkey_ocr', "alt<+>x", type=str)
+            rc = self.settings.value('hotkey_rc', "alt<+>c", type=str)
+            rcs = self.settings.value('hotkey_rcs', "ctrl<+>alt<+>c", type=str)
+            a1 = self.settings.value('hotkey_a1', "alt<+>1", type=str)
+            a2 = self.settings.value('hotkey_a2', "alt<+>2", type=str)
+        return {"ss":ss,"ocr":ocr,"rc":rc,"rcs":rcs,"a1":a1,"a2":a2}
+        
     def run(self):
         if PLATFORM_SYS == "win32":
             self.win32hotkey()
@@ -132,24 +153,58 @@ class JHotkey(QThread):
         print("hotkey start")
         hotkey.wait()
         hotkey.join()
-
+    def win32_registerhotkey(self,callbackid,keys):
+        key_names = {
+        'f1': 0x70, 'f2': 0x71, 'f3': 0x72, 'f4': 0x73, 'f5': 0x74, 'f6': 0x75, 'f7': 0x76, 'f8': 0x77, 'f9': 0x78, 'f10': 0x79, 'f11': 0x7A, 'f12': 0x7B, '0': 0x30, '1': 0x31, '2': 0x32, '3': 0x33, '4': 0x34, '5': 0x35, '6': 0x36, '7': 0x37, '8': 0x38, '9': 0x39, 'num0': 0x60, 'num1': 0x61, 'num2': 0x62, 'num3': 0x63, 'num4': 0x64, 'num5': 0x65, 'num6': 0x66, 'num7': 0x67, 'num8': 0x68, 'num9': 0x69, 'a': 0x41, 'b': 0x42, 'c': 0x43, 'd': 0x44, 'e': 0x45, 'f': 0x46, 'g': 0x47, 'h': 0x48, 'i': 0x49, 'j': 0x4A, 'k': 0x4B, 'l': 0x4C, 'm': 0x4D, 'n': 0x4E, 'o': 0x4F, 'p': 0x50, 'q': 0x51, 'r': 0x52, 's': 0x53, 't': 0x54, 'u': 0x55, 'v': 0x56, 'w': 0x57, 'x': 0x58, 'y': 0x59, 'z': 0x5A, 'enter': 0x0D, 'space': 0x20, 'tab': 0x09, 'delete': 0x2E, 'up': 0x26, 'down': 0x28, 'left': 0x25, 'right': 0x27, 'pageup': 0x21, 'pagedown': 0x22, 'home': 0x24, 'end': 0x23, 'escape': 0x1B, 'semicolon': 0xBA, 'plus': 0xBB, 'comma': 0xBC, 'minus': 0xBD, 'period': 0xBE, 'slash': 0xBF, 'backslash': 0xDC,
+        "alt" : 1,
+        "ctrl" : 2,"shift" : 4,"win" : 8}
+        
+        
+        try:
+            print(keys)
+            hotkey_ss = keys.split("<+>")
+            ss_vk = 0
+            mod = 0
+            for i,k in enumerate(hotkey_ss):
+                if k not in key_names:
+                    raise Exception('无法识别快捷键：{}'.format(k))
+                if i == len(hotkey_ss)-1:
+                    ss_vk = key_names[k]
+                    print(hex(ss_vk))
+                else:
+                    mod = mod|key_names[k]
+            print(mod,ss_vk)
+            if not self.user32.RegisterHotKey(None, callbackid,mod, ss_vk):
+                self.showm_signal.emit('无法注册截屏快捷键!{}'.format(keys))
+                raise Exception('无法注册截屏快捷键!{}'.format(keys))
+        except Exception as e:
+            print(e)
+            return False
+        return True
+        
     def win32hotkey(self):
         self.user32 = ctypes.windll.user32
-        if not self.user32.RegisterHotKey(None, 100, win32con.MOD_ALT, 0x5A):
-            print('RuntimeError')
-            self.showm_signal.emit('无法注册截屏快捷键!Alt+z')
-        if not self.user32.RegisterHotKey(None, 101, win32con.MOD_ALT, 0x58):
-            print('RuntimeError')
-            self.showm_signal.emit('无法注册文字识别快捷键!Alt+x')
-        if not self.user32.RegisterHotKey(None, 102, win32con.MOD_ALT, 0x43):
-            print('RuntimeError')
-            self.showm_signal.emit('无法注册录屏快捷键!Alt+c')
-        if not self.user32.RegisterHotKey(None, 103, win32con.MOD_ALT, 0x31):
-            print('RuntimeError')
-            self.showm_signal.emit('无法注册动作录制快捷键!Alt+1')
-        if not self.user32.RegisterHotKey(None, 104, win32con.MOD_ALT, 0x32):
-            print('RuntimeError')
-            self.showm_signal.emit('无法注册动作播放快捷键!Alt+2')
+        self.win32_registerhotkey(100,self.hotkeys["ss"]) 
+        self.win32_registerhotkey(101,self.hotkeys["ocr"]) 
+        self.win32_registerhotkey(102,self.hotkeys["rc"]) 
+        self.win32_registerhotkey(103,self.hotkeys["a1"]) 
+        self.win32_registerhotkey(104,self.hotkeys["a2"]) 
+        self.win32_registerhotkey(105,self.hotkeys["rcs"]) 
+        # if not self.user32.RegisterHotKey(None, 100, win32con.MOD_ALT, 0x5A):
+        #     print('RuntimeError')
+        #     self.showm_signal.emit('无法注册截屏快捷键!Alt+z')
+        # if not self.user32.RegisterHotKey(None, 101, win32con.MOD_ALT, 0x58):
+        #     print('RuntimeError')
+        #     self.showm_signal.emit('无法注册文字识别快捷键!Alt+x')
+        # if not self.user32.RegisterHotKey(None, 102, win32con.MOD_ALT, 0x43):
+        #     print('RuntimeError')
+        #     self.showm_signal.emit('无法注册录屏快捷键!Alt+c')
+        # if not self.user32.RegisterHotKey(None, 103, win32con.MOD_ALT, 0x31):
+        #     print('RuntimeError')
+        #     self.showm_signal.emit('无法注册动作录制快捷键!Alt+1')
+        # if not self.user32.RegisterHotKey(None, 104, win32con.MOD_ALT, 0x32):
+        #     print('RuntimeError')
+        #     self.showm_signal.emit('无法注册动作播放快捷键!Alt+2')
         try:
             msg = ctypes.wintypes.MSG()
             while self.user32.GetMessageA(ctypes.byref(msg), None, 0, 0) != 0:  # GetMessageA 堵塞
@@ -171,6 +226,9 @@ class JHotkey(QThread):
                     elif id == 104:
                         print('Alt+2')
                         self.running_change_signal.emit()
+                    elif id == 105:
+                        print("record_setarea_signal")
+                        self.record_setarea_signal.emit()
 
                 self.user32.TranslateMessage(ctypes.byref(msg))
                 self.user32.DispatchMessageA(ctypes.byref(msg))
@@ -179,32 +237,6 @@ class JHotkey(QThread):
             print('end hotkey')
             self.user32.UnregisterHotKey(None, 1)
 
-
-class EnterSendQTextEdit(QTextEdit):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent = parent
-        self.action = self.show
-
-    def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Return:
-            try:
-                if QApplication.keyboardModifiers() in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
-                    if QApplication.keyboardModifiers() in (Qt.ControlModifier, Qt.AltModifier):
-                        self.insertPlainText('\n')
-                    else:
-                        # print('enter')
-                        pass
-                else:
-                    # print('returnkey')
-                    self.action()
-            except:
-                print('回车失败', sys.exc_info())
-            return
-        super().keyPressEvent(e)
-
-    def keyenter_connect(self, action):
-        self.action = action
 
 
 class Recordingthescreen(QObject):
@@ -1022,7 +1054,7 @@ class JamToolsWindow(QMainWindow):
             y = (QApplication.primaryScreen().size().height() - self.height()) // 2
 
         self.setGeometry(x, y,800, 550)
-        self.setWindowTitle('JamTools {} \t\t\t\t\t\t\t\t\t 本软件完全免费，严禁贩卖！！！'.format(VERSON))
+        self.setWindowTitle('JamTools {} 本软件完全免费，严禁贩卖'.format(VERSON))
         self.setWindowIcon(QIcon(":/ico.png"))
         self.setWindowFlags(Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
         self.setAcceptDrops(True)
@@ -1336,6 +1368,7 @@ class JamToolsWindow(QMainWindow):
         self.hotkey.ocr_signal.connect(self.trayicon.add_simple_window)
         self.hotkey.showm_signal.connect(self.trayicon.showM)
         self.hotkey.recordchange_signal.connect(self.recorder.recordchange)
+        self.hotkey.record_setarea_signal.connect(self.set_area)
         self.recorder.showm_signal.connect(self.trayicon.showM)
         self.WebFilesTransmitter.showm_signal.connect(self.trayicon.showM)
         self.connectss()

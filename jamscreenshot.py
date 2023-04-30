@@ -784,6 +784,7 @@ class Slabel(QLabel):  # 区域截图功能
             self.freeze_img_botton.hide()
             self.roll_ss_btn.hide()
             self.ocr_botton.hide()
+        elif mode != "set_area":
             self.ssrec_botton.hide()
             
         # self.setVisible(False)
@@ -867,7 +868,14 @@ class Slabel(QLabel):  # 区域截图功能
                 self.sure_btn.width() + self.ocr_botton.width() + self.ssrec_botton.width()
                 + a + self.save_botton.width() + self.freeze_img_botton.width(),
                 self.sure_btn.height())
+        elif self.mode == "set_area":
+            self.Tipsshower.setText("设置录屏区域...")
+            self.sure_btn.setGeometry(self.ssrec_botton.x() + self.ssrec_botton.width(), 0, 60, 35)
+            self.botton_box.resize(
+                self.sure_btn.width()+self.ssrec_botton.width(),
+                self.sure_btn.height())
         else:
+            
             self.sure_btn.setGeometry(0, 0, 60, 35)
             self.botton_box.resize(
                 self.sure_btn.width(),
