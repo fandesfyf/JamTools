@@ -107,47 +107,55 @@ class JHotkey(QThread):
             self.win32hotkey()
         else:
             self.pynputhotkey()
-
+    def generate_hotkey_str(self,hotkey_ss):
+        mod = ""
+        ss_vk = None
+        hotkey_ss = hotkey_ss.split("<+>")
+        for i,k in enumerate(hotkey_ss):
+            if i == len(hotkey_ss)-1:
+                ss_vk = k
+            else:
+                mod = mod+"<{}>+".format(k)
+        mod = mod.rstrip("+")
+        return mod,ss_vk
     def pynputhotkey(self):
         releaser = keyboard.Controller()
-
+        
         def ssf():
             self.ss_signal.emit()
-            releaser.release('z')
-            releaser.release('Ω')
+            releaser.release(self.generate_hotkey_str(self.hotkeys["ss"])[-1])
 
         def ocrf():
             self.ocr_signal.emit()
-            releaser.release('x')
-            releaser.release('≈')
+            releaser.release(self.generate_hotkey_str(self.hotkeys["ocr"])[-1])
 
         def srf():
             self.recordchange_signal.emit()
-            releaser.release('c')
-            releaser.release('ç')
+            releaser.release(self.generate_hotkey_str(self.hotkeys["rc"])[-1])
 
         def a1f():
             self.listening_change_signal.emit()
-            releaser.release('1')
-            releaser.release('¡')
+            releaser.release(self.generate_hotkey_str(self.hotkeys["a1"])[-1])
 
         def a2f():
             self.running_change_signal.emit()
-            releaser.release('2')
-            releaser.release('™')
+            releaser.release(self.generate_hotkey_str(self.hotkeys["a2"])[-1])
+            
+        def sr_setarea():
+            print("record_setarea_signal")
+            self.record_setarea_signal.emit()
+            releaser.release(self.generate_hotkey_str(self.hotkeys["rcs"])[-1])
 
-        hotkey = keyboard.GlobalHotKeys({
-            '<alt>+z': ssf,
-            '<alt>+Ω': ssf,
-            '<alt>+x': ocrf,
-            '<alt>+≈': ocrf,
-            '<alt>+c': srf,
-            '<alt>+ç': srf,
-            '<alt>+1': a1f,
-            '<alt>+¡': a1f,
-            '<alt>+2': a2f,
-            '<alt>+™': a2f
+        dd ={
+            "+".join(self.generate_hotkey_str(self.hotkeys["ss"])): ssf,
+            "+".join(self.generate_hotkey_str(self.hotkeys["ocr"])): ocrf,
+            "+".join(self.generate_hotkey_str(self.hotkeys["rc"])): srf,
+            "+".join(self.generate_hotkey_str(self.hotkeys["a1"])): a1f,
+            "+".join(self.generate_hotkey_str(self.hotkeys["a2"])): a2f,
+            "+".join(self.generate_hotkey_str(self.hotkeys["rcs"])): sr_setarea,
         }
+        hotkey = keyboard.GlobalHotKeys(
+            dd
         )
         hotkey.start()
         print("hotkey start")
@@ -158,8 +166,6 @@ class JHotkey(QThread):
         'f1': 0x70, 'f2': 0x71, 'f3': 0x72, 'f4': 0x73, 'f5': 0x74, 'f6': 0x75, 'f7': 0x76, 'f8': 0x77, 'f9': 0x78, 'f10': 0x79, 'f11': 0x7A, 'f12': 0x7B, '0': 0x30, '1': 0x31, '2': 0x32, '3': 0x33, '4': 0x34, '5': 0x35, '6': 0x36, '7': 0x37, '8': 0x38, '9': 0x39, 'num0': 0x60, 'num1': 0x61, 'num2': 0x62, 'num3': 0x63, 'num4': 0x64, 'num5': 0x65, 'num6': 0x66, 'num7': 0x67, 'num8': 0x68, 'num9': 0x69, 'a': 0x41, 'b': 0x42, 'c': 0x43, 'd': 0x44, 'e': 0x45, 'f': 0x46, 'g': 0x47, 'h': 0x48, 'i': 0x49, 'j': 0x4A, 'k': 0x4B, 'l': 0x4C, 'm': 0x4D, 'n': 0x4E, 'o': 0x4F, 'p': 0x50, 'q': 0x51, 'r': 0x52, 's': 0x53, 't': 0x54, 'u': 0x55, 'v': 0x56, 'w': 0x57, 'x': 0x58, 'y': 0x59, 'z': 0x5A, 'enter': 0x0D, 'space': 0x20, 'tab': 0x09, 'delete': 0x2E, 'up': 0x26, 'down': 0x28, 'left': 0x25, 'right': 0x27, 'pageup': 0x21, 'pagedown': 0x22, 'home': 0x24, 'end': 0x23, 'escape': 0x1B, 'semicolon': 0xBA, 'plus': 0xBB, 'comma': 0xBC, 'minus': 0xBD, 'period': 0xBE, 'slash': 0xBF, 'backslash': 0xDC,
         "alt" : 1,
         "ctrl" : 2,"shift" : 4,"win" : 8}
-        
-        
         try:
             print(keys)
             hotkey_ss = keys.split("<+>")
