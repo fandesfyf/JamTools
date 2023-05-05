@@ -8,9 +8,9 @@ urllib3==1.25.8
 pyttsx3
 PyInstaller==3.4
 baidu-aip
-PyQt5==5.15.2
-PyQt5-sip==12.8.1
-PyQt5-stubs==5.14.2.2
+PyQt5
+PyQt5-sip
+PyQt5-stubs
 onnxruntime
 shapely
 pyclipper

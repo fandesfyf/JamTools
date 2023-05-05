@@ -1,5 +1,6 @@
 import os
 import re
+from PyQt5 import QtGui
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl
 from PyQt5.QtGui import QTextCursor, QDesktopServices
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont,QImage,QPixmap
@@ -7,7 +8,10 @@ from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit
 from PyQt5.QtGui import QPainter, QColor, QLinearGradient,QMovie,QPolygon
 from PyQt5.QtCore import Qt, QTimer,QSize,QPoint
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget
-
+import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout
+from PyQt5.QtGui import QKeySequence, QKeyEvent
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, pyqtSlot, QEvent
 from PyQt5.QtCore import Qt, pyqtSignal, QStandardPaths, QUrl,QTimer
 from PyQt5.QtGui import QPainter, QPen, QIcon, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QFileDialog, QMenu
@@ -868,14 +872,109 @@ class Freezer(QLabel):
         
         e.ignore()
 
+class ShortcutLineEdit(QLineEdit):
+    keyPressed = pyqtSignal(QKeyEvent)
+    key_states = set()
+    shortcut_str = ""
+    def event(self, event):
+        if event.type() == QEvent.KeyPress:
+            self.keyPressed.emit(event)
+        return super().event(event)
+    def mousePressEvent(self, a0) -> None:
+        self.clear()
+        return super().mousePressEvent(a0)
+    def keyPressEvent(self, event):
+        key = event.key()
+        modifiers = event.modifiers()
+
+        if key != Qt.Key_Control and key != Qt.Key_Shift and key != Qt.Key_Alt:
+            self.key_states.add(key)
+
+        # Get the modifiers for the current key press
+        modifier_keys = []
+        if modifiers & Qt.ControlModifier:
+            modifier_keys.append(Qt.ControlModifier)
+        if modifiers & Qt.ShiftModifier:
+            modifier_keys.append(Qt.ShiftModifier)
+        if modifiers & Qt.AltModifier:
+            modifier_keys.append(Qt.AltModifier)
+        # Combine all pressed keys with the modifiers to create the shortcut
+        shortcut_keys = modifier_keys + list(self.key_states)
+        # shortcut = QKeySequence(*shortcut_keys)
+
+        # Use + to connect the keys and remove extra spaces
+        shortcut_str = "+".join([QKeySequence(key).toString(QKeySequence.PortableText) for key in shortcut_keys])
+        shortcut_str = shortcut_str.replace(" ", "").replace("++","+")
+        print(shortcut_str)
+        if len(shortcut_str)>1 and str(shortcut_str[-1]).isalpha() and str(shortcut_str[-2]).isalpha() and str(shortcut_str[-1]).islower() and str(shortcut_str[-2]).isupper():
+            shortcut_str = shortcut_str[:-1].upper()
+        self.setText(shortcut_str)
+        self.shortcut_str = shortcut_str
+         # 禁用输入法，并忽略所有输入事件，直到组合键被释放
+        event.ignore()
+
+
+    def keyReleaseEvent(self, event):
+        key = event.key()
+        if key in self.key_states:
+            # Remove the key from the list of pressed keys if it is released
+            self.key_states.discard(key)
+        modifiers = event.modifiers()
+        if len(self.key_states) == 0 and not (modifiers & Qt.ControlModifier or  modifiers & Qt.ShiftModifier or modifiers & Qt.AltModifier):
+            print("松开了按键")
+            current_str = self.shortcut_str.lower()
+            fkey = len(current_str)==2 and current_str[-1].isnumeric
+            if not fkey and "alt" not in current_str and "ctrl" not in current_str and "shift" not in current_str or current_str[-1]=="+":
+                self.clear()
+    def clear(self):
+        super().clear()
+        self.shortcut_str = ""
+
+class ShortcutSettingWidget(QWidget):
+    save_setting_signal = pyqtSignal(QWidget,list)
+    def __init__(self,parent,names=["截屏快捷键:",'录屏快捷键:','动作快捷键:'],default=['按下组合键','按下组合键','按下组合键']):
+        super().__init__(parent)
+        sublayout = QHBoxLayout()
+        self.title_label = QLabel('快捷键设置')
+        self.set_btn = QPushButton("保存")
+        self.set_btn.clicked.connect(self.save_setting)
+        sublayout.addWidget(self.title_label)
+        sublayout.addWidget(self.set_btn)
+        
+        self.editers = []
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(sublayout)
+        for name,de in zip(names,default):
+            label = QLabel(name)
+            editer = ShortcutLineEdit()
+            editer.setText(de)
+            editer.setPlaceholderText(de)
+            sublayout = QHBoxLayout()
+            sublayout.addWidget(label)
+            sublayout.addWidget(editer)
+            self.editers.append(editer)
+            main_layout.addLayout(sublayout)
+
+        self.setLayout(main_layout)
+        
+    def set_callback(self,id,msg="快捷键冲突!"):
+        self.editers[id].setText(msg)
+
+    def save_setting(self):
+        returnstr = [editer.shortcut_str for editer in self.editers]
+        self.save_setting_signal.emit(self,returnstr)
+        print("save settings")
+
+
+    def focus_shortcut_line_edit(self, event):
+        self.shortcut_line_edit.setFocus()
+        self.shortcut_line_edit.setPlaceholderText('')
+
 
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    s = FramelessEnterSendQTextEdit()
-    # s.img_list = [cv2.imread("j_temp/{}.png".format(name)) for name in range(45, 51)]
-    # s.match_and_merge()
-    s.show()
-    # t = TipsShower("按下以开始")
+    widget = ShortcutSettingWidget()
+    widget.show()
     app.exec_()
 
