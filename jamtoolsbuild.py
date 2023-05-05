@@ -160,6 +160,7 @@ if __name__ == '__main__':
     freezer = subprocess.Popen('fbs freeze {}'.format("--debug" if Debug else ""), shell=True, stdin=subprocess.PIPE,
                                stdout=subprocess.PIPE)
     freezer.wait()
+    print("freeze end")
     if PLATFORM_SYS != "win32":
         a = input("是否打包为安装文件,Y/N:(回车默认Y)")
         if "y" in a.lower() or len(a) == 0:
@@ -175,8 +176,9 @@ if __name__ == '__main__':
         if os.path.exists("target/JamTools/cv2"):
             print("replace cv2 module")
             shutil.rmtree("target/JamTools/cv2")
-            os.mkdir("target/JamTools/cv2")
-            shutil.copy2("opencv_world341.dll", "target/JamTools/cv2/opencv_world341.dll")
-            shutil.copy2("cv2.cp37-win_amd64.pyd", "target/JamTools/cv2/cv2.cp37-win_amd64.pyd")
+        os.mkdir("target/JamTools/cv2")
+        shutil.copy2("opencv_world341.dll", "target/JamTools/cv2/opencv_world341.dll")
+        shutil.copy2("cv2.cp37-win_amd64.pyd", "target/JamTools/cv2/cv2.cp37-win_amd64.pyd")
         
     print('finished all')
+    time.sleep(2)
