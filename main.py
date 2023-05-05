@@ -15,7 +15,7 @@ import os, re
 from Logger import Logger
 import numpy as np
 import jampublic
-from jamWidgets import FramelessEnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit,EnterSendQTextEdit,ShortcutSettingWidget
 import http.client
 import random
 import shutil
@@ -69,6 +69,7 @@ from jamWidgets import PreviewWindow
 import io
 import sys, time
 import pyttsx3
+import PyQt5
 from threading import Thread
 import threading
 import copy

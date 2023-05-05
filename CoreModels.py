@@ -17,7 +17,7 @@ sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
     SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT,get_request_session
-from jamWidgets import FramelessEnterSendQTextEdit,EnterSendQTextEdit
+from jamWidgets import FramelessEnterSendQTextEdit,EnterSendQTextEdit,ShortcutSettingWidget
 import http.client
 
 import random
@@ -84,7 +84,9 @@ class JHotkey(QThread):
     def __init__(self):
         super().__init__()
         self.settings = QSettings('Fandes', 'jamtools')
-        self.hotkeys = self.get_dicts()
+        self.hoykey_name,self.hoykey_str = self.get_dicts()
+        self.hotkeys = dict(zip(self.hoykey_name,self.hoykey_str))
+        self.stop_flag = False
     def get_dicts(self):
         if PLATFORM_SYS == "darwin":
             ss = self.settings.value('hotkey_ss', "alt<+>Ω", type=str)
@@ -100,13 +102,53 @@ class JHotkey(QThread):
             rcs = self.settings.value('hotkey_rcs', "ctrl<+>alt<+>c", type=str)
             a1 = self.settings.value('hotkey_a1', "alt<+>1", type=str)
             a2 = self.settings.value('hotkey_a2', "alt<+>2", type=str)
-        return {"ss":ss,"ocr":ocr,"rc":rc,"rcs":rcs,"a1":a1,"a2":a2}
-        
+        return ["ss","ocr","rc","rcs","a1","a2"],[ss,ocr,rc,rcs,a1,a2]
+    def set_hotkeys(self,keys):
+        names = ["hotkey_ss",'hotkey_ocr','hotkey_rc',"hotkey_rcs",'hotkey_a1','hotkey_a2']
+        for i,name in enumerate(names):
+            self.settings.setValue(name,keys[i])
+        self.hoykey_name,self.hoykey_str = self.get_dicts()
+        self.hotkeys = dict(zip(self.hoykey_name,self.hoykey_str))
+            
+    def judge_hotkey(self,keylist):
+        fault_id = []
+        available_keys = []
+        for i,keystr in enumerate(keylist):
+            if len(keystr) == 0:
+                keystr = self.hoykey_str[i]
+                print("使用默认快捷键",i,keystr)
+            else:
+                keystr = keystr.replace("+","<+>")
+            available_keys.append(keystr)
+        if PLATFORM_SYS == "win32":
+            for i,keystr in enumerate(available_keys):
+                if self.win32_registerhotkey(100+i,keystr):
+                    print(keystr,"success")
+                else:
+                    fault_id.append(i)
+                    print(keystr,"快捷键设置失败")
+            self.win32hotkey_unregister()
+        else:
+            fault_id = self.pynputhotkey_start(check = True)
+        # fault_id = self.pynputhotkey_start(check = True)
+        if len(fault_id) == 0:
+            self.set_hotkeys(available_keys)
+        return fault_id
     def run(self):
         if PLATFORM_SYS == "win32":
             self.win32hotkey()
         else:
-            self.pynputhotkey()
+            self.pynputhotkey_start()
+        # self.pynputhotkey_start()
+            
+    def stop(self):
+        if PLATFORM_SYS == "win32":
+            self.win32hotkey_unregister()
+        else:
+            self.pynputhotkey_stop()
+        # self.pynputhotkey_stop()
+        self.terminate()
+            
     def generate_hotkey_str(self,hotkey_ss):
         mod = ""
         ss_vk = None
@@ -118,56 +160,75 @@ class JHotkey(QThread):
                 mod = mod+"<{}>+".format(k)
         mod = mod.rstrip("+")
         return mod,ss_vk
-    def pynputhotkey(self):
-        releaser = keyboard.Controller()
-        
-        def ssf():
-            self.ss_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["ss"])[-1])
-
-        def ocrf():
-            self.ocr_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["ocr"])[-1])
-
-        def srf():
-            self.recordchange_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["rc"])[-1])
-
-        def a1f():
-            self.listening_change_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["a1"])[-1])
-
-        def a2f():
-            self.running_change_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["a2"])[-1])
+    def pynputhotkey_start(self,check=False):
+        try:
+            releaser = keyboard.Controller()
             
-        def sr_setarea():
-            print("record_setarea_signal")
-            self.record_setarea_signal.emit()
-            releaser.release(self.generate_hotkey_str(self.hotkeys["rcs"])[-1])
+            def ssf():
+                self.ss_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["ss"])[-1])
 
-        dd ={
-            "+".join(self.generate_hotkey_str(self.hotkeys["ss"])): ssf,
-            "+".join(self.generate_hotkey_str(self.hotkeys["ocr"])): ocrf,
-            "+".join(self.generate_hotkey_str(self.hotkeys["rc"])): srf,
-            "+".join(self.generate_hotkey_str(self.hotkeys["a1"])): a1f,
-            "+".join(self.generate_hotkey_str(self.hotkeys["a2"])): a2f,
-            "+".join(self.generate_hotkey_str(self.hotkeys["rcs"])): sr_setarea,
-        }
-        hotkey = keyboard.GlobalHotKeys(
-            dd
-        )
-        hotkey.start()
-        print("hotkey start")
-        hotkey.wait()
-        hotkey.join()
+            def ocrf():
+                self.ocr_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["ocr"])[-1])
+
+            def srf():
+                self.recordchange_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["rc"])[-1])
+
+            def a1f():
+                self.listening_change_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["a1"])[-1])
+
+            def a2f():
+                self.running_change_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["a2"])[-1])
+                
+            def sr_setarea():
+                print("record_setarea_signal")
+                self.record_setarea_signal.emit()
+                releaser.release(self.generate_hotkey_str(self.hotkeys["rcs"])[-1])
+
+            dd ={
+                "+".join(self.generate_hotkey_str(self.hotkeys["ss"])): ssf,
+                "+".join(self.generate_hotkey_str(self.hotkeys["ocr"])): ocrf,
+                "+".join(self.generate_hotkey_str(self.hotkeys["rc"])): srf,
+                "+".join(self.generate_hotkey_str(self.hotkeys["a1"])): a1f,
+                "+".join(self.generate_hotkey_str(self.hotkeys["a2"])): a2f,
+                "+".join(self.generate_hotkey_str(self.hotkeys["rcs"])): sr_setarea,
+            }
+            self.pynputhotkey = keyboard.GlobalHotKeys(
+                dd
+            )
+            self.pynputhotkey.start()
+            print("hotkey start")
+        except Exception as e:
+            print("设置快捷键错误",e)
+            if check:
+                return list(range(6))
+        else:
+            if check:
+                return []
+            while not self.stop_flag:
+                time.sleep(0.1)
+            # self.pynputhotkey.wait()
+            # self.pynputhotkey.join()
+        
+    def pynputhotkey_stop(self):
+        print("pynputhotkey_stopping")
+        self.stop_flag=False
+        self.pynputhotkey.stop() 
+        self.pynputhotkey.wait()
+        self.pynputhotkey.join()
+        print("pynputhotkey_stoped")
+        
     def win32_registerhotkey(self,callbackid,keys):
         key_names = {
         'f1': 0x70, 'f2': 0x71, 'f3': 0x72, 'f4': 0x73, 'f5': 0x74, 'f6': 0x75, 'f7': 0x76, 'f8': 0x77, 'f9': 0x78, 'f10': 0x79, 'f11': 0x7A, 'f12': 0x7B, '0': 0x30, '1': 0x31, '2': 0x32, '3': 0x33, '4': 0x34, '5': 0x35, '6': 0x36, '7': 0x37, '8': 0x38, '9': 0x39, 'num0': 0x60, 'num1': 0x61, 'num2': 0x62, 'num3': 0x63, 'num4': 0x64, 'num5': 0x65, 'num6': 0x66, 'num7': 0x67, 'num8': 0x68, 'num9': 0x69, 'a': 0x41, 'b': 0x42, 'c': 0x43, 'd': 0x44, 'e': 0x45, 'f': 0x46, 'g': 0x47, 'h': 0x48, 'i': 0x49, 'j': 0x4A, 'k': 0x4B, 'l': 0x4C, 'm': 0x4D, 'n': 0x4E, 'o': 0x4F, 'p': 0x50, 'q': 0x51, 'r': 0x52, 's': 0x53, 't': 0x54, 'u': 0x55, 'v': 0x56, 'w': 0x57, 'x': 0x58, 'y': 0x59, 'z': 0x5A, 'enter': 0x0D, 'space': 0x20, 'tab': 0x09, 'delete': 0x2E, 'up': 0x26, 'down': 0x28, 'left': 0x25, 'right': 0x27, 'pageup': 0x21, 'pagedown': 0x22, 'home': 0x24, 'end': 0x23, 'escape': 0x1B, 'semicolon': 0xBA, 'plus': 0xBB, 'comma': 0xBC, 'minus': 0xBD, 'period': 0xBE, 'slash': 0xBF, 'backslash': 0xDC,
         "alt" : 1,
         "ctrl" : 2,"shift" : 4,"win" : 8}
         try:
-            print(keys)
+            keys=keys.lower()
             hotkey_ss = keys.split("<+>")
             ss_vk = 0
             mod = 0
@@ -176,18 +237,23 @@ class JHotkey(QThread):
                     raise Exception('无法识别快捷键：{}'.format(k))
                 if i == len(hotkey_ss)-1:
                     ss_vk = key_names[k]
-                    print(hex(ss_vk))
                 else:
                     mod = mod|key_names[k]
-            print(mod,ss_vk)
             if not self.user32.RegisterHotKey(None, callbackid,mod, ss_vk):
-                self.showm_signal.emit('无法注册截屏快捷键!{}'.format(keys))
-                raise Exception('无法注册截屏快捷键!{}'.format(keys))
+                self.showm_signal.emit('无法注册快捷键!{}'.format(keys))
+                raise Exception('无法注册快捷键!{}'.format(keys))
         except Exception as e:
             print(e)
             return False
         return True
-        
+    def win32hotkey_unregister_id(self,id):
+        self.user32.UnregisterHotKey(None, id)
+    def win32hotkey_unregister(self):
+        print("win32hotkey_unregister")
+        for i in range(100,106):
+            self.user32.UnregisterHotKey(None, i)
+        print("win32hotkey_unregistered")
+ 
     def win32hotkey(self):
         self.user32 = ctypes.windll.user32
         self.win32_registerhotkey(100,self.hotkeys["ss"]) 
@@ -1365,8 +1431,12 @@ class JamToolsWindow(QMainWindow):
             painter.drawRect(pixmap.rect())
             painter.end()
             widget.setIcon(QIcon(pixmap))
-
-    def connect_all(self):
+    def hotkey_restart_callback(self):
+        self.hotkey = JHotkey()
+        self.hotkey_connect()
+        self.hotkey.start()
+        
+    def hotkey_connect(self):
         self.hotkey.running_change_signal.connect(self.start_action_run)
         self.hotkey.listening_change_signal.connect(self.start_action_listen)
         self.hotkey.ss_signal.connect(self.screenshot_slot)
@@ -1375,6 +1445,9 @@ class JamToolsWindow(QMainWindow):
         self.hotkey.showm_signal.connect(self.trayicon.showM)
         self.hotkey.recordchange_signal.connect(self.recorder.recordchange)
         self.hotkey.record_setarea_signal.connect(self.set_area)
+        
+    def connect_all(self):
+        self.hotkey_connect()
         self.recorder.showm_signal.connect(self.trayicon.showM)
         self.WebFilesTransmitter.showm_signal.connect(self.trayicon.showM)
         self.connectss()
@@ -1384,6 +1457,8 @@ class JamToolsWindow(QMainWindow):
 
     def settings_show(self):  # 设置
         self.settingspage = SettingPage(self)
+        self.settingspage.hotkey_restart_signal.connect(self.hotkey_restart_callback)
+        self.settingspage.showm_signal.connect(self.trayicon.showM)
 
     def change_show_item(self, item):
         for i in self.show_items:
@@ -3838,6 +3913,8 @@ hhh(o゜▽゜)o☆）
 
 
 class SettingPage(QScrollArea):
+    hotkey_restart_signal = pyqtSignal()
+    showm_signal = pyqtSignal(str)
     def __init__(self, parent):
         super(SettingPage, self).__init__()
         self.parent = parent
@@ -3962,8 +4039,27 @@ class SettingPage(QScrollArea):
         self.smartShift.stateChanged.connect(self.smartShiftsetting_save)
         self.smartShiftsetting_save(self.smartShift.isChecked())
         # 快捷键
+        self.hoykeynames = ["截屏快捷键：","小窗快捷键：","录屏快捷键：","设置录屏区域","动作录制：","动作播放："]
+        self.hoykey_str = [
+                    self.settings.value('hotkey_ss', "alt<+>z", type=str).replace("<+>","+"),
+                    self.settings.value('hotkey_ocr', "alt<+>x", type=str).replace("<+>","+"),
+                    self.settings.value('hotkey_rc', "alt<+>c", type=str).replace("<+>","+"),
+                    self.settings.value('hotkey_rcs',  "ctrl<+>alt<+>c", type=str).replace("<+>","+"),
+                    self.settings.value('hotkey_a1', "alt<+>1", type=str).replace("<+>","+"),
+                    self.settings.value('hotkey_a2', "alt<+>2", type=str).replace("<+>","+"),
+        ]
+        hotkeys = {"截屏快捷键：":self.settings.value('hotkey_ss', "alt<+>z", type=str).replace("<+>","+"),
+                   "小窗快捷键：":self.settings.value('hotkey_ocr', "alt<+>x", type=str).replace("<+>","+"),
+                   "录屏快捷键：":self.settings.value('hotkey_rc', "alt<+>c", type=str).replace("<+>","+"),
+                   "设置录屏区域":self.settings.value('hotkey_rcs',  "ctrl<+>alt<+>c", type=str).replace("<+>","+"),
+                   "动作录制：":self.settings.value('hotkey_a1', "alt<+>1", type=str).replace("<+>","+"),
+                   "动作播放：":self.settings.value('hotkey_a2', "alt<+>2", type=str).replace("<+>","+"),
+                   }
+        self.parent.hotkey.stop()
         groub1 = QGroupBox('快捷键', self.settings_widget)
-        groub1.setGeometry(shiftbox.x(), shiftbox.y() + shiftbox.height() + 10, 350, 150)
+        groub1.setGeometry(shiftbox.x(), shiftbox.y() + shiftbox.height() + 10, 350, 300)
+        settingbox = ShortcutSettingWidget(groub1,names=self.hoykeynames,default=self.hoykey_str)
+        settingbox.save_setting_signal.connect(self.set_hotkey_callback)
         # control_kjj = QCheckBox('控制快捷键', groub1)
         # control_kjj.setToolTip('酱控制的快捷键开关,打开后将可以用快捷键Alt+1录制,Alt+2播放鼠标键盘动作!')
         # control_kjj.setChecked(self.settings.value('can_controll', False, type=bool))
@@ -4024,7 +4120,17 @@ class SettingPage(QScrollArea):
         self.raise_()
         self.setFocus()
         self.activateWindow()
-
+    
+    def set_hotkey_callback(self,widget,keylist):
+        print(keylist,"keylist")
+        fault_id = self.parent.hotkey.judge_hotkey(keylist)
+        if len(fault_id) == 0:
+            self.showm_signal.emit("快捷键设置成功！"  )
+        else:
+            for id in fault_id:
+                widget.set_callback(id)
+            self.showm_signal.emit("快捷键设置失败，请检查")
+        
     def right_ocr_setting_save(self):
         if self.settings.value('right_ocr', True, bool):
             self.parent.closelistenmouse()
@@ -4143,6 +4249,8 @@ class SettingPage(QScrollArea):
 
     def closeEvent(self, e) -> None:
         super(SettingPage, self).closeEvent(e)
+        self.parent.hotkey = JHotkey()
+        self.hotkey_restart_signal.emit()
         self.parent.setEnabled(True)
 
 
