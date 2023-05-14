@@ -32,7 +32,6 @@ import PyQt5.QtNetwork
 from qt_material import apply_stylesheet,list_themes
 import qt_material
 from jamscreenshot import Slabel
-import fbs_runtime.application_context.PyQt5
 import pynput
 from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath

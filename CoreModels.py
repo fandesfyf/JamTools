@@ -44,7 +44,7 @@ from qt_material import apply_stylesheet,list_themes
 import qt_material
 from jamscreenshot import Slabel
 # from aip import AipOcr
-from fbs_runtime.application_context.PyQt5 import ApplicationContext
+# from fbs_runtime.application_context.PyQt5 import ApplicationContext
 from pynput import keyboard, mouse
 from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
@@ -62,6 +62,8 @@ if PLATFORM_SYS == "win32":
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except Exception as e:
         print(e)
+    import pynput.keyboard._win32
+    import pynput.mouse._win32
 if PLATFORM_SYS == "darwin":
     import pynput.keyboard._darwin
     import pynput.mouse._darwin
@@ -5695,8 +5697,9 @@ def main():
     global jamtools, ffmpeg_path, documents_path, temp_path, iconpng, paypng, transformater, \
         translator
     start_t = time.time()
-    appctxt = ApplicationContext()
-    single_instance_check = StartUpChecker(appctxt.app)
+    # appctxt = ApplicationContext()
+    app = QApplication(sys.argv)
+    single_instance_check = StartUpChecker(app)
     ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
     documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
 
@@ -5718,7 +5721,7 @@ def main():
     jamtools.init_rec_con_thread.start()
     jamtools.statusBar().showMessage('初始化用时：%f' % float(time.time() - start_t))
     print('init_swindowtime:', time.time() - start_t)
-    sys.exit(appctxt.app.exec_())
+    sys.exit(app.exec_())
 
 
 if __name__ == '__main__':
