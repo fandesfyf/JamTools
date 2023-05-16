@@ -23,10 +23,11 @@ if __name__ == "__main__":
     import sys
     import shutil
     import subprocess, setuptools
+    
     # from CoreModels import VERSON
     WithCompile = 0  # 是否编译
-    Debug = 1  # 是否debug模式
-
+    Debug = 0  # 是否debug模式
+    VERSON = "0.14.1B"
 
     if WithCompile:
         Compiler = subprocess.Popen('python setjam.py build_ext --inplace', shell=True,stderr=subprocess.PIPE)
@@ -96,9 +97,9 @@ if __name__ == "__main__":
                                 "tkinter","Cython","fbs_runtime",
                                 "lib2to3","multiprocessing","packaging",
                                 "pkg_resources","test",
-
-    ],
-                     "include_files": include_files}
+                                    ],
+                     "include_files": include_files,
+                      }
 
     import sys
     if Debug:
@@ -109,15 +110,16 @@ if __name__ == "__main__":
         base = None
 
     executables = [
-        Executable('main.py', base=base, target_name = 'Jamtools')
+        Executable('main.py', base=base, target_name = 'Jamtools',icon="./icon.ico")
     ]
 
     setup(name='JamTools',
-        version = '1.14.1B',
-        description = 'JamTools是一个跨平台的小工具集类软件，支持Windows7/8/10/11、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动/区域)截屏、录屏、文字识别、多种语言互译、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能',
+        version = VERSON,
+        description = 'JamTools是一个完全开源的跨平台的小工具集类软件，支持Windows7/8/10/11、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动/区域)截屏、录屏、文字识别、多种语言互译、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能。github链接：https://github.com/fandesfyf/JamTools',
         options = {'build_exe': build_options,},
-        icon="icon.png",
         executables = executables)
-    
-    shutil.move("./build/exe.win-amd64-3.7/lib/PyQt5/Qt/Qt5/plugins", "./build/exe.win-amd64-3.7/lib/PyQt5/Qt/plugins")
+    for filename in os.listdir("./build/"):
+        if filename.startswith("exe."):
+            shutil.move(f"./build/{filename}", f"./build/Jamtools")
+            shutil.move("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins", "./build/Jamtools/lib/PyQt5/Qt/plugins")
 
