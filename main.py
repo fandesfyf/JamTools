@@ -1,7 +1,7 @@
 # !usr/bin/python3
 # -*- coding: utf-8 -*-
 
-####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
+####### 本文件由setup.py 打包脚本自动生成 ######
 
 import pynput.keyboard
 import pynput.mouse
@@ -32,7 +32,6 @@ import PyQt5.QtNetwork
 from qt_material import apply_stylesheet,list_themes
 import qt_material
 from jamscreenshot import Slabel
-import fbs_runtime.application_context.PyQt5
 import pynput
 from jamcontroller import ActionController, ActionCondition
 from WEBFilesTransmitter import WebFilesTransmitter, WebFilesTransmitterBox, apppath
@@ -80,5 +79,5 @@ from CoreModels import main
 main()
 
 
-####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
+####### 本文件由setup.py 打包脚本自动生成 ######
 

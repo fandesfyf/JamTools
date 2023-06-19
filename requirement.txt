@@ -1,7 +1,6 @@
 Wheel
 Pillow
 pynput
-fbs==0.9.0
 qrcode
 requests==2.27 
 urllib3==1.25.8
@@ -22,4 +21,4 @@ setuptools==50.3.0
 chardet
 comtypes
 opencv-contrib-python
-
+cx_Freeze

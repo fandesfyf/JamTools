@@ -145,7 +145,7 @@ $其他功能：划屏提字：打开软件后可以在任何界面(图片也可
 │  jamroll_screenshot.py //滚动截屏模块
 │  jampublic.py //一些非常常用的公共引用类/方法,如翻译文字识别线程类等
 │  jamresourse.py //转化的资源文件
-│  jamtoolsbuild.py //一键构建脚本,调用该脚本即可自动分析项目引用,自动配置项目文件,自动编译/打包等
+│  jamtoolsbuild.py //一键构建脚本,调用该脚本即可自动分析项目引用,自动配置项目文件,自动编译/打包等, 基于fbs，后续将移除
 │  setjam.py //附加编译脚本,如在构建脚本中设置了编译,则会调用该脚本将所有库转化为c文件后编译,需要Cython支持
 |  以下几个库文件是(作者自行编译的)不同平台下的缩略版opencv库(10M+),现在默认clone的项目将不会包含这些文件(因为太大了clone起来太慢),已经放在release里面了,要小一点的文件的话就自己去下载,或者直接安装完全版的opencv-contrib-python==3.4.2.17(70M+)..
 │ \ cv2.cp37-win_amd64.pyd //windows下编译的opencv库,如需扩展功能,请自行安装opencv-contrib-python==3.4.2.17
@@ -305,4 +305,17 @@ opencv-contrib-python # 如果需要更小体积的cv2,则可以从[这里](http
 
 此外,本软件多媒体处理能力主要依赖于[ffmpeg库](https://ffmpeg.org/),需要自行下载[ffmpeg](https://ffmpeg.org/)(用于录屏和多媒体处理)和[gifsicle](http://www.lcdf.org/gifsicle/)(用于gif压缩)可执行文件放到bin目录对应操作系统的文件夹下,方可使用对应功能.
 
-配置好以上环境后,可以通过运行`jamtoolsbuild.py`文件一键打包对应平台下的包,然后通过fbs install命令构建安装程序,详情请看[这里](https://github.com/mherrmann/fbs-tutorial)
+### 打包安装程序
+
+> 原本的打包基于fbs库，但是高版本的fbs开始收费了，所以换成了`cx_Freeze`进行打包(感觉更好用了，白嫖真爽！)
+
+配置好以上环境后,可以通过运行以下命令打包为安装目录的文件夹：
+```shell
+python setup.py build 
+```
+window下打包出来安装目录之后，可以使用nsis打包为安装程序，提供了一个安装程序脚本到`.\build\installer`中，具体用法可以参考[nsis教程](https://nsis.sourceforge.io/Main_Page)
+
+TODO:
+- 其他平台使用`cx_Freeze`打包还没有测试
+- `cx_Freeze`本身好像支持打包为安装程序，但是不能定义安装页面，后面再看看能不能使用
+
