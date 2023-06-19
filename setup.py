@@ -86,7 +86,13 @@ if __name__ == "__main__":
     include_files = [
         (bin_files,"lib/"+bin_files),
         ("html/","lib/html"),
+        ("LICENSE","LICENSE")
     ]
+    if sys.platform == "win32":
+        include_files.extend(
+            [("screen-capture-recorder-x64.dll","screen-capture-recorder-x64.dll"),
+             ("audio_sniffer-x64.dll","audio_sniffer-x64.dll")]
+        )
     
     # exit()
     # Dependencies are automatically detected, but it might need
@@ -120,6 +126,10 @@ if __name__ == "__main__":
         executables = executables)
     for filename in os.listdir("./build/"):
         if filename.startswith("exe."):
-            shutil.move(f"./build/{filename}", f"./build/Jamtools")
+            destination_dir = f"./build/Jamtools"
+            if os.path.exists(destination_dir):
+                shutil.rmtree(destination_dir)
+            shutil.copytree(f"./build/{filename}", destination_dir)
+            print(f"move ./build/{filename} -> {destination_dir}")
             shutil.move("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins", "./build/Jamtools/lib/PyQt5/Qt/plugins")
 
