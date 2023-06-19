@@ -1,7 +1,7 @@
 {
     "windows": {
-        "version": "0.14.0B",
-        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.14.0B/JamTools0.14.0BSetup_for_windows.exe"
+        "version": "0.14.1B",
+        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.14.1B/JamTools0.14.1BSetup_for_windows.exe"
     },
     "linux": {
         "version": "0.13.7B",
