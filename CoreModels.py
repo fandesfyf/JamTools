@@ -52,6 +52,8 @@ from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 from jam_transtalater import Translator
 import jamresourse
+from pynput.mouse import Controller
+
 
 if PLATFORM_SYS == "win32":
     import win32con
@@ -326,6 +328,7 @@ class Recordingthescreen(QObject):
         self.showrect = Transparent_windows()
         self.x = 0
         self.y = 0
+        self.using_area = False
         self.w = self.maxw = QApplication.desktop().width() // 2 * 2
         self.h = self.maxh = QApplication.desktop().height() // 2 * 2
 
@@ -354,6 +357,19 @@ class Recordingthescreen(QObject):
                 QStandardPaths.MoviesLocation) + "/Jam_screenrecord")
 
     def area_recording(self):
+        screen_number = 0
+        if not self.using_area:
+            if QApplication.desktop().screenCount()>1:
+                screen=self.search_in_which_screen()
+            else:
+                screen=QApplication.primaryScreen()
+            ssize = screen.geometry()
+            self.w = self.maxw = ssize.width() // 2 * 2
+            self.h = self.maxh = ssize.height() // 2 * 2
+            
+            desktop = QApplication.desktop()
+            screen_number = desktop.screenNumber(desktop.cursor().pos())
+            print("screen_number",screen_number)
         self.codec = 'libx264 '
         profile = ' high444 -level 5.1 '
         try:
@@ -458,7 +474,7 @@ class Recordingthescreen(QObject):
                         self.y,
                         self.w,
                         self.h)
-                    video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
+                    video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop{} '.format(f":{screen_number}")
                 else:
                     video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
                                                                                                  self.mouse, self.x,
@@ -549,7 +565,16 @@ class Recordingthescreen(QObject):
               + audio
               + out_file
               + ' -y')
-
+    def search_in_which_screen(self):
+        mousepos=Controller().position
+        screens = QApplication.screens()
+        secondscreen = QApplication.primaryScreen()
+        for i in screens:
+            rect=i.geometry().getRect()
+            if mousepos[0]in range(rect[0],rect[0]+rect[2]) and mousepos[1]in range(rect[1],rect[1]+rect[3]):
+                secondscreen = i
+                break
+        return secondscreen
     # -framerate 5 -draw_mouse 1 -show_region 1 显示截取区域 -i title={窗口名称} 用-framerate在macos下报错 用-r代替
     def recordchange(self):
         if self.waiting:
@@ -3796,6 +3821,7 @@ hhh(o゜▽゜)o☆）
     def set_area_callback(self,area):
         print('setting recarea',area)
         self.recorder.x , self.recorder.y, self.recorder.w,self.recorder.h = area
+        self.recorder.using_area = True
         
     def screen_shot_end_callback(self,pic):
         self.setup_ui_screenshot()
