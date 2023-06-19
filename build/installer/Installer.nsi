@@ -4,7 +4,7 @@ SetCompressor /SOLID LZMA
 InstallDir "$PROGRAMFILES64\JamTools"
 ;InstallDirRegKey HKCU "Software\JamTools" "$PROGRAMFILES64\JamTools"
 !define PRODUCT_NAME "JamTools"
-!define PRODUCT_VERSION "0.14.0B"
+!define PRODUCT_VERSION "0.14.1B"
 Unicode True
 
 ;--------------------------------

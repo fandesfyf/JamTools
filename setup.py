@@ -132,4 +132,18 @@ if __name__ == "__main__":
             shutil.copytree(f"./build/{filename}", destination_dir)
             print(f"move ./build/{filename} -> {destination_dir}")
             shutil.move("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins", "./build/Jamtools/lib/PyQt5/Qt/plugins")
-
+    nsisfile_path = "build/installer/Installer.nsi"
+    if sys.platform == "win32" and os.path.exists(nsisfile_path):
+        """重写windows下的nsis配置文件版本号"""
+        with open(nsisfile_path, "r", encoding="ansi") as nsisfile:
+            ns = nsisfile.readlines()
+        for i, line in enumerate(ns):
+            if "!define PRODUCT_VERSION" in line:
+                print("找到版本号{}".format(line))
+                v = line.split('"')[-2]
+                if v != VERSON:
+                    print(f"版本号不同{v}->{VERSON}")
+                    ns[i] = '!define PRODUCT_VERSION "{}"\n'.format(VERSON)
+                    with open(nsisfile_path, "w", encoding="ansi") as nsisfile:
+                        nsisfile.writelines(ns)
+                break
