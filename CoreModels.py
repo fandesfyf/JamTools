@@ -73,7 +73,7 @@ elif PLATFORM_SYS == "linux":
     import pynput.keyboard._xorg
     import pynput.mouse._xorg
 
-VERSON = "0.14.0B"
+VERSON = "0.14.1B"
 
 
 class JHotkey(QThread):

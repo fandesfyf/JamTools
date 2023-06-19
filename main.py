@@ -1,7 +1,7 @@
 # !usr/bin/python3
 # -*- coding: utf-8 -*-
 
-####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
+####### 本文件由setup.py 打包脚本自动生成 ######
 
 import pynput.keyboard
 import pynput.mouse
@@ -79,5 +79,5 @@ from CoreModels import main
 main()
 
 
-####### 本文件由jamtoolsbuild.py 打包脚本自动生成 ######
+####### 本文件由setup.py 打包脚本自动生成 ######
 
