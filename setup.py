@@ -86,7 +86,8 @@ if __name__ == "__main__":
     include_files = [
         (bin_files,"lib/"+bin_files),
         ("html/","lib/html"),
-        ("LICENSE","LICENSE")
+        ("LICENSE","LICENSE"),
+        ("fake_useragent_0.1.11.json","lib/fake_useragent_0.1.11.json")
     ]
     if sys.platform == "win32":
         include_files.extend(
