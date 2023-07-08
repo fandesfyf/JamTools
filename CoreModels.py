@@ -63,7 +63,7 @@ if PLATFORM_SYS == "win32":
     try:# win7 don't have SetProcessDpiAwareness
         ctypes.windll.shcore.SetProcessDpiAwareness(2)
     except Exception as e:
-        print(e)
+        print("SetProcessDpiAwareness error ",e)
     import pynput.keyboard._win32
     import pynput.mouse._win32
 if PLATFORM_SYS == "darwin":
@@ -5724,6 +5724,7 @@ def main():
         translator
     start_t = time.time()
     # appctxt = ApplicationContext()
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
     app = QApplication(sys.argv)
     single_instance_check = StartUpChecker(app)
     ffmpeg_path = os.path.join(apppath, 'bin', PLATFORM_SYS)
