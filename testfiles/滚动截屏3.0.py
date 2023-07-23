@@ -31,7 +31,7 @@ class TipsShower(QLabel):
     def __init__(self, text, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.setFont(QFont('微软雅黑', 15))
+        self.setFont(QFont('黑体', 15))
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Tool | Qt.WindowStaysOnTopHint)

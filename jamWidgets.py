@@ -974,7 +974,7 @@ class ShortcutSettingWidget(QWidget):
 if __name__ == "__main__":
     import sys
     app = QApplication(sys.argv)
-    widget = ShortcutSettingWidget()
+    widget = FramelessEnterSendQTextEdit()
     widget.show()
     app.exec_()
 

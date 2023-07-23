@@ -957,7 +957,7 @@ class Small_Ocr(QLabel):
         self.adjustSize(w)
 
         self.move(self.sx, self.sy)
-        font = QFont('微软雅黑' if PLATFORM_SYS == "win32" else "", )
+        font = QFont('黑体' if PLATFORM_SYS == "win32" else "", )
         self.small_show.move(0, grabheight)
         self.smalltra.move(0, self.small_show.y() + self.small_show.height())
         self.search_botton.move(w, 0)

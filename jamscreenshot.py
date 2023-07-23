@@ -646,7 +646,7 @@ class PaintLayer(QLabel):
             self.parent.text_box.clear()
             pos = self.parent.drawtext_pointlist.pop(0)
             if text:
-                self.pixPainter.setFont(QFont('', self.parent.tool_width))
+                self.pixPainter.setFont(QFont('黑体', self.parent.tool_width))
                 self.pixPainter.setPen(QPen(self.parent.pencolor, 3, Qt.SolidLine))
                 self.pixPainter.drawText(pos[0] + self.parent.text_box.document.size().height() / 8,
                                          pos[1] + self.parent.text_box.document.size().height() * 32 / 41, text)
@@ -1049,7 +1049,7 @@ class Slabel(QLabel):  # 区域截图功能
                                  self.choice_clor_btn.width(), self.choice_clor_btn.height())
         self.nextbtn.clicked.connect(self.next_step)
         print(1)
-        tipsfont = QFont("", 35)
+        tipsfont = QFont("黑体", 35)
         # tipsfont.setBold(True)
         self.Tipsshower.setFont(tipsfont)
         self.choice_clor_btn.setStyleSheet('background-color:rgb(255,0,0);')
@@ -1776,7 +1776,7 @@ class Slabel(QLabel):  # 区域截图功能
                 elif self.painter_tools['drawtext_on']:
                     self.text_box.move(event.x(), event.y())
                     self.drawtext_pointlist.append([event.x(), event.y()])
-                    self.text_box.setFont(QFont('', self.tool_width))
+                    self.text_box.setFont(QFont('黑体', self.tool_width))
                     self.text_box.setTextColor(self.pencolor)
                     self.text_box.textAreaChanged()
                     self.text_box.show()
@@ -2053,7 +2053,7 @@ class Slabel(QLabel):  # 区域截图功能
                 if self.painter_tools['drawtext_on']:
                     # self.text_box.move(event.x(), event.y())
                     # self.drawtext_pointlist.append([event.x(), event.y()])
-                    self.text_box.setFont(QFont('', self.tool_width))
+                    self.text_box.setFont(QFont('黑体', self.tool_width))
                     # self.text_box.setTextColor(self.pencolor)
                     self.text_box.textAreaChanged()
             self.update()

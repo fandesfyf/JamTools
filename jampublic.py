@@ -85,7 +85,7 @@ class TipsShower(QLabel):
         self.parent = parent
         self.area = list(targetarea)
         self.timeout = timeout
-        self.rfont = QFont('', fontsize)
+        self.rfont = QFont('黑体', fontsize)
         self.setFont(self.rfont)
         self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
