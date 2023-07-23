@@ -69,11 +69,15 @@ class Translator(QObject):
                 mode = "AUTO"
             else:
                 mode = mode_dict[self.fromLang]+"2"+mode_dict[self.toLang]
-            
-            url = "http://fanyi.youdao.com/translate?&doctype=json&type={}&i={}".format(mode,self.text)
+            url = "http://fanyi.youdao.com/translate?&doctype=json&type={}&i={}".format(mode,requests.utils.quote(self.text))
             res = requests.get(url,headers=headers).json()
             print(res)
-            result = res["translateResult"][0][0]["tgt"]
+            result= ""
+            result_lines = res["translateResult"]
+            for line in result_lines:
+                for sentence in line:
+                    result += sentence["tgt"]
+                result += "\n"
             result_type_dict = dict(zip(mode_dict.values(),mode_dict.keys()))
             from_lan,to_lan = res["type"].split("2")
             from_lan,to_lan = result_type_dict[from_lan],result_type_dict[to_lan]
