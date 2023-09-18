@@ -6,7 +6,7 @@ from cx_Freeze import setup, Executable
 # from cx_Freeze.util import get_default_include_path
 from cx_Freeze.finder import ModuleFinder
 import shutil
-
+'''运行`python setup.py build`即可打包'''
 
 jamfilelist = ["CoreModels", "jamcontroller", "WEBFilesTransmitter", "clientFilesTransmitter",
                "jamscreenshot", "jampublic", "jamroll_screenshot", "Logger", "jamspeak",
