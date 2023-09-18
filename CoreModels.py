@@ -474,7 +474,7 @@ class Recordingthescreen(QObject):
                         self.y,
                         self.w,
                         self.h)
-                    video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop{} '.format(f":{screen_number}")
+                    video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
                     video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
                                                                                                  self.mouse, self.x,
