@@ -802,6 +802,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.NpainterNmoveFlag = self.choicing = self.move_rect = self.move_y0 = self.move_x0 = self.move_x1 \
             = self.change_alpha = self.move_y1 = False
         self.x0 = self.y0 = self.rx0 = self.ry0 = self.x1 = self.y1 = self.mouse_posx = self.mouse_posy = -50
+        self.screen_init_xy = [0, 0]
         self.bx = self.by = 0
         self.alpha = 255  # 透明度值
         self.smartcursor_on = self.settings.value("screenshot/smartcursor", True, type=bool)
@@ -1376,6 +1377,7 @@ class Slabel(QLabel):  # 区域截图功能
             rect=i.geometry().getRect()
             if mousepos[0]in range(rect[0],rect[0]+rect[2]) and mousepos[1]in range(rect[1],rect[1]+rect[3]):
                 targetscreen = i
+                self.screen_init_xy = rect[0:2]
                 print("current screen is %s" % i.name(),rect)
                 break
         return targetscreen
@@ -1515,7 +1517,7 @@ class Slabel(QLabel):  # 区域截图功能
     def freeze_img(self):
         self.cutpic(save_as=2)
         self.parent.freeze_imgs.append(Freezer(None, self.final_get_img,
-                                               min(self.x0, self.x1), min(self.y0, self.y1),
+                                               self.screen_init_xy[0] + min(self.x0, self.x1),self.screen_init_xy[1] + min(self.y0, self.y1),
                                                len(self.parent.freeze_imgs)))
         if not QSettings('Fandes', 'jamtools').value("S_SIMPLE_MODE", False, bool):
             self.parent.show()
