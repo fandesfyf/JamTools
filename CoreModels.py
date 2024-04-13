@@ -568,13 +568,13 @@ class Recordingthescreen(QObject):
     def search_in_which_screen(self):
         mousepos=Controller().position
         screens = QApplication.screens()
-        secondscreen = QApplication.primaryScreen()
+        targetscreen = QApplication.primaryScreen()
         for i in screens:
             rect=i.geometry().getRect()
             if mousepos[0]in range(rect[0],rect[0]+rect[2]) and mousepos[1]in range(rect[1],rect[1]+rect[3]):
-                secondscreen = i
+                targetscreen = i
                 break
-        return secondscreen
+        return targetscreen
     # -framerate 5 -draw_mouse 1 -show_region 1 显示截取区域 -i title={窗口名称} 用-framerate在macos下报错 用-r代替
     def recordchange(self):
         if self.waiting:

@@ -351,7 +351,7 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
         elif e.key() ==16777267:
             self.speak()
         elif e.key() == Qt.Key_S and QApplication.keyboardModifiers() == Qt.ControlModifier:
-            print("save")
+            # print("save")
             self.addhistory()
         elif QApplication.keyboardModifiers() not in (Qt.ShiftModifier, Qt.ControlModifier, Qt.AltModifier):
             self.history_pos = len(self.history)
@@ -905,7 +905,7 @@ class ShortcutLineEdit(QLineEdit):
         # Use + to connect the keys and remove extra spaces
         shortcut_str = "+".join([QKeySequence(key).toString(QKeySequence.PortableText) for key in shortcut_keys])
         shortcut_str = shortcut_str.replace(" ", "").replace("++","+")
-        print(shortcut_str)
+        # print(shortcut_str)
         if len(shortcut_str)>1 and str(shortcut_str[-1]).isalpha() and str(shortcut_str[-2]).isalpha() and str(shortcut_str[-1]).islower() and str(shortcut_str[-2]).isupper():
             shortcut_str = shortcut_str[:-1].upper()
         self.setText(shortcut_str)
@@ -921,7 +921,7 @@ class ShortcutLineEdit(QLineEdit):
             self.key_states.discard(key)
         modifiers = event.modifiers()
         if len(self.key_states) == 0 and not (modifiers & Qt.ControlModifier or  modifiers & Qt.ShiftModifier or modifiers & Qt.AltModifier):
-            print("松开了按键")
+            # print("松开了按键")
             current_str = self.shortcut_str.lower()
             fkey = len(current_str)==2 and current_str[-1].isnumeric
             if not fkey and "alt" not in current_str and "ctrl" not in current_str and "shift" not in current_str or current_str[-1]=="+":

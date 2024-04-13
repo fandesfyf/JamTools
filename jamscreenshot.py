@@ -1367,17 +1367,18 @@ class Slabel(QLabel):  # 区域截图功能
         if pic:
             self.paintlayer.pixpng = QPixmap(pic)
             self.choise_pix.setIcon(QIcon(pic))
-    def search_in_which_screen(self):
-        mousepos=Controller().position
+    def search_in_which_screen(self,mousepos):
+        # mousepos=Controller().position
         screens = QApplication.screens()
-        secondscreen = QApplication.primaryScreen()
+        # print("there is %d screens" % len(screens))
+        targetscreen = QApplication.primaryScreen()
         for i in screens:
             rect=i.geometry().getRect()
             if mousepos[0]in range(rect[0],rect[0]+rect[2]) and mousepos[1]in range(rect[1],rect[1]+rect[3]):
-                secondscreen = i
+                targetscreen = i
+                print("current screen is %s" % i.name(),rect)
                 break
-        print("t", self.x(), QApplication.desktop().width(),QApplication.primaryScreen().geometry(),secondscreen.geometry(),mousepos)
-        return secondscreen
+        return targetscreen
 
     def screen_shot(self, pix=None,mode = "screenshot"):
         """mode: screenshot 、orc、set_area、getpix。screenshot普通截屏;非截屏模式:orc获取ocr源图片; set_area用于设置区域、getpix提取区域"""
@@ -1386,13 +1387,15 @@ class Slabel(QLabel):  # 区域截图功能
         self.sshoting = True
         t1 = time.process_time()
         pixRat = QWindow().devicePixelRatio()
+        mousepos = Controller().position
+        print("mousepos:",mousepos)
         if type(pix) is QPixmap:
             get_pix = pix
             self.init_parameters()
         else:
             self.setup(mode)  # 初始化截屏
             if QApplication.desktop().screenCount()>1:
-                sscreen=self.search_in_which_screen()
+                sscreen=self.search_in_which_screen(mousepos)
             else:
                 sscreen=QApplication.primaryScreen()
             get_pix = sscreen.grabWindow(0)  # 截取屏幕
@@ -1418,7 +1421,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.paintlayer.show()
         self.text_box.hide()
         self.botton_box.hide()
-        # self.setGeometry(0, 0, pix.width(), pix.height())  # 全屏必须在所有控件画完再进行
+        self.setGeometry(self.screen_init_xy[0], self.screen_init_xy[1], get_pix.width(), get_pix.height())  # 全屏必须在所有控件画完再进行
 
         self.setWindowOpacity(1)
         # self.showNormal()
