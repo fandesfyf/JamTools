@@ -48,31 +48,31 @@ if __name__ == "__main__":
     
     ### gen main.py
     file_tips = "\n####### 本文件由setup.py 打包脚本自动生成 ######\n\n"
-    with open('main.py', "w", encoding="utf-8") as mainf:
-        importfilelist = ["# !usr/bin/python3\n","# -*- coding: utf-8 -*-\n",
-                          file_tips,"import pynput.keyboard\n", "import pynput.mouse\n"]
-        for file in jamfilelist:
-            print("explaining {}".format(file))
-            with open("{}.py".format(file), "r", encoding="utf-8") as soursef:
-                line = soursef.readline()
-                while line:
-                    if line[:6] == "import" or (line[:4] == "from" and "import" in line):
-                        if "PyQt5" in line or "pynput" in line:
-                            if "from" in line:
-                                line = "import " + line.split(" ")[1] + "\n"
-                            elif " as " in line:
-                                line = line.split(" as ")[0] + "\n"
-                        if "jampublic" in line: line = "import jampublic\n"
-                        while line[-2] == "\\":  # 多行
-                            if line not in importfilelist:
-                                importfilelist.append(line)
-                            line = soursef.readline()
-                        if line not in importfilelist:
-                            importfilelist.append(line)
-                    line = soursef.readline()
+    # with open('main.py', "w", encoding="utf-8") as mainf:
+    #     importfilelist = ["# !usr/bin/python3\n","# -*- coding: utf-8 -*-\n","import os\n","os.environ['DISPLAY'] = ':0'\n",
+    #                       file_tips,"import pynput.keyboard\n", "import pynput.mouse\n"]
+    #     for file in jamfilelist:
+    #         print("explaining {}".format(file))
+    #         with open("{}.py".format(file), "r", encoding="utf-8") as soursef:
+    #             line = soursef.readline()
+    #             while line:
+    #                 if line[:6] == "import" or (line[:4] == "from" and "import" in line):
+    #                     if "PyQt5" in line or "pynput" in line:
+    #                         if "from" in line:
+    #                             line = "import " + line.split(" ")[1] + "\n"
+    #                         elif " as " in line:
+    #                             line = line.split(" as ")[0] + "\n"
+    #                     if "jampublic" in line: line = "import jampublic\n"
+    #                     while line[-2] == "\\":  # 多行
+    #                         if line not in importfilelist:
+    #                             importfilelist.append(line)
+    #                         line = soursef.readline()
+    #                     if line not in importfilelist:
+    #                         importfilelist.append(line)
+    #                 line = soursef.readline()
 
-        mainf.writelines(importfilelist)
-        mainf.writelines(["from CoreModels import main\n", "main()\n\n",file_tips])
+    #     mainf.writelines(importfilelist)
+    #     mainf.writelines(["from CoreModels import main\n", "main()\n\n",file_tips])
     
 
     
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         bin_files = "bin/win32"
     else:
         bin_files = "bin/linux" if sys.platform=='linux' else "bin/darwin"
-
+    
     include_files = [
         (bin_files,"lib/"+bin_files),
         ("html/","lib/html"),
@@ -98,9 +98,10 @@ if __name__ == "__main__":
     # exit()
     # Dependencies are automatically detected, but it might need
     # fine tuning.
-    build_options = {'packages': [], 
-                     'zip_include_packages':["PyQt5"],
-                     'excludes': ["setuptools","tk8.6",
+    build_options = {'packages': ["Xlib","pynput"], 
+                     'zip_include_packages':["PyQt5","numpy"],
+                     "includes": ["atexit"],
+                     'excludes': ["setuptools","tk8.6","scipy","numpy.libs","notebook","PySide2",
                                 "tkinter","Cython","fbs_runtime",
                                 "lib2to3","multiprocessing","packaging",
                                 "pkg_resources","test",
@@ -115,36 +116,39 @@ if __name__ == "__main__":
         base = 'Win32GUI'
     else:
         base = None
-
+    exe_name = "JamTools"
     executables = [
-        Executable('main.py', base=base, target_name = 'Jamtools',icon="./icon.ico")
+        Executable('main.py', base=base, target_name = exe_name,icon="./icon.ico")
     ]
 
-    setup(name='JamTools',
+    setup(name=exe_name,
         version = VERSON,
         description = 'JamTools是一个完全开源的跨平台的小工具集类软件，支持Windows7/8/10/11、Macos、ubuntu系统(其他系统可以直接从源码编译打包)。包含了(滚动/区域)截屏、录屏、文字识别、多种语言互译、多媒体格式转换、鼠标键盘动作录制播放、局域网文件传输、聊天机器人等功能。github链接：https://github.com/fandesfyf/JamTools',
         options = {'build_exe': build_options,},
         executables = executables)
-    for filename in os.listdir("./build/"):
-        if filename.startswith("exe."):
-            destination_dir = f"./build/Jamtools"
-            if os.path.exists(destination_dir):
-                shutil.rmtree(destination_dir)
-            shutil.copytree(f"./build/{filename}", destination_dir)
-            print(f"move ./build/{filename} -> {destination_dir}")
-            shutil.move("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins", "./build/Jamtools/lib/PyQt5/Qt/plugins")
-    nsisfile_path = "build/installer/Installer.nsi"
-    if sys.platform == "win32" and os.path.exists(nsisfile_path):
-        """重写windows下的nsis配置文件版本号"""
-        with open(nsisfile_path, "r", encoding="ansi") as nsisfile:
-            ns = nsisfile.readlines()
-        for i, line in enumerate(ns):
-            if "!define PRODUCT_VERSION" in line:
-                print("找到版本号{}".format(line))
-                v = line.split('"')[-2]
-                if v != VERSON:
-                    print(f"版本号不同{v}->{VERSON}")
-                    ns[i] = '!define PRODUCT_VERSION "{}"\n'.format(VERSON)
-                    with open(nsisfile_path, "w", encoding="ansi") as nsisfile:
-                        nsisfile.writelines(ns)
-                break
+    # for filename in os.listdir("./build/"):
+    #     if filename.startswith("exe."):
+    #         destination_dir = f"./build/Jamtools"
+    #         if os.path.exists(destination_dir):
+    #             shutil.rmtree(destination_dir)
+    #         shutil.copytree(f"./build/{filename}", destination_dir)
+    #         print(f"move ./build/{filename} -> {destination_dir}")
+    #         if os.path.exists("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins"):
+    #             shutil.move("./build/Jamtools/lib/PyQt5/Qt/Qt5/plugins", "./build/Jamtools/lib/PyQt5/Qt/plugins")
+    #         else:
+    #             print("PyQt5/Qt/Qt5/plugins not found")
+    # nsisfile_path = "build/installer/Installer.nsi"
+    # if sys.platform == "win32" and os.path.exists(nsisfile_path):
+    #     """重写windows下的nsis配置文件版本号"""
+    #     with open(nsisfile_path, "r", encoding="ansi") as nsisfile:
+    #         ns = nsisfile.readlines()
+    #     for i, line in enumerate(ns):
+    #         if "!define PRODUCT_VERSION" in line:
+    #             print("找到版本号{}".format(line))
+    #             v = line.split('"')[-2]
+    #             if v != VERSON:
+    #                 print(f"版本号不同{v}->{VERSON}")
+    #                 ns[i] = '!define PRODUCT_VERSION "{}"\n'.format(VERSON)
+    #                 with open(nsisfile_path, "w", encoding="ansi") as nsisfile:
+    #                     nsisfile.writelines(ns)
+    #             break

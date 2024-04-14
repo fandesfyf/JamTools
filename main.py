@@ -1,8 +1,9 @@
 # !usr/bin/python3
 # -*- coding: utf-8 -*-
+import os
+os.environ['DISPLAY'] = ':0'
 
 ####### 本文件由setup.py 打包脚本自动生成 ######
-
 import pynput.keyboard
 import pynput.mouse
 import hashlib
@@ -39,7 +40,6 @@ from jamspeak import Speaker
 from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 from jam_transtalater import Translator
 import jamresourse
-import os
 from numpy import asarray
 import base64
 import html
