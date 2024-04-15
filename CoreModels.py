@@ -326,6 +326,9 @@ class Recordingthescreen(QObject):
         self.timer = QTimer()
         self.timer.timeout.connect(self.count)
         self.showrect = Transparent_windows()
+        self.reset_area()
+        
+    def reset_area(self):
         self.x = 0
         self.y = 0
         self.using_area = False
@@ -364,6 +367,8 @@ class Recordingthescreen(QObject):
             else:
                 screen=QApplication.primaryScreen()
             ssize = screen.geometry()
+            self.x = ssize.x() // 2*2
+            self.y = ssize.y() // 2*2
             self.w = self.maxw = ssize.width() // 2 * 2
             self.h = self.maxh = ssize.height() // 2 * 2
             
