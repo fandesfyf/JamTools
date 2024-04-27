@@ -2,12 +2,12 @@ Wheel
 Pillow
 pynput
 qrcode
-requests==2.27 
-urllib3==1.25.8
+requests
+urllib3
 pyttsx3
-PyInstaller==3.4
+PyInstaller
 baidu-aip
-PyQt5
+PyQt5==5.14
 PyQt5-sip
 PyQt5-stubs
 onnxruntime
@@ -17,8 +17,8 @@ qt_material
 numpy
 Cython==0.29.21
 fake-useragent==0.1.11
-setuptools==50.3.0
+setuptools
 chardet
 comtypes
-opencv-contrib-python
+opencv-python
 cx_Freeze
