@@ -345,8 +345,3 @@ TODO:
 - 其他平台使用`cx_Freeze`打包还没有测试
 - `cx_Freeze`本身好像支持打包为安装程序，但是不能定义安装页面，后面再看看能不能使用
 
-# ubuntu打包
-需要7.0的cx_Freeze版本，目前还是rc版本吗，所以需要使用以下命令升级：
-pip install --upgrade --pre --extra-index-url https://marcelotduarte.github.io/packages/ cx_Freeze
-sudo apt-get install alien
-python setup.py bdist_deb 
