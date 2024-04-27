@@ -10,12 +10,12 @@ import sys
 import time
 
 import requests
-import pyttsx3
-if sys.platform == "win32":
-    import pyttsx3.drivers
-    import pyttsx3.drivers.sapi5
-
 try:
+    import pyttsx3
+    if sys.platform == "win32":
+        import pyttsx3.drivers
+        import pyttsx3.drivers.sapi5
+
     speaker_engine = pyttsx3.init()
 except:
     e = sys.exc_info()
