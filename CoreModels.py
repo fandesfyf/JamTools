@@ -354,6 +354,11 @@ class Recordingthescreen(QObject):
         self.Nondestructive = ' -qp 5 '
         self.scale = 1
         self.c = 0
+        display_evn = os.environ['DISPLAY']
+        if "." in display_evn:
+            display_evn = display_evn.split(".")[0]
+        self.display = display_evn if ":" in display_evn else ":0"
+        
         if not os.path.exists(QStandardPaths.writableLocation(
                 QStandardPaths.MoviesLocation) + "/Jam_screenrecord"):
             os.mkdir(QStandardPaths.writableLocation(
@@ -481,8 +486,8 @@ class Recordingthescreen(QObject):
                         self.h)
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
-                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
-                                                                                                 self.mouse, self.x,
+                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i {}.0+{},{} ".format(self.w, self.h,
+                                                                                                 self.mouse, self.display, self.x,
                                                                                                  self.y)
             else:
                 vf = ' -vf crop={}:{}:{}:{} '.format(self.w, self.h, self.x, self.y)
@@ -535,8 +540,8 @@ class Recordingthescreen(QObject):
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
                     audio = " "  # linux 暂不支持录音
-                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i :0.0+{},{} ".format(self.w, self.h,
-                                                                                                 self.mouse, self.x,
+                    video = " -video_size {}x{} -f x11grab -draw_mouse {} -i {}.0+{},{} ".format(self.w, self.h,
+                                                                                                 self.mouse, self.display, self.x,
                                                                                                  self.y)
             else:
                 if "camera" in vi_divice.lower() or "摄像头" in vi_divice.lower():  # 摄像头
