@@ -1,11 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
+import sys
+import os
+pack_datas=[("icon.ico", "."),("icon.png", ".",),("html","."),("LICENSE", "LICENSE"),
+           ("log.log","."),("fake_useragent_0.1.11.json","."),("PaddleOCRModel","PaddleOCRModel")]  # 额外的数据文件
+if sys.platform == "win32":
+    pack_datas.append(("bin/win32","bin/win32"))
+    pack_datas.extend([("screen-capture-recorder-x64.dll","screen-capture-recorder-x64.dll"),("audio_sniffer-x64.dll","audio_sniffer-x64.dll")])
+elif sys.platform == "darwin":
+    pack_datas.append(("bin/darwin","bin/darwin"))
+else:
+    pack_datas.append(("bin/linux","bin/linux"))
+    
+    if os.path.exists("libopencv_world.so.3.4") and os.path.exists("cv2.so"):
+        print("found cv2.so")
+        pack_datas.extend([("libopencv_world.so.3.4","."),("cv2.so",".")])
+
 a = Analysis(
     ['main.py'],  # 包含的文件
     pathex=[],  # 额外的搜索路径
     binaries=[],  # 依赖的二进制文件
-    datas=[("icon.ico", "."),("icon.png", ".",),("html","."),
-           ("bin/linux","bin/linux"),("libopencv_world.so.3.4","."),
-           ("log.log","."),("fake_useragent_0.1.11.json",".")],  # 额外的数据文件
+    datas = pack_datas,  # 额外的数据文件
     hiddenimports=['pynput.keyboard._xorg', 'pynput.mouse._xorg',"pynput.keyboard._win32","pynput.mouse._win32"],  # 需要隐式导入的模块
     hookspath=[],  # 钩子路径
     hooksconfig={},  # 钩子配置
