@@ -1,0 +1,20 @@
+[Desktop Entry]
+
+# The type of the thing this desktop file refers to (e.g. can be Link)
+Type=Application
+
+# The application name.
+Name=JamTools
+
+# Tooltip comment to show in menus.
+Comment=A simple JamTools application.
+
+# The path (folder) in which the executable is run
+Path=/tmp/
+
+# The executable (can include arguments)
+Exec=/opt/JamTools/JamTools
+
+# The icon for the entry, using the name from `hicolor/scalable` without the extension.
+# You can also use a full path to a file in /opt.
+Icon=icon

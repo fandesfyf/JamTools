@@ -3,9 +3,10 @@ j_temp
 .idea
 build/*
 !build/installer
+!build/ubuntu
+!build/windows
 dist
 sometest
-*.so
 *.zip
 *.c
 *.ui
@@ -14,13 +15,7 @@ test_files/
 test2.py
 test3.py
 *.pyd
-libopencv_world.3.4.1.dylib
 jamtools.log
-libopencv_world.so.3.4
-opencv_world341
-opencv_world341.dll
-sometests.py
-sometests.spec
 temp.png
 temp.jpg
 src/
