@@ -1297,6 +1297,7 @@ class JamToolsWindow(QMainWindow):
         self.payimg.hide()
         self.help_text.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.help_text.setReadOnly(True)
+        self.help_text.setOpenExternalLinks(True)
 
         self.show_items = [self.screenshot_groupBox, self.tra_groupBox, self.Transforma_groupBox, self.ocr_groupBox,
                         self.rec_groupBox, self.chat_groupBox,
@@ -3469,7 +3470,7 @@ hhh(o゜▽゜)o☆）
         self.help_text.moveCursor(QTextCursor.Start)
 
     def about(self):
-        icon = QPixmap(":/p.png")
+        icon = QPixmap(":/pay.jpg")
         self.payimg.setPixmap(icon)
         self.payimg.setScaledContents(True)
         self.payimg.resize(150, 150)
@@ -3478,17 +3479,24 @@ hhh(o゜▽゜)o☆）
         self.help_text.clear()
         self.change_show_item([self.about_groupBox])
 
-        text = 'Jamtools version:{}\nEdit by Fandes&机械酱 build for 帮帮酱团队\n' \
+        text = 'Jamtools version:{}'.format(VERSON)+'\nEdit by Fandes&机械酱 build for 帮帮酱团队\n' \
                '感谢以下平台/团队提供接口支持：\n' \
                '   百度AI开放平台http:/ai.baidu.com\n' \
                '   百度翻译开放平台https:/api.fanyi.baidu.com\n' \
                '   思知人工智能AI开放平台https:/console.ownthink.com\n' \
                '   本软件完全免费、开源，拒绝商业用途！严禁贩卖！如有疑问，请联系作者 2861114322@qq.com\n\n' \
-               '本软件安装文件的唯一正常来源为Github项目地址:https://github.com/fandesfyf/JamTools和个人CSDN博客\n' \
-               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，作者(Fandes)概不负责！！' \
-               '也欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)\n' \
-               '欢迎关注 公众号<机械酱的小黑屋>,虽然什么都没有啦...(真的)'.format(VERSON)
+               '本软件安装文件的唯一正常来源为'
         self.help_text.insertPlainText(text)
+        self.help_text.insertHtml('<a href="https://github.com/fandesfyf/JamTools">Github项目地址</a>')
+        self.help_text.insertHtml('和')
+        self.help_text.insertHtml('<a href="https://blog.csdn.net/Fandes_F">个人CSDN博客</a>')
+        # self.help_text.insertHtml('<span style="color:black"> </span>')
+
+        text = '<br>' \
+               '建议从Github的release中下载最新版本，从其他地址下载的安装文件有可能已被更改，作者(Fandes)概不负责！！' \
+               '也欢迎给该软件提出任何宝贵意见/建议(说不定下一个版本就出现了呢)<br>' \
+               '生活不易，酱酱卖艺，欢迎打赏...'
+        self.help_text.insertHtml(text)
 
     def others(self):
         self.payimg.hide()
