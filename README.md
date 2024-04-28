@@ -303,27 +303,26 @@ JamTools是一个跨平台的小工具集类软件，支持Windows7/8/10/11、Ma
 Wheel
 Pillow
 pynput
-fbs==0.9.0 #高版本fbs变成收费了,但支持了更高版本的python
 qrcode
-requests==2.27 
-urllib3==1.25.8
+requests
+urllib3
 pyttsx3
-PyInstaller==3.4
+PyInstaller
 baidu-aip
-PyQt5==5.15.2
-PyQt5-sip==12.8.1
-PyQt5-stubs==5.14.2.2
+PyQt5==5.14
+PyQt5-sip
+PyQt5-stubs
 onnxruntime
 shapely
 pyclipper
 qt_material
 numpy
-Cython==0.29.21 #如果需要编译
+Cython==0.29.21
 fake-useragent==0.1.11
-setuptools==50.3.0
+setuptools
 chardet
 comtypes
-opencv-contrib-python # 如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
+opencv-python # 如果需要更小体积的cv2,则可以从[这里](https://github.com/fandesfyf/JamTools/releases/tag/0.12.5)下载我重新编译好的删减版
 
 ```
 
@@ -333,15 +332,30 @@ opencv-contrib-python # 如果需要更小体积的cv2,则可以从[这里](http
 
 ### 打包安装程序
 
-> 原本的打包基于fbs库，但是高版本的fbs开始收费了，所以换成了`cx_Freeze`进行打包(感觉更好用了，白嫖真爽！)
+> ~~原本的打包基于fbs库，但是高版本的fbs开始收费了，所以换成了`cx_Freeze`进行打包(感觉更好用了，白嫖真爽！)~~
 
-配置好以上环境后,可以通过运行以下命令打包为安装目录的文件夹：
+- 最近发现新版的 pyinstaller 打包pyqt5程序也挺好用的了，改成用`pyinstaller`进行打包(白嫖真爽+1)
+
 ```shell
-python setup.py build 
+# 需要安装/升级pyinstaller
+pip3 install --upgrade pyinstaller
 ```
-window下打包出来安装目录之后，可以使用nsis打包为安装程序，提供了一个安装程序脚本到`.\build\installer`中，具体用法可以参考[nsis教程](https://nsis.sourceforge.io/Main_Page)
+
+- windows/ubuntu下打包：
+```shell
+
+pyinstaller installer.spec -y
+```
+会输出到dist中
+
+- windows 下打包为安装程序：
+
+使用NSIS(Nullsoft Scriptable Install System)打包为安装程序，提供了一个安装程序脚本到`./build/windows/Installer.nsi`中，具体用法可以参考[nsis教程](https://nsis.sourceforge.io/Main_Page)
+
+- ubuntu下打包为deb包：
+
+提供了几个有用的脚本在`./build/ubuntu`下供参考
 
 TODO:
-- 其他平台使用`cx_Freeze`打包还没有测试
-- `cx_Freeze`本身好像支持打包为安装程序，但是不能定义安装页面，后面再看看能不能使用
+- macos下打包还没有尝试，没有机器，pyinstaller应该是通用的流程，如果有人试过，欢迎提供脚本或教程
 

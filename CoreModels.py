@@ -354,7 +354,9 @@ class Recordingthescreen(QObject):
         self.Nondestructive = ' -qp 5 '
         self.scale = 1
         self.c = 0
-        display_evn = os.environ['DISPLAY']
+        display_evn = ":0"
+        if sys.platform == "linux":
+            display_evn = os.environ['DISPLAY']
         if "." in display_evn:
             display_evn = display_evn.split(".")[0]
         self.display = display_evn if ":" in display_evn else ":0"
@@ -3543,7 +3545,7 @@ hhh(o゜▽゜)o☆）
         # bot.move(50,self.chat_view_textEdit.document().size().height())
         # bot.show()
         # print(self.chat_view_textEdit.document().size(),bot.isVisible(),50,self.chat_view_textEdit.document().size().height()-50)
-        with open(documents_path + '/chat_record.txt', 'a') as file:
+        with open(documents_path + '/chat_record.txt', 'a', encoding="utf-8") as file:
             file.write(me + text + '\n')
             file.flush()
         self.chatthread = Chat_Thread(Tulin, text)
@@ -3561,7 +3563,7 @@ hhh(o゜▽゜)o☆）
         self.chat_view_textEdit.insertPlainText(mess + '\n')
         self.statusBar().showMessage("小酱酱回复完成！")
         QApplication.processEvents()
-        with open(documents_path + '/chat_record.txt', 'a') as file:
+        with open(documents_path + '/chat_record.txt', 'a', encoding="utf-8") as file:
             file.write(jj + mess + '\n')
             file.flush()
 
@@ -3617,14 +3619,18 @@ hhh(o゜▽゜)o☆）
         self.chat_view_textEdit.setFont(QFont('黑体' if PLATFORM_SYS == "win32" else "", 9))
         self.chat_view_textEdit.setReadOnly(True)
         if os.path.exists(documents_path + '/chat_record.txt'):
-            with open(documents_path + '/chat_record.txt', 'r+') as file:
-                text = file.read()
-                if len(text) > 100000:
-                    text = text[50000:]
-                    file.seek(0)
-                    file.truncate()
-                    file.write('-----前面的聊天记录已清空!-----\n' + text)
-                self.chat_view_textEdit.insertPlainText(text + '\n-----------以上为历史消息-----------\n')
+            try:
+                with open(documents_path + '/chat_record.txt', 'r+', encoding="utf-8") as file:
+                    text = file.read()
+                    if len(text) > 100000:
+                        text = text[50000:]
+                        file.seek(0)
+                        file.truncate()
+                        file.write('-----前面的聊天记录已清空!-----\n' + text)
+                    self.chat_view_textEdit.insertPlainText(text + '\n-----------以上为历史消息-----------\n')
+            except :
+                
+                self.chat_view_textEdit.insertPlainText('\n-----------前面的聊天记录已清空-----------\n')
 
         self.chat_view_textEdit.setGeometry(100, 30, 350, 350)
         self.chat_send_textEdit = EnterSendQTextEdit(self.chat_groupBox)

@@ -1,7 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 import sys
 import os
-pack_datas=[("icon.ico", "."),("icon.png", ".",),("html","."),("LICENSE", "LICENSE"),
+import shutil
+pack_datas=[("icon.ico", "."),("icon.png", ".",),("html","."),("LICENSE", "."),
            ("log.log","."),("fake_useragent_0.1.11.json","."),("PaddleOCRModel","PaddleOCRModel")]  # 额外的数据文件
 if sys.platform == "win32":
     pack_datas.append(("bin/win32","bin/win32"))
@@ -26,7 +27,7 @@ a = Analysis(
     runtime_hooks=[],  # 运行时钩子
     excludes=[],  # 被排除的模块
     noarchive=False,  # 不使用归档文件
-    optimize=0,  # 优化级别
+    # optimize=0,  # 优化级别
 )
 pyz = PYZ(a.pure)  # 纯Python字节码
 
@@ -40,12 +41,13 @@ exe = EXE(
     bootloader_ignore_signals=False,  # 引导加载程序是否忽略信号
     strip=False,  # 是否删除调试信息
     upx=True,  # 是否使用UPX压缩
-    console=True,  # 是否显示控制台
+    console=False,  # 是否显示控制台
     disable_windowed_traceback=False,  # 是否禁用窗口化回溯
     argv_emulation=False,  # 是否启用参数仿真
     target_arch=None,  # 目标架构
     codesign_identity=None,  # 签名标识
     entitlements_file=None,  # 权限文件
+    icon='./icon.ico',  # 图标文件
 )
 
 coll = COLLECT(
@@ -57,3 +59,12 @@ coll = COLLECT(
     upx_exclude=[],  # 要排除的UPX压缩文件
     name='JamTools',  # 最终输出的程序名称
 )
+
+
+print("build success")
+if sys.platform == "win32":
+    destination_folder = "build/JamTools"
+    if os.path.exists(destination_folder):
+        shutil.rmtree(destination_folder)
+    shutil.copytree("dist/JamTools", destination_folder)
+    print("copy to build folder success, please use NSIS with build/windows/install.nsi to build installer")
