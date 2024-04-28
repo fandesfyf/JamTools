@@ -1,4 +1,4 @@
-# 
+# pyinstaller installer.spec  -y 
 echo "Building JamTools DEB package..."
 rm -rf package
 mkdir -p package/opt
