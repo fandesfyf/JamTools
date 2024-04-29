@@ -25,5 +25,7 @@ if [ -f "$file" ]; then
     echo "File $file is deleted."
 
 fi
-fpm -C package -s dir -t deb -n "jamtools" -v 0.1.0 -p "$file"
+version=$(grep -m 1 'VERSON' ../../installer.spec | cut -d'"' -f2)
+echo "Version: $version"
+fpm -C package -s dir -t deb -n "jamtools" -v "${version}" -p "$file"
 echo "Done!"

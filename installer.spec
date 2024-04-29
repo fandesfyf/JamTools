@@ -2,6 +2,7 @@
 import sys
 import os
 import shutil
+VERSON = "0.14.5B"
 pack_datas=[("icon.ico", "."),("icon.png", ".",),("html","."),("LICENSE", "."),
            ("log.log","."),("fake_useragent_0.1.11.json","."),("PaddleOCRModel","PaddleOCRModel")]  # 额外的数据文件
 if sys.platform == "win32":
@@ -68,3 +69,18 @@ if sys.platform == "win32":
         shutil.rmtree(destination_folder)
     shutil.copytree("dist/JamTools", destination_folder)
     print("copy to build folder success, please use NSIS with build/windows/install.nsi to build installer")
+    nsisfile_path = "build/windows/Installer.nsi"
+    if os.path.exists(nsisfile_path):
+        """重写windows下的nsis配置文件版本号"""
+        with open(nsisfile_path, "r", encoding="ansi") as nsisfile:
+            ns = nsisfile.readlines()
+        for i, line in enumerate(ns):
+            if "!define PRODUCT_VERSION" in line:
+                print("找到版本号{}".format(line))
+                v = line.split('"')[-2]
+                if v != VERSON:
+                    print(f"版本号不同{v}->{VERSON}")
+                    ns[i] = '!define PRODUCT_VERSION "{}"\n'.format(VERSON)
+                    with open(nsisfile_path, "w", encoding="ansi") as nsisfile:
+                        nsisfile.writelines(ns)
+                break
