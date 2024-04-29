@@ -660,7 +660,7 @@ class det_rec_functions(object):
             width = np.max(pos[:, 0]) - min_x
             height = np.max(pos[:, 1]) - min_y
             total_h += height
-            print((min_x, min_y, width, height))
+            # print((min_x, min_y, width, height))
             text_blocks.append({'text': text, 'box': (min_x, min_y, width, height)})
         
         av_h = int(total_h/len(text_blocks))       
@@ -695,21 +695,21 @@ class det_rec_functions(object):
                 last_right = x + w
                 first_line_x = x
                 continue
-            print(block,top , bottom,last_bottom - h // 2)
+            # print(block,top , bottom,last_bottom - h // 2)
             # 如果当前文字块的顶部位置比上一个文字块的底部位置高，则需要换行
             new_line = False
             if top > last_bottom - h // 2:
                 result += '\n'
                 last_right = 0
                 new_line=True
-                print("add new line")
+                # print("add new line")
             if new_line:
                 if x - first_line_x > h // 2:
                     result += ' ' * (int(x-last_right)//av_h)
             # 如果当前文字块的左侧位置比上一个文字块的右侧位置大，则需要增加空格
             elif x > last_right:
                 result += ' ' * (int(x - last_right)//av_h)
-                print("add space")
+                # print("add space")
                 
             # 添加当前文字块的识别结果
             result += text

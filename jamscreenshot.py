@@ -1538,7 +1538,7 @@ class Slabel(QLabel):  # 区域截图功能
         # self.ocrthread = OcrimgThread(img)
         # self.ocrthread.result_show_signal.connect(self.ocr_res_signalhandle)
         # self.ocrthread.start()
-        self.ocr_freezer = Freezer(None, self.final_get_img, min(self.x0, self.x1), min(self.y0, self.y1),
+        self.ocr_freezer = Freezer(None, self.final_get_img, self.screen_init_xy[0] + min(self.x0, self.x1), self.screen_init_xy[1] + min(self.y0, self.y1),
                                                len(self.parent.freeze_imgs))
         self.ocr_freezer.ocr()
         QApplication.processEvents()
