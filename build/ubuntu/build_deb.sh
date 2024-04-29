@@ -1,4 +1,9 @@
-# pyinstaller installer.spec  -y 
+original_dir=$(dirname "$(readlink -f "$0")")
+echo "Original directory: $original_dir"
+echo "Building JamTools executable..."
+cd ../../ && pyinstaller installer.spec  -y 
+cd ${original_dir}
+
 echo "Building JamTools DEB package..."
 rm -rf package
 mkdir -p package/opt
@@ -14,6 +19,11 @@ echo "Setting permissions..."
 chmod +x package/opt/JamTools/JamTools
 
 echo "Building DEB package..."
-rm  jamtools_installer.deb
-fpm -C package -s dir -t deb -n "jamtools" -v 0.1.0 -p jamtools_installer.deb
+file="jamtools_installer.deb"
+if [ -f "$file" ]; then
+    rm "$file"
+    echo "File $file is deleted."
+
+fi
+fpm -C package -s dir -t deb -n "jamtools" -v 0.1.0 -p "$file"
 echo "Done!"
