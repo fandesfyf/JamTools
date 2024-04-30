@@ -7,7 +7,7 @@ pack_datas=[("icon.ico", "."),("icon.png", ".",),("html","."),("LICENSE", "."),
            ("log.log","."),("fake_useragent_0.1.11.json","."),("PaddleOCRModel","PaddleOCRModel")]  # 额外的数据文件
 if sys.platform == "win32":
     pack_datas.append(("bin/win32","bin/win32"))
-    pack_datas.extend([("screen-capture-recorder-x64.dll","screen-capture-recorder-x64.dll"),("audio_sniffer-x64.dll","audio_sniffer-x64.dll")])
+    pack_datas.extend([("screen-capture-recorder-x64.dll","."),("audio_sniffer-x64.dll",".")])
 elif sys.platform == "darwin":
     pack_datas.append(("bin/darwin","bin/darwin"))
 else:
