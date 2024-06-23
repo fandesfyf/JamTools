@@ -1529,32 +1529,40 @@ class JamToolsWindow(QMainWindow):
 
         self.canstartkeyboardtra = False
         self.shifttime = time.time()
-        self.shift_ctrl_press=0
-        self.shift_ctrl_press_first_time=time.time()
-
+        # self.shift_ctrl_press = 0
+        # self.shift_ctrl_press_first_time = time.time()
+        self.z_pressed = False  # 新增 Z 键状态
+        self.shift_pressed = False
+        self.ctrl_pressed = False
         def on_press(key):
-            if self.settings.value('smartShift', True, bool) and key in (keyboard.Key.shift, keyboard.Key.ctrl_l) and \
-                    time.time() - self.shifttime < self.settings.value("timeoutshift", 7, type=int):
-                if self.shift_ctrl_press==0 or time.time()-self.shift_ctrl_press_first_time > 0.4:
-                    self.shift_ctrl_press_first_time=time.time()
-                    self.shift_ctrl_press=1 if key == keyboard.Key.shift else -1
-                elif self.shift_ctrl_press ==-1 and key == keyboard.Key.shift:
-                    self.shift_ctrl_press=-2
-                elif self.shift_ctrl_press == 1 and key == keyboard.Key.ctrl_l:
-                    self.shift_ctrl_press=2
-   
-                if abs(self.shift_ctrl_press)>=2:        
-                    print('shift pressed', time.time() - self.shifttime)
-                    self.canstartkeyboardtra = True
-                    self.keboardchange_fucsignal.emit()
-                    stopall()
+            if not self.settings.value('smartShift', True, bool):
+                return
+            if key == keyboard.Key.shift:
+                self.shift_pressed = True
+            elif key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                self.ctrl_pressed = True
+            elif hasattr(key, 'char') and key.char.lower() == 'z':
+                self.z_pressed = True
+
+            if self.shift_pressed and self.ctrl_pressed and self.z_pressed:
+                self.canstartkeyboardtra = True
+                self.keboardchange_fucsignal.emit()
+                stopall()
+
+        def on_release(key):
+            if key == keyboard.Key.shift:
+                self.shift_pressed = False
+            elif key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                self.ctrl_pressed = False
+            elif hasattr(key, 'char') and key.char == 'z':
+                self.z_pressed = False
 
         def stopall():
             self.kbtralistenertimer.stop()
             self.kbtralistener.stop()
 
         self.kbtralistenertimer = QTimer()
-        self.kbtralistener = keyboard.Listener(on_press=on_press)
+        self.kbtralistener = keyboard.Listener(on_press=on_press, on_release=on_release)
         self.kbtralistener.start()
         self.kbtralistenertimer.start(self.settings.value("timeoutshift", 7, type=int) * 1000)
         self.kbtralistenertimer.timeout.connect(stopall)
@@ -3438,7 +3446,7 @@ class JamToolsWindow(QMainWindow):
 $其他功能：
 划屏提字：打开软件后可以在任何界面(图片也可)，按住Alt键后用鼠标右键水平右划，即可提取出鼠标滑过的文字上下设定像素内的文字(并翻译)，可以在设置中心设置详细内容！
 
-剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！翻译小窗可以通过快捷键alt+x弹出
+剪贴板翻译：监控剪贴板内容，剪切板内容变化7s内按下shift+ctrl+z触发,支持英语自动翻译,网页自动打开,百度云链接提取码自动复制等！可在设置中心设置详细内容！翻译小窗可以通过快捷键alt+x弹出
 
 小窗模式：小窗模式下不会显示主界面，截屏(Alt+z)、小窗翻译(Alt+x)、录屏(Alt+c)、键鼠动作录制(Alt+1)播放(Alt+2)均可以用(用快捷键/系统托盘)调用，所有功能显示均在小窗显示，小窗可以(回车)翻译(英-中),双击系统托盘可以进入/退出小窗模式
 
@@ -3507,7 +3515,7 @@ hhh(o゜▽゜)o☆）
         self.help_text.clear()
 
         text = """1.右键划屏识字(翻译)\n    用法:任意界面按住alt键后点击鼠标右键水平右划过屏幕上文字的中间即可提取出文字并翻译,支持一键跳转百度搜索;如不需要,可以在设置中心关闭这个功能...\n   
-2.剪切板监听:\n    用法:复制文字后n秒(默认为7s)内按下shift+ctrl键触发，检测到复制的内容为英文时直接弹窗并翻译;检测到网址时直接在浏览器打开;可在设置中心设置更加详细的内容...(由于权限原因,macos用户需要复制内容后点击程序后才可触发弹窗..)
+2.剪切板监听:\n    用法:复制文字后n秒(默认为7s)内按下shift+ctrl+z键触发，检测到复制的内容为英文时直接弹窗并翻译;检测到网址时直接在浏览器打开;可在设置中心设置更加详细的内容...(由于权限原因,macos用户需要复制内容后点击程序后才可触发弹窗..)
                """
 
         self.help_text.insertPlainText(text)
@@ -4060,7 +4068,7 @@ class SettingPage(QScrollArea):
 
         self.timeoutshift = QSpinBox(shiftbox)
         self.timeoutshift.setSuffix("s内触发")
-        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift+ctrl键才触发")
+        self.timeoutshift.setToolTip("剪切板改变n秒内按下shift+ctrl+z键才触发")
         self.timeoutshift.move(self.smartShift.x() + self.smartShift.width() + 20, self.smartShift.y())
         self.timeoutshift.valueChanged.connect(lambda a: self.settings.setValue("timeoutshift", a))
         self.timeoutshift.setValue(self.settings.value("timeoutshift", 7, type=int))
@@ -4068,16 +4076,16 @@ class SettingPage(QScrollArea):
         self.shiftFY = QCheckBox("翻译", shiftbox)
         self.shiftFY.move(self.smartShift.x(), self.smartShift.y() + self.smartShift.height())
         self.shiftFY.stateChanged.connect(lambda a: self.settings.setValue("shiftFY", bool(a)))
-        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift+ctrl键为则翻译")
+        self.shiftFY.setToolTip("剪切板内容改变n秒内按下shift+ctrl+z键为则翻译")
         self.shiftFY.setChecked(self.settings.value("shiftFY", True, bool))
         self.shiftFYzh = QCheckBox("翻译中文", shiftbox)
         self.shiftFYzh.move(self.timeoutshift.x(), self.shiftFY.y())
         self.shiftFYzh.stateChanged.connect(lambda a: self.settings.setValue("shiftFYzh", bool(a)))
-        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift+ctrl键翻译为英文")
+        self.shiftFYzh.setToolTip("剪切板内容为中文时按下shift+ctrl+z键翻译为英文")
         self.shiftFYzh.setChecked(self.settings.value("shiftFYzh", True, bool))
 
         self.openhtmlbtn = QCheckBox('识别网址', shiftbox)
-        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift+ctrl直接在浏览器打开网址")
+        self.openhtmlbtn.setToolTip("识别到复制网址时7s内按下shift+ctrl+z直接在浏览器打开网址")
         self.openhtmlbtn.stateChanged.connect(lambda a: self.settings.setValue("openhttp", bool(a)))
         self.openhtmlbtn.setChecked(self.settings.value("openhttp", True, bool))
         self.openhtmlbtn.move(self.shiftFY.x(), self.shiftFY.y() + self.shiftFY.height())
@@ -4091,7 +4099,7 @@ class SettingPage(QScrollArea):
         self.shiftopendir.move(self.openhtmlbtn.x(), self.openhtmlbtn.y() + self.openhtmlbtn.height())
         self.shiftopendir.stateChanged.connect(lambda a: self.settings.setValue("shiftopendir", bool(a)))
         self.shiftopendir.setChecked(self.settings.value("shiftopendir", True, bool))
-        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift+ctrl键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
+        self.shiftopendir.setToolTip("剪切板内容改变n秒内按下shift+ctrl+z键,识别到剪切板复制有文件路径则直接打开文件(夹)所在位置")
         self.smartShift.stateChanged.connect(self.smartShiftsetting_save)
         self.smartShiftsetting_save(self.smartShift.isChecked())
         # 快捷键
