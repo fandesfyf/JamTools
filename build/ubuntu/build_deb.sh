@@ -1,6 +1,7 @@
 original_dir=$(dirname "$(readlink -f "$0")")
 echo "Original directory: $original_dir"
 echo "Building JamTools executable..."
+cd ${original_dir}
 cd ../../ && pyinstaller installer.spec  -y 
 cd ${original_dir}
 
