@@ -53,7 +53,7 @@ from clientFilesTransmitter import ClientFilesTransmitterGroupbox
 from jam_transtalater import Translator
 import jamresourse
 from pynput.mouse import Controller
-
+from ClipboardManager import ClipboardManager
 
 if PLATFORM_SYS == "win32":
     import win32con
@@ -1355,6 +1355,10 @@ class JamToolsWindow(QMainWindow):
 
         if self.settings.value('right_ocr', True, bool):
             self.openlistenmouse()
+        
+        documents_path = QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        clipboard_history_dir = os.path.join(documents_path, 'clipboard_history.json')
+        self.keyboard_mamager = ClipboardManager(history_path=clipboard_history_dir)
         
         
     def init_others(self):
