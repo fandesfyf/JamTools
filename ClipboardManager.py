@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QListWidget, QL
                              QLabel, QMenu, QInputDialog, QMessageBox)
 from PyQt5.QtGui import QClipboard, QCursor, QFont, QFontMetrics,QPixmap,QImage
 from PyQt5.QtCore import Qt, QTimer, QSize,QByteArray, QBuffer
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QDesktopWidget
 
 from pynput import mouse, keyboard
 import io
@@ -365,16 +365,27 @@ class ClipboardManager(QWidget):
 
     def show_near_cursor(self):
         cursor_pos = QCursor.pos()
-        screen = QApplication.primaryScreen().geometry()
-        x = min(cursor_pos.x(), screen.right() - self.width())
-        y = min(cursor_pos.y(), screen.bottom() - self.height())
-        x = max(x, screen.left())
-        y = max(y, screen.top())
+        desktop = QDesktopWidget()
+        screen_number = desktop.screenNumber(cursor_pos)
+        screen_geometry = desktop.screenGeometry(screen_number)
+
+        x = cursor_pos.x()
+        y = cursor_pos.y()
+
+        # 确保窗口完全在屏幕内
+        if x + self.width() > screen_geometry.right():
+            x = screen_geometry.right() - self.width()
+        if y + self.height() > screen_geometry.bottom():
+            y = screen_geometry.bottom() - self.height()
+
+        # 确保窗口不会超出屏幕左边和上边
+        x = max(x, screen_geometry.left())
+        y = max(y, screen_geometry.top())
 
         self.move(x, y)
         self.show()
         self.activateWindow()
-        self.raise_() 
+        self.raise_()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
