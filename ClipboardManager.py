@@ -1,16 +1,30 @@
 import sys
 import json
 import base64
+import time
 from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QListWidget, QListWidgetItem, 
                              QScrollBar, QScroller, QAbstractItemView, QPushButton, QHBoxLayout, 
                              QLabel, QMenu, QInputDialog, QMessageBox)
 from PyQt5.QtGui import QClipboard, QCursor, QFont, QFontMetrics,QPixmap,QImage
 from PyQt5.QtCore import Qt, QTimer, QSize,QByteArray, QBuffer
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QTextEdit, QDialogButtonBox, QDesktopWidget
+from PyQt5.QtCore import pyqtSignal
 
 from pynput import mouse, keyboard
 import io
+class CustomListWidget(QListWidget):
+    itemActivated = pyqtSignal(QListWidgetItem)
 
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            current_item = self.currentItem()
+            if current_item:
+                self.itemActivated.emit(current_item)
+        else:
+            super().keyPressEvent(event)
 class CustomInputDialog(QDialog):
     def __init__(self, parent=None, title="", text=""):
         super().__init__(parent)
@@ -195,7 +209,7 @@ class ClipboardManager(QWidget):
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         
-        self.list_widget = QListWidget()
+        self.list_widget = CustomListWidget(self)
         self.list_widget.setVerticalScrollMode(QAbstractItemView.ScrollPerPixel)
         self.list_widget.verticalScrollBar().setSingleStep(20)
         self.list_widget.setStyleSheet("""
@@ -241,6 +255,7 @@ class ClipboardManager(QWidget):
         self.list_widget.setVerticalScrollBar(QScrollBar())
         self.list_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.list_widget.itemClicked.connect(self.on_item_clicked)
+        self.list_widget.itemActivated.connect(self.on_item_clicked)
         # QScroller.grabGesture(self.list_widget.viewport(), QScroller.LeftMouseButtonGesture)
         
         layout.addWidget(self.list_widget)
@@ -353,6 +368,7 @@ class ClipboardManager(QWidget):
         controller.press(keyboard.Key.ctrl)
         controller.press(keyboard.Key.shift)
         controller.press('v')
+        time.sleep(0.01)
         controller.release('v')
         controller.release(keyboard.Key.shift)
         controller.release(keyboard.Key.ctrl)
