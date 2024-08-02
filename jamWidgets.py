@@ -275,7 +275,8 @@ class FramelessEnterSendQTextEdit(QTextEdit):  # 小窗,翻译,文字识别,语�
     def textAreaChanged(self, minsize=200, recheck=True,border=30):
         self.document.adjustSize()
         newWidth = self.document.size().width() + border
-        newHeight = self.document.size().height() + border//2
+        newWidth = int(newWidth)
+        newHeight = int(self.document.size().height() + border//2)
         winwidth, winheight = QApplication.desktop().width(), QApplication.desktop().height()
         if newWidth != self.width():
             if newWidth < minsize:
@@ -697,17 +698,17 @@ class Freezer(QLabel):
                     old_pos = e.pos()
                     old_width = self.width()
                     old_height = self.height()
-                    w = self.width() + dy * 5
+                    w = int(self.width() + dy * 5)
                     if w < 50: w = 50
                     if w > 2 * QApplication.desktop().width(): w = 2 * QApplication.desktop().width()
                     scale = self.showing_imgpix.height() / self.showing_imgpix.width()
-                    h = w * scale
+                    h =int(w * scale)
                     s = self.width() / w  # 缩放比例
                     self.setPixmap(self.showing_imgpix.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation))
                     self.resize( w, h)
                     delta_x = -(w - old_width)*old_pos.x()/old_width
                     delta_y = -(h - old_height)*old_pos.y()/old_height
-                    self.move(self.x() + delta_x, self.y() + delta_y)
+                    self.move(int(self.x() + delta_x), int(self.y() + delta_y))
                     QApplication.processEvents()
 
             self.update()
@@ -742,6 +743,7 @@ class Freezer(QLabel):
             points = []
             for point in contour:
                 x, y = point
+                x, y = int(x), int(y)
                 points.append(QPoint(x, y))
             polygon = QPolygon(points + [points[0]])
             painter.drawPolyline(polygon)

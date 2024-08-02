@@ -85,6 +85,8 @@ class KeyboardActionListener(QThread):
                     template['vk'] = key.value.vk
                 finally:
                     # print(template)
+                    if file.closed:
+                        return
                     file.writelines(json.dumps(template) + "\n")
                     file.flush()
 
@@ -100,6 +102,8 @@ class KeyboardActionListener(QThread):
                     template['vk'] = key.value.vk
                 finally:
                     print(template)
+                    if file.closed:
+                        return
                     file.writelines(json.dumps(template) + "\n")
                     file.flush()
 
@@ -113,6 +117,7 @@ class KeyboardActionListener(QThread):
                     print("keyboard break")
                     break
                 time.sleep(0.1)
+        print('键盘监听结束')
 
 
 # 鼠标动作监听
@@ -276,7 +281,7 @@ class MouseActionExecute(QThread):
 
                     if obj['event'] == 'move':
                         mouse_exec.position = (obj['location']['x'], obj['location']['y'])
-                        # print(1)
+                        # print(obj['location']['x'], obj['location']['y'])
                     elif obj['event'] == 'click':
                         if obj['action']:
                             # time.sleep(obj['time'])
@@ -356,10 +361,10 @@ class ActionController(QObject):
 
         try:
             time.sleep(0.2)
-            del self.mouseActionListener.mouseListener
-            del self.keboardrelistener.keyboardListener
-            # self.mouseActionListener.mouseListener.stop()
-            # self.keboardrelistener.keyboardListener.stop()
+            # del self.mouseActionListener.mouseListener
+            # del self.keboardrelistener.keyboardListener
+            self.mouseActionListener.mouseListener.stop()
+            self.keboardrelistener.keyboardListener.stop()
         except:
             print(sys.exc_info(),362)
         print("stop")
@@ -686,6 +691,7 @@ class ActionCondition(QGroupBox):
 
         self.parent = parent
         self.canshowrect = True
+        self.showrect = None
         h = 110
         self.id = id
         self.setTitle("条件{}".format(id))
@@ -724,6 +730,8 @@ class ActionCondition(QGroupBox):
         self.clicked_signal.emit(self.id)
 
     def showrectornot(self, t):
+        if self.showrect is None:
+            return
         try:
             if t and self.area != (0, 0, 0, 0) and self.canshowrect:
                 self.showrect.show()

@@ -20,8 +20,7 @@ from jamWidgets import PreviewWindow
 from jampublic import Commen_Thread, TipsShower, CONFIG_DICT
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QTextEdit, QWidget
 
-if not os.path.exists("j_temp"):
-    os.mkdir("j_temp")
+
 class MergeThread(QThread):
     previewersignal = pyqtSignal(QPixmap)
     def __init__(self, parent = None) -> None:
@@ -179,6 +178,8 @@ class Splicing_shots(QWidget):  # 滚动截屏主类
     def __init__(self, parent: QLabel = None, draw=False):
         super(Splicing_shots, self).__init__()
         self.parent = parent
+        if not os.path.exists("j_temp"):
+            os.mkdir("j_temp")
         self.rollerthread = None
         self.clear_timer = QTimer()  # 后台清理器,暂时不用
         self.clear_timer.timeout.connect(self.setup)
@@ -209,8 +210,7 @@ class Splicing_shots(QWidget):  # 滚动截屏主类
         self.img_list = []
         self.roll_speed = self.settings.value('screenshot/roll_speed', 2, type=int)
         self.in_rolling = False
-        if not os.path.exists("j_temp"):
-            os.mkdir("j_temp")
+        
 
     def is_same(self, img1, img2):  # 判断两张图片的相似度,用于判断结束条件
         h1 = img1.histogram()
