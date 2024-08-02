@@ -1305,8 +1305,12 @@ class JamToolsWindow(QMainWindow):
         #切换到帮助页面显示
         self.help()
         self.setWindowFlag(Qt.WindowStaysOnTopHint, self.on_top)
-        self.activateWindow()
-        self.show()
+        if sys.argv.__len__() >= 2 and sys.argv[1].lower() == '--hide':
+            print('start up hide window')
+            self.hide()
+        else:
+            self.activateWindow()
+            self.show()
 
         
         
@@ -4211,7 +4215,7 @@ class SettingPage(QScrollArea):
                             QSettings.NativeFormat)
         if not self.settings.value('auto_run', False, type=bool):
             try:
-                setting.setValue(appName, '"' + appPath + '"')
+                setting.setValue(appName, '"' + appPath + '" --hide')
                 self.settings.setValue('auto_run', True)
                 print('setrun')
             except:
