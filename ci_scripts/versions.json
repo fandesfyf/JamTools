@@ -4,8 +4,8 @@
         "url": "https://github.com/fandesfyf/JamTools/releases/download/0.14.1B/JamTools0.14.1BSetup_for_windows.exe"
     },
     "linux": {
-        "version": "0.13.7B",
-        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.13.7B/JamTools_for_ubuntu16.deb"
+        "version": "0.14.5B",
+        "url": "https://github.com/fandesfyf/JamTools/releases/download/0.14.5/jamtools_0.14.5B_amd64.deb"
     },
     "darwin": {
         "version": "0.12.200225B",
