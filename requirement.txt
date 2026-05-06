@@ -13,7 +13,7 @@ PyQt5-stubs
 onnxruntime
 shapely
 pyclipper
-qt_material
+qt-material==2.14
 numpy
 Cython==0.29.21
 fake-useragent==0.1.11
