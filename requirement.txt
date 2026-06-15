@@ -7,7 +7,7 @@ urllib3
 pyttsx3
 PyInstaller
 baidu-aip
-PyQt5==5.14
+PyQt5>=5.15
 PyQt5-sip
 PyQt5-stubs
 onnxruntime
