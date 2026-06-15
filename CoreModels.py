@@ -4659,9 +4659,18 @@ class Transforma(QObject):
 
     def t_video(self, vds, recording=False):
         print(vds)
+        jam_video_dir = QStandardPaths.writableLocation(
+            QStandardPaths.MoviesLocation) + '/jam_video'
         t_videofile_format = 'gif'
         dt = fps = video_w = keep_ws = out_file = ' '
         vd_speed = ["" for i in range(len(vds))]
+        t_code_format = 'gif'
+        preset = ''
+        scale_w = 0
+        fps_r = 0.0
+        speed = 1.0
+        lossless_qp = False
+        nvenc = False
         if not recording:
             self.set_style(self.parent.t_video_pushButton)
             t_videofile_format = self.parent.t_videofile_format.currentText()
@@ -4726,11 +4735,64 @@ class Transforma(QObject):
                         vd_speed.append(
                             ' -filter_complex "[0:v]setpts={:.2f}*PTS[v];[0:a]atempo={:.2f}[a]" -map "[v]" -map "[a]" '.format(
                                 1 / speed, speed))
+            scale_w = self.parent.t_videoscale.value()
+            fps_r = float(self.parent.t_videofps.value())
+            speed = float(self.parent.t_vd_speed.value())
+            lossless_qp = keep_ws.strip() != ''
+            nvenc = self.parent.hardware_transforma.isChecked() and t_code_format == 'H.264'
+
+        def _safe_t_video_seg(s):
+            s = str(s).strip()
+            for c in '\\/:*?"<>|':
+                s = s.replace(c, '_')
+            return s or 'video'
+
+        def _build_t_video_out_stem(vd):
+            base = _safe_t_video_seg(
+                self.parent.recorder.name if recording else QFileInfo(vd).completeBaseName())
+            bits = []
+            if not recording:
+                if scale_w != 0:
+                    bits.append('w%d' % scale_w)
+                if fps_r != 0:
+                    bits.append('f%g' % fps_r)
+                if speed != 1:
+                    bits.append('x%g' % speed)
+            if t_videofile_format == 'gif':
+                enc = 'gif'
+            else:
+                if lossless_qp:
+                    bits.append('q0')
+                if t_code_format == 'H.264':
+                    enc = 'h264_nvenc' if nvenc else 'h264'
+                    if preset:
+                        bits.append('p' + _safe_t_video_seg(preset)[:12])
+                elif t_code_format == 'H.265':
+                    enc = 'h265'
+                elif t_code_format == 'mpeg4':
+                    enc = 'mpeg4'
+                elif t_code_format == 'wmv1':
+                    enc = 'wmv1'
+                elif t_code_format == 'wmv2':
+                    enc = 'wmv2'
+                elif t_code_format == '自动选择':
+                    enc = 'auto'
+                else:
+                    enc = _safe_t_video_seg(t_code_format).lower()[:20]
+            param = '_'.join(bits)
+            if param:
+                return base + '_' + param + '_' + enc
+            return base + '_' + enc
+
+        last_out_path = ''
         if t_videofile_format == 'gif':
             print('is gif')
             for vd in vds:
-                self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
                 print(vd)
+                t_out_base = jam_video_dir if recording else QFileInfo(vd).path()
+                out_stem = _build_t_video_out_stem(vd)
+                t_out_file = t_out_base + '/' + out_stem + '.gif'
+                last_out_path = t_out_file
                 # if vd_speed == '':
                 #     vd_speed = ' -codec copy '
                 if not recording:
@@ -4752,9 +4814,8 @@ class Transforma(QObject):
                 print('取样图片输出')
                 self.transforma = subprocess.Popen(
                     self.f_path + ' -i "' + temp_path + '/j_temp/temp_video.mp4" -i ' + temp_path +
-                    '/j_temp/palette.png -filter_complex "[0:v][1:v] paletteuse" ' +
-                    QStandardPaths.writableLocation(
-                        QStandardPaths.MoviesLocation) + '/jam_video/t' + self.name + '.gif'
+                    '/j_temp/palette.png -filter_complex "[0:v][1:v] paletteuse" "' +
+                    t_out_file + '"'
                     + ' -y',
                     shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
                 self.transforma.wait()
@@ -4766,41 +4827,43 @@ class Transforma(QObject):
             for i, vd in enumerate(vds):
                 print("正在处理", vd)
                 self.showm_signal.emit("正在处理{}".format(vd))
-                self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
+                t_out_base = jam_video_dir if recording else QFileInfo(vd).path()
+                out_stem = _build_t_video_out_stem(vd)
+                t_out_file = t_out_base + '/' + out_stem + '.' + t_videofile_format
+                last_out_path = t_out_file
                 # try:
                 print(
                     self.f_path + ' -i "' + vd + '"' + dt + ' -pix_fmt yuv420p ' + fps + video_w + vd_speed[
-                        i] + out_file +
-                    QStandardPaths.writableLocation(
-                        QStandardPaths.MoviesLocation) + '/jam_video/t' + self.name + '.' + t_videofile_format
+                        i] + out_file + ' "' +
+                    t_out_file + '"'
                     + ' -y')
                 self.transforma = subprocess.Popen(
                     self.f_path + ' -i "' + vd + '"' + dt + ' -pix_fmt yuv420p ' + fps + video_w + vd_speed[
-                        i] + out_file +
-                    QStandardPaths.writableLocation(
-                        QStandardPaths.MoviesLocation) + '/jam_video/t' + self.name + '.' + t_videofile_format
+                        i] + out_file + ' "' +
+                    t_out_file + '"'
                     + ' -y',
                     shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
                 self.transforma.wait()
                 if self.stoper:
                     break
+        last_out_dir = jam_video_dir if recording else QFileInfo(vds[-1]).path()
+        last_out_hint = last_out_path if last_out_path else last_out_dir
         if not recording:
             self.reset_style(self.parent.t_video_pushButton)
             if self.stoper:
                 self.stoper = False
                 self.showm_signal.emit('操作已中止！')
             else:
-                self.showm_signal.emit("视频处理完成，文件保存于：\n视频/jam_video/t" + self.name + '\n点击此处可打开')
-                self.parent.statusBar().showMessage("视频处理完成，文件保存于：\n视频/jam_video/t" + self.name)
+                self.showm_signal.emit("视频处理完成，文件保存于：\n" + last_out_hint + '\n点击此处可打开')
+                self.parent.statusBar().showMessage("视频处理完成，文件保存于：" + last_out_hint)
                 self.parent.trayicon.tran_open = True
         else:
-            self.showm_signal.emit("gif生成完毕，文件保存于：\n视频/jam_video/t" + self.name + '\n点击此处可打开')
-            self.parent.statusBar().showMessage("gif生成完毕，文件保存于：\n视频/jam_video/t" + self.name)
+            self.showm_signal.emit("gif生成完毕，文件保存于：\n" + last_out_hint + '\n点击此处可打开')
+            self.parent.statusBar().showMessage("gif生成完毕，文件保存于：" + last_out_hint)
             self.parent.trayicon.tran_open = True
 
         self.time = time.time()
-        self.open_path = QStandardPaths.writableLocation(
-            QStandardPaths.MoviesLocation) + '/jam_video/'
+        self.open_path = QFileInfo(last_out_hint).path() if last_out_path else last_out_dir
 
     def t_audio(self, aus):
         self.set_style(self.parent.t_audio_pushButton)
