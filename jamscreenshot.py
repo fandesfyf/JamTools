@@ -678,12 +678,12 @@ class AutotextEdit(QTextEdit):
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
             else:
-                self.setFixedWidth(newWidth)
+                self.setFixedWidth(int(newWidth))
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
             else:
-                self.setFixedHeight(newHeight)
+                self.setFixedHeight(int(newHeight))
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
