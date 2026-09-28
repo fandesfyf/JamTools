@@ -33,6 +33,22 @@ print("platform is", sys.platform)
 PLATFORM_SYS = sys.platform
 CONFIG_DICT = {"last_pic_save_name":"{}".format( str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())))}
 
+
+def get_default_screenshot_save_dir():
+    return QStandardPaths.writableLocation(
+        QStandardPaths.PicturesLocation) + '/JamPicture/screenshot/'
+
+
+def get_screenshot_save_dir(settings=None):
+    if settings is None:
+        settings = QSettings('Fandes', 'jamtools')
+    custom = settings.value('screenshot/save_path', '', type=str)
+    if custom:
+        custom = custom.replace("\\", "/").rstrip("/")
+        if os.path.isdir(custom):
+            return custom + '/'
+    return get_default_screenshot_save_dir()
+
 def get_apppath():
     p = sys.path[0].replace("\\", "/").rstrip("/") if os.path.isdir(sys.path[0]) else os.path.split(sys.path[0])[0]
     # print("apppath",p)

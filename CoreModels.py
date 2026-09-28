@@ -16,7 +16,8 @@ Jamtools_logger = Logger(os.path.join(os.path.expanduser('~'), ".jamtools.log"))
 sys.stdout = Jamtools_logger
 
 from jampublic import Commen_Thread, OcrimgThread, Transparent_windows, APP_ID, API_KEY, \
-    SECRECT_KEY, PLATFORM_SYS, mutilocr,gethtml,CONFIG_DICT,get_request_session
+    SECRECT_KEY, PLATFORM_SYS, mutilocr, gethtml, CONFIG_DICT, get_request_session, \
+    get_screenshot_save_dir, get_default_screenshot_save_dir
 from jamWidgets import FramelessEnterSendQTextEdit,EnterSendQTextEdit,ShortcutSettingWidget
 import http.client
 
@@ -335,6 +336,37 @@ class Recordingthescreen(QObject):
         self.w = self.maxw = QApplication.desktop().width() // 2 * 2
         self.h = self.maxh = QApplication.desktop().height() // 2 * 2
 
+    def _screen_for_point(self, x, y):
+        for screen in QApplication.screens():
+            rect = screen.geometry()
+            if rect.x() <= x < rect.x() + rect.width() and rect.y() <= y < rect.y() + rect.height():
+                return screen
+        return QApplication.primaryScreen()
+
+    def _physical_rect_for_gdigrab(self, x, y, w, h):
+        """Convert Qt logical desktop coords to physical pixels for gdigrab.
+
+        JamTools stores capture geometry from QScreen.geometry() and the
+        screenshot selector in logical pixels. ffmpeg gdigrab on Windows
+        expects physical pixels, so at 150%/200% scaling the old values
+        captured only the upper-left portion of the intended region.
+        """
+        if PLATFORM_SYS != "win32":
+            return x, y, w, h
+        screen = self._screen_for_point(x, y)
+        if screen is None:
+            screen = QApplication.primaryScreen()
+        dpr = screen.devicePixelRatio()
+        px = int(round(x * dpr))
+        py = int(round(y * dpr))
+        pw = int(round(w * dpr)) // 2 * 2
+        ph = int(round(h * dpr)) // 2 * 2
+        return px, py, pw, ph
+
+    def _gdigrab_area(self, mouse):
+        x, y, w, h = self._physical_rect_for_gdigrab(self.x, self.y, self.w, self.h)
+        return ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(mouse, x, y, w, h)
+
     def init_arearecord(self):
         self.recording = False
         self.record = None
@@ -459,11 +491,9 @@ class Recordingthescreen(QObject):
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
         w = str(int(self.w * self.scale // 2) * 2)
 
-        area = ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(self.mouse,
-                                                                                      self.x,
-                                                                                      self.y,
-                                                                                      self.w,
-                                                                                      self.h)
+        area = self._gdigrab_area(self.mouse) if PLATFORM_SYS == "win32" else \
+            ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(
+                self.mouse, self.x, self.y, self.w, self.h)
         audio = ' '
         video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
 
@@ -480,12 +510,7 @@ class Recordingthescreen(QObject):
             vf = ' -vf scale=' + w + ':-2 '
             if vi_divice == '抓屏':
                 if PLATFORM_SYS == "win32":
-                    area = '  -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(
-                        self.mouse,
-                        self.x,
-                        self.y,
-                        self.w,
-                        self.h)
+                    area = self._gdigrab_area(self.mouse)
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
                     video = " -video_size {}x{} -f x11grab -draw_mouse {} -i {}.0+{},{} ".format(self.w, self.h,
@@ -2074,11 +2099,21 @@ class JamToolsWindow(QMainWindow):
                     self.statusBar().showMessage('找不到文件，请先截图！')
 
         def open_path():
-            p = QStandardPaths.writableLocation(
-                QStandardPaths.PicturesLocation) + '/JamPicture/screenshot/'
+            p = get_screenshot_save_dir(self.settings)
             if not os.path.exists(p):
-                os.mkdir(p)
+                os.makedirs(p)
             QDesktopServices.openUrl(QUrl.fromLocalFile(p))
+
+        def browse_ss_save_path():
+            start_dir = get_screenshot_save_dir(self.settings)
+            if not os.path.exists(start_dir):
+                start_dir = get_default_screenshot_save_dir()
+            selected = QFileDialog.getExistingDirectory(self, "选择截图保存路径", start_dir)
+            if selected:
+                selected = selected.replace("\\", "/")
+                self.ss_save_path.setText(selected)
+                self.settings.setValue('screenshot/save_path', selected)
+                self.settings.sync()
 
         self.open_png = QCheckBox(self.screenshot_groupBox)
         self.open_png.setChecked(self.settings.value('screenshot/open_png', False, type=bool))
@@ -2109,9 +2144,21 @@ class JamToolsWindow(QMainWindow):
         self.save_png.setChecked(self.settings.value('screenshot/save_png', False, type=bool))
         self.save_png.setText('自动保存文件')
         self.save_png.setToolTip('截屏后将自动保存文件')
-        self.save_png.setStatusTip('截屏后将自动保存文件到系统图片文件夹中，点击右上角图标可以打开该文件夹')
+        self.save_png.setStatusTip('截屏后将自动保存文件到下方设置的文件夹中，点击右上角图标可以打开该文件夹')
         self.save_png.setGeometry(150, 460, 125, 25)
         self.save_png.stateChanged.connect(self.setting_save)
+
+        ss_path_label = QLabel('保存路径', self.screenshot_groupBox)
+        ss_path_label.setGeometry(475, 145, 60, 20)
+        self.ss_save_path = QLineEdit(self.screenshot_groupBox)
+        self.ss_save_path.setGeometry(475, 165, 175, 25)
+        self.ss_save_path.setReadOnly(True)
+        self.ss_save_path.setToolTip('截图自动保存的文件夹路径')
+        self.ss_save_path.setText(get_screenshot_save_dir(self.settings).rstrip('/'))
+        self.ss_save_path_browse = QPushButton('浏览', self.screenshot_groupBox)
+        self.ss_save_path_browse.setGeometry(475, 195, 80, 25)
+        self.ss_save_path_browse.setToolTip('选择截图自动保存路径')
+        self.ss_save_path_browse.clicked.connect(browse_ss_save_path)
 
         self.hide_ss = QCheckBox(self.screenshot_groupBox)
         # print(self.settings.value('screenshot/hide_ss', True, type=bool))
@@ -3875,12 +3922,11 @@ hhh(o゜▽゜)o☆）
             print("can't open", sys.exc_info())
         try:
             if self.settings.value('screenshot/save_png', False, type=bool):
-                name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))+ '.png'
-                p = QStandardPaths.writableLocation(
-                    QStandardPaths.PicturesLocation) + '/JamPicture/screenshot/{}'.format(
-                    str(time.strftime("%Y_%m_%d")))
-                if not os.path.exists(p): os.makedirs(p)
-                shutil.copy2(filepath,name)
+                name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime())) + '.png'
+                p = get_screenshot_save_dir(self.settings) + str(time.strftime("%Y_%m_%d"))
+                if not os.path.exists(p):
+                    os.makedirs(p)
+                shutil.copy2(filepath, os.path.join(p, name))
         except:
             print("can't save", sys.exc_info())
 
@@ -5515,6 +5561,8 @@ class Settings_save(QThread):
                 jamtools.settings.setValue('roll_speed', jamtools.roll_speed.value())
                 # jamtools.settings.setValue('fault_rate_ss', jamtools.fault_rate_ss.value())
                 jamtools.settings.setValue('copy_type_ss', jamtools.copy_type_ss.currentText())
+                if hasattr(jamtools, 'ss_save_path'):
+                    jamtools.settings.setValue('screenshot/save_path', jamtools.ss_save_path.text())
                 jamtools.settings.endGroup()
                 # print(jamtools.settings.value('screenshot/save_png', False, type=bool))
             except:

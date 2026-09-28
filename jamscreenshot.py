@@ -393,7 +393,8 @@ class MaskLayer(QLabel):
         # 以下为鼠标放大镜
         if not (self.parent.painter_tools['drawcircle_on'] or self.parent.painter_tools['drawrect_bs_on'] or
                 self.parent.painter_tools['pen_on'] or self.parent.painter_tools['eraser_on'] or
-                self.parent.painter_tools['drawtext_on'] or self.parent.painter_tools['backgrounderaser_on']
+                self.parent.painter_tools['drawtext_on'] or self.parent.painter_tools['numberstamp_on'] or
+                self.parent.painter_tools['backgrounderaser_on']
                 or self.parent.painter_tools['drawpix_bs_on'] or self.parent.move_rect):
             
             select_color_mode = True if self.parent.painter_tools['selectcolor_on'] or self.parent.painter_tools['bucketpainter_on'] else False  # 取色器或油漆桶
@@ -677,12 +678,12 @@ class AutotextEdit(QTextEdit):
             if newWidth < minsize:
                 self.setFixedWidth(minsize)
             else:
-                self.setFixedWidth(newWidth)
+                self.setFixedWidth(int(newWidth))
         if newHeight != self.height():
             if newHeight < minsize:
                 self.setFixedHeight(minsize)
             else:
-                self.setFixedHeight(newHeight)
+                self.setFixedHeight(int(newHeight))
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Return:
@@ -755,6 +756,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.drawcircle = QPushButton('', self.painter_box)
         self.bs = QPushButton('', self.painter_box)
         self.drawtext = QPushButton('', self.painter_box)
+        self.numberstamp_btn = QPushButton('序', self.painter_box)
         self.pen = QPushButton('', self.painter_box)
         self.eraser = QPushButton('', self.painter_box)
         self.backgrounderaser = QPushButton('', self.painter_box)
@@ -815,13 +817,15 @@ class Slabel(QLabel):  # 区域截图功能
         self.drawpix_pointlist = []
         self.repairbackground_pointlist = []
         self.drawtext_pointlist = []
+        self.numberstamp_pointlist = []
+        self.numberstamp_counter = 1
         self.perspective_cut_pointlist = []
         self.polygon_ss_pointlist = []
         self.drawrect_pointlist = [[-2, -2], [-2, -2], 0]
         self.drawarrow_pointlist = [[-2, -2], [-2, -2], 0]
         self.drawcircle_pointlist = [[-2, -2], [-2, -2], 0]
         self.painter_tools = {'drawpix_bs_on': 0, 'drawarrow_on': 0, 'drawcircle_on': 0, 'drawrect_bs_on': 0,
-                              'pen_on': 0, 'eraser_on': 0, 'drawtext_on': 0,
+                              'pen_on': 0, 'eraser_on': 0, 'drawtext_on': 0, 'numberstamp_on': 0,
                               'backgrounderaser_on': 0, 'selectcolor_on': 0, "bucketpainter_on": 0,
                               "repairbackground_on": 0, "perspective_cut_on": 0, "polygon_ss_on": 0}
 
@@ -969,6 +973,12 @@ class Slabel(QLabel):  # 区域截图功能
                                   self.choice_clor_btn.width(), self.choice_clor_btn.height())
         self.drawtext.clicked.connect(self.drawtext_fun)
 
+        self.numberstamp_btn.setToolTip('序号笔，点击添加编号标记')
+        self.numberstamp_btn.setGeometry(self.choice_clor_btn.x(),
+                                         self.drawtext.y() + self.drawtext.height(),
+                                         self.choice_clor_btn.width(), self.choice_clor_btn.height())
+        self.numberstamp_btn.clicked.connect(self.numberstamp_fun)
+
         self.pen.setToolTip('画笔工具')
         self.pen.setIcon(QIcon(":/pen.png"))
         self.pen.setGeometry(self.bs.x(), self.bs.y() + self.bs.height(),
@@ -978,7 +988,8 @@ class Slabel(QLabel):  # 区域截图功能
 
         self.eraser.setToolTip('橡皮擦')
         self.eraser.setIcon(QIcon(":/eraser.png"))
-        self.eraser.setGeometry(self.choice_clor_btn.x(), self.drawtext.y() + self.drawtext.height(),
+        self.eraser.setGeometry(self.choice_clor_btn.x(),
+                                self.numberstamp_btn.y() + self.numberstamp_btn.height(),
                                 self.choice_clor_btn.width(), self.choice_clor_btn.height())
         self.eraser.clicked.connect(self.clear_paint_fun)
         self.backgrounderaser.setIcon(QIcon(":/backgrounderaser.png"))
@@ -1258,6 +1269,33 @@ class Slabel(QLabel):  # 区域截图功能
             self.setCursor(QCursor(QPixmap(":/texticon.png").scaled(16, 16, Qt.KeepAspectRatio), 0, 0))
             self.Tipsshower.setText("绘制文本")
 
+    def numberstamp_fun(self):
+        if self.painter_tools['numberstamp_on']:
+            self.painter_tools['numberstamp_on'] = 0
+            self.numberstamp_btn.setStyleSheet('')
+        else:
+            self.change_tools_fun('numberstamp_on')
+            self.numberstamp_btn.setStyleSheet('background-color:rgb(50,50,50)')
+            self.setCursor(Qt.CrossCursor)
+            self.Tipsshower.setText("序号笔")
+
+    def draw_numberstamp_on_layer(self, x, y, num):
+        radius = max(self.tool_width * 3, 12)
+        painter = QPainter(self.paintlayer.pixmap())
+        painter.setRenderHint(QPainter.Antialiasing)
+        fill_color = QColor(self.pencolor)
+        text_color = get_opposite_color(fill_color)
+        painter.setBrush(QBrush(fill_color))
+        painter.setPen(QPen(text_color, max(1, self.tool_width // 3), Qt.SolidLine))
+        painter.drawEllipse(QPoint(x, y), radius, radius)
+        font = QFont('黑体', max(radius - 2, 10))
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QPen(text_color))
+        painter.drawText(QRect(x - radius, y - radius, radius * 2, radius * 2), Qt.AlignCenter, str(num))
+        painter.end()
+        self.paintlayer.update()
+
     def change_pen_fun(self):
         if self.painter_tools['pen_on']:
             self.painter_tools['pen_on'] = 0
@@ -1316,6 +1354,7 @@ class Slabel(QLabel):  # 区域截图功能
         self.drawarrow.setStyleSheet('')
         self.drawcircle.setStyleSheet('')
         self.drawtext.setStyleSheet('')
+        self.numberstamp_btn.setStyleSheet('')
         self.selectcolor_btn.setStyleSheet("")
         self.bucketpainter_btn.setStyleSheet("")
         self.backgroundrepair_btn.setStyleSheet("")
@@ -1786,6 +1825,12 @@ class Slabel(QLabel):  # 区域截图功能
                     self.text_box.textAreaChanged()
                     self.text_box.show()
                     self.text_box.setFocus()
+                elif self.painter_tools['numberstamp_on']:
+                    num = self.numberstamp_counter
+                    self.numberstamp_counter += 1
+                    self.numberstamp_pointlist.append([event.x(), event.y(), num])
+                    self.draw_numberstamp_on_layer(event.x(), event.y(), num)
+                    self.backup_shortshot()
                 elif self.painter_tools['selectcolor_on']:
                     allpix = self.cutpic(save_as=3)
                     self.qimg = allpix.toImage()
@@ -1978,7 +2023,8 @@ class Slabel(QLabel):  # 区域截图功能
                     self.eraser_pointlist.append([-2, -2])
                 elif self.painter_tools['backgrounderaser_on']:
                     self.backgrounderaser_pointlist.append([-2, -2])
-                if not self.painter_tools["perspective_cut_on"] and not self.painter_tools["polygon_ss_on"]:
+                if not self.painter_tools["perspective_cut_on"] and not self.painter_tools["polygon_ss_on"] \
+                        and not self.painter_tools["numberstamp_on"]:
                     self.backup_shortshot()
             else:  # 调整选区松开
                 self.setCursor(Qt.ArrowCursor)
@@ -2112,6 +2158,8 @@ class Slabel(QLabel):  # 区域截图功能
                     self.setCursor(QCursor(QPixmap(":/circle.png").scaled(32, 32, Qt.KeepAspectRatio), 16, 16))
                 elif self.painter_tools['drawtext_on']:
                     self.setCursor(QCursor(QPixmap(":/texticon.png").scaled(16, 16, Qt.KeepAspectRatio), 0, 0))
+                elif self.painter_tools['numberstamp_on']:
+                    self.setCursor(Qt.CrossCursor)
                 elif self.painter_tools['eraser_on']:
                     self.setCursor(QCursor(QPixmap(":/eraser.png").scaled(32, 32, Qt.KeepAspectRatio), 0, 32))
                 elif self.painter_tools['backgrounderaser_on']:
