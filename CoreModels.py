@@ -336,6 +336,31 @@ class Recordingthescreen(QObject):
         self.w = self.maxw = QApplication.desktop().width() // 2 * 2
         self.h = self.maxh = QApplication.desktop().height() // 2 * 2
 
+    def _screen_for_point(self, x, y):
+        for screen in QApplication.screens():
+            rect = screen.geometry()
+            if rect.x() <= x < rect.x() + rect.width() and rect.y() <= y < rect.y() + rect.height():
+                return screen
+        return QApplication.primaryScreen()
+
+    def _physical_rect_for_gdigrab(self, x, y, w, h):
+        """Qt 使用逻辑像素，Windows gdigrab 需要物理像素坐标。"""
+        if PLATFORM_SYS != "win32":
+            return x, y, w, h
+        screen = self._screen_for_point(x, y)
+        if screen is None:
+            screen = QApplication.primaryScreen()
+        dpr = screen.devicePixelRatio()
+        px = int(round(x * dpr))
+        py = int(round(y * dpr))
+        pw = int(round(w * dpr)) // 2 * 2
+        ph = int(round(h * dpr)) // 2 * 2
+        return px, py, pw, ph
+
+    def _gdigrab_area(self, mouse):
+        x, y, w, h = self._physical_rect_for_gdigrab(self.x, self.y, self.w, self.h)
+        return ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(mouse, x, y, w, h)
+
     def init_arearecord(self):
         self.recording = False
         self.record = None
@@ -460,11 +485,9 @@ class Recordingthescreen(QObject):
         self.name = str(time.strftime("%Y-%m-%d_%H.%M.%S", time.localtime()))
         w = str(int(self.w * self.scale // 2) * 2)
 
-        area = ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(self.mouse,
-                                                                                      self.x,
-                                                                                      self.y,
-                                                                                      self.w,
-                                                                                      self.h)
+        area = self._gdigrab_area(self.mouse) if PLATFORM_SYS == "win32" else \
+            ' -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(
+                self.mouse, self.x, self.y, self.w, self.h)
         audio = ' '
         video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
 
@@ -481,12 +504,7 @@ class Recordingthescreen(QObject):
             vf = ' -vf scale=' + w + ':-2 '
             if vi_divice == '抓屏':
                 if PLATFORM_SYS == "win32":
-                    area = '  -draw_mouse {}  -offset_x {} -offset_y {} -video_size {}x{} '.format(
-                        self.mouse,
-                        self.x,
-                        self.y,
-                        self.w,
-                        self.h)
+                    area = self._gdigrab_area(self.mouse)
                     video = '  -thread_queue_size 16 -f gdigrab -rtbufsize 500M ' + area + ' -i desktop '
                 else:
                     video = " -video_size {}x{} -f x11grab -draw_mouse {} -i {}.0+{},{} ".format(self.w, self.h,
