@@ -344,7 +344,13 @@ class Recordingthescreen(QObject):
         return QApplication.primaryScreen()
 
     def _physical_rect_for_gdigrab(self, x, y, w, h):
-        """Qt 使用逻辑像素，Windows gdigrab 需要物理像素坐标。"""
+        """Convert Qt logical desktop coords to physical pixels for gdigrab.
+
+        JamTools stores capture geometry from QScreen.geometry() and the
+        screenshot selector in logical pixels. ffmpeg gdigrab on Windows
+        expects physical pixels, so at 150%/200% scaling the old values
+        captured only the upper-left portion of the intended region.
+        """
         if PLATFORM_SYS != "win32":
             return x, y, w, h
         screen = self._screen_for_point(x, y)
